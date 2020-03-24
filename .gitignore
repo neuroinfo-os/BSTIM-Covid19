@@ -13,7 +13,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-.Python
+.Pytho
 build/
 develop-eggs/
 dist/
@@ -102,6 +102,9 @@ venv.bak/
 
 # Rope project settings
 .ropeproject
+
+# vscode settings
+.vscode
 
 # mkdocs documentation
 /site
