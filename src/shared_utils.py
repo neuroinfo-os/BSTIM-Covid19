@@ -9,7 +9,7 @@ import theano.tensor as tt
 import scipy.stats
 from itertools import product
 import datetime, pickle as pkl, numpy as np, pandas as pd, pymc3 as pm
-from pymc3.stats import quantiles
+# from pymc3.stats import quantiles
 from sampling_utils import *
 from collections import OrderedDict
 import isoweek
