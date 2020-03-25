@@ -10,9 +10,16 @@ Key features of the model:
 * a Bayesian Monte Carlo regression approach provides an estimate of the full probability distribution over inferred parameters as well as model predictions.
 * the model learns an interpretable spatio-temporal kernel that captures typical interactions between infection cases of the tested diseases.
 
+## Setup
+It is recommended to install a local virtual environment for python3, a requirements.txt is provided.
+
 # Data sources
 ## Epidemiological data
 The data is provided by the [Robert Koch Institute][4], and consists of weekly reports of case counts for three diseases, campylobacteriosis, rotavirus infections and Lyme borreliosis. They are aggregated by county and collected over a time period spanning from the 1st of January 2011 (2013 for borreliosis) to the 31st of December 2017 via the *SurvNet* surveillance system. Aggregated case counts of diseases with mandatory reporting in Germany is available [online][5].
+
+## Covid-19
+Covid-19 data is provided by the [Robert Koch Institute][4] via the publically accessiable (this)[https://npgeo-corona-npgeo-de.hub.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0/data?orderBy=Meldedatum] link. The downloadable CSV table can be found in ./data/raw and is preprocessed to fit the BSTI Model implementation via the notebook ./notebooks/preprocess_covid19_data.ipynb.
+
 
 ## Geospatial data
 Information about the shape of counties within Germany is publicly provided by the [German federal agency for cartography and geodesy (Bundesamt für Kartographie und Geodäsie)][6] (© GeoBasis-DE / BKG 2018) under the [dl-de/by-2-0 license][7].
