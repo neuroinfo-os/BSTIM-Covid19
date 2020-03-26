@@ -7,11 +7,21 @@ theano.config.compute_test_value = 'off' # BUG: may throw an error for flat RVs
 
 
 def uniform_times_by_week(weeks, n=500):
+    """ Samples n random timepoints within a week, per week. converts times to datetime obj."""
     res = OrderedDict()
     for week in weeks:
         time_min = datetime.datetime.combine(isoweek.Week(*week).monday(), datetime.time.min)
         time_max = datetime.datetime.combine(isoweek.Week(*week).sunday(), datetime.time.max)
         res[week] = np.random.rand(n) * (time_max-time_min) + time_min
+    return res
+
+def uniform_times_by_day(days, n=500):
+    """ Samples n random timepoints within a day, per day. converts pd.Timestamps to datetime obj."""
+    res = OrderedDict()
+    for day in days:
+        time_min = datetime.datetime.combine(day, datetime.time.min)
+        time_max = datetime.datetime.combine(day, datetime.time.max)
+        res[day] = np.random.rand(n) * (time_max - time_min) + time_min
     return res
 
 def uniform_locations_by_county(counties, n=500):
@@ -115,9 +125,10 @@ def build_ia_bfs(temporal_bfs, spatial_bfs):
     return theano.function([t1,x1,t2,x2], contrib, allow_input_downcast=True)
 
 class IAEffectSampler(object):
-    def __init__(self, data, times_by_week, locations_by_county, temporal_bfs, spatial_bfs, num_tps = 10, time_horizon=5, verbose=True):
+    """ switching to days """
+    def __init__(self, data, times_by_day, locations_by_county, temporal_bfs, spatial_bfs, num_tps = 10, time_horizon=5, verbose=True):
         self.ia_bfs = build_ia_bfs(temporal_bfs, spatial_bfs)
-        self.times_by_week = times_by_week
+        self.times_by_day = times_by_day
         self.locations_by_county = locations_by_county
         self._to_timestamp = np.frompyfunc(datetime.datetime.timestamp, 1, 1)
         self.data = data
@@ -126,16 +137,16 @@ class IAEffectSampler(object):
         self.num_features = len(temporal_bfs(tt.fmatrix("tmp")))*len(spatial_bfs(tt.fmatrix("tmp")))
         self.verbose = verbose
         
-    def __call__(self, weeks, counties):
-        res = np.zeros((len(weeks), len(counties), self.num_features), dtype=np.float32)
-        for i,week in enumerate(weeks):
+    def __call__(self, days, counties):
+        res = np.zeros((len(days), len(counties), self.num_features), dtype=np.float32)
+        for i,day in enumerate(days):
             for j,county in enumerate(counties):
-                idx = ((isoweek.Week(*week)-self.time_horizon) <= self.data.index)*(self.data.index < week)
-                # print("sampling week {} for county {} using data in range {}".format(week, county, idx))
-                t_data, x_data = sample_time_and_space(self.data.iloc[idx], self.times_by_week, self.locations_by_county)
-                t_pred, x_pred = sample_time_and_space(pd.DataFrame(self.num_tps, index=[week], columns=[county]), self.times_by_week, self.locations_by_county)
+                idx = ((day - pd.Timedelta(days=5)) <= self.data.index)*(self.data.index < day)
+                # print("sampling day {} for county {} using data in range {}".format(day, county, idx))
+                t_data, x_data = sample_time_and_space(self.data.iloc[idx], self.times_by_day, self.locations_by_county)
+                t_pred, x_pred = sample_time_and_space(pd.DataFrame(self.num_tps, index=[day], columns=[county]), self.times_by_day, self.locations_by_county)
                 res[i,j,:] = self.ia_bfs(self._to_timestamp(t_pred), x_pred, self._to_timestamp(t_data), x_data)
-            frac = (i+1)/len(weeks)
+            frac = (i+1)/len(days)
             if self.verbose:
                 print("⎹" + "█"*int(np.floor(frac*100)) + " ░▒▓█"[int(((frac*100)%1)*5)] + " "*int(np.ceil((1-frac)*100)) + "⎸ ({:.3}%)".format(100*frac), end="\r", flush=True)
         return res
