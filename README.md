@@ -12,13 +12,15 @@ Key features of the model:
 
 ## Setup
 It is recommended to install a local virtual environment for python3, a requirements.txt is provided.
+The experiment is then run by first sampling interactions effects and then the posterior, currently implemented via a SGE scripts ./src/gridjob_sample_ia.sge and ./src/gridjob_sample_posterior.sge . Adapt to different runtimes as needed.
+
 
 # Data sources
 ## Epidemiological data
 The data is provided by the [Robert Koch Institute][4], and consists of weekly reports of case counts for three diseases, campylobacteriosis, rotavirus infections and Lyme borreliosis. They are aggregated by county and collected over a time period spanning from the 1st of January 2011 (2013 for borreliosis) to the 31st of December 2017 via the *SurvNet* surveillance system. Aggregated case counts of diseases with mandatory reporting in Germany is available [online][5].
 
 ## Covid-19
-Covid-19 data is provided by the [Robert Koch Institute][4] via the publically accessiable (this)[https://npgeo-corona-npgeo-de.hub.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0/data?orderBy=Meldedatum] link. The downloadable CSV table can be found in ./data/raw and is preprocessed to fit the BSTI Model implementation via the notebook ./notebooks/preprocess_covid19_data.ipynb.
+Covid-19 data is provided by the [Robert Koch Institute][4] via the publically accessiable [this](https://npgeo-corona-npgeo-de.hub.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0/data?orderBy=Meldedatum) link. The downloadable CSV table can be found in ./data/raw and is preprocessed to fit the BSTI Model implementation via the notebook ./notebooks/preprocess_covid19_data.ipynb.
 
 
 ## Geospatial data
