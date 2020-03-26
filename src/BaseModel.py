@@ -13,6 +13,11 @@ class SpatioTemporalFeature(object):
         return self._call_(np.asarray(times).reshape((-1,1)), np.asarray(locations).reshape((1,-1))).astype(np.float32)
 
 class SpatioTemporalYearlyDemographicsFeature(SpatioTemporalFeature):
+    """ TODO:  
+    * county data must be updated to include 2019/2020 demographic data
+    * call must be by date --> if yearweek is a isoweek, it's a pandas timestamp now!
+    * temporary fix: always call latest known population -> 2018
+    """
     def __init__(self, county_dict, group, scale=1.0):
         self.dict = {
             (year, county): val*scale
@@ -22,8 +27,10 @@ class SpatioTemporalYearlyDemographicsFeature(SpatioTemporalFeature):
         }
         super().__init__()
 
-    def call(self, yearweek,county):
-        return self.dict.get((yearweek[0],county))
+    def call(self, yearweekday, county):
+        # TODO: do this properly when data is available!
+        return self.dict.get((2018, county))
+        # return self.dict.get((yearweekday.year,county))
 
 class SpatialEastWestFeature(SpatioTemporalFeature):
     def __init__(self, county_dict):
@@ -33,10 +40,13 @@ class SpatialEastWestFeature(SpatioTemporalFeature):
         }
         super().__init__()
 
-    def call(self, yearweek,county):
+    def call(self, yearweekday ,county):
         return self.dict.get(county)
 
 class TemporalFourierFeature(SpatioTemporalFeature):
+    """ NOTE: this periodic feature models per year, is not needed for Covid-19.
+            must be updated if periodic features are to be included --> daily, not weekly scale!
+    """
     def __init__(self, i, t0, scale):
         self.t0 = t0
         self.scale = scale
@@ -48,13 +58,16 @@ class TemporalFourierFeature(SpatioTemporalFeature):
         return self.fun((t-self.t0)/self.scale*self.τ)
 
 class TemporalSigmoidFeature(SpatioTemporalFeature):
+    """ NOTE: units is days now -> all inc. ts as pd.Timestamps
+    """
     def __init__(self, t0, scale):
         self.t0 = t0
         self.scale = scale
         super().__init__()
 
     def call(self, t, x):
-        return sp.special.expit((t-self.t0)/self.scale)
+        t_delta = (t - self.t0) / self.scale
+        return sp.special.expit( t_delta.days + (t_delta.seconds/(3600 * 24)) )
 
 
 class IAEffectLoader(object):
@@ -86,7 +99,7 @@ class IAEffectLoader(object):
         new[self.vars[0].name] = new_res
         return new
 
-    def stop_tuning(*args):
+    def stop_tuning(self, *args):
         pass
 
     @property
@@ -110,6 +123,11 @@ class BaseModel(object):
     """
 
     def __init__(self, trange, counties, ia_effect_filenames, num_ia=16, model=None, include_ia=True, include_eastwest=True, include_demographics=True, include_temporal=True, orthogonalize=False):
+        """ TODO:
+        * trange is now a (pd.Timestamp, pd.Timestamp) tuple
+        * only one year inlcuded --> remove periodic features over years
+        * change other temporal features to daily instead of weekly --> adding/substracting timedeltas!
+        """
         self.county_info = counties
         self.ia_effect_filenames = ia_effect_filenames
         self.num_ia = num_ia if include_ia else 0
@@ -119,11 +137,12 @@ class BaseModel(object):
         self.include_temporal = include_temporal
         self.trange = trange
 
-        first_year=self.trange[0][0]
-        last_year=self.trange[1][0]
+        # first_year=self.trange[0][0]
+        # last_year=self.trange[1][0]
         self.features = {
-                "temporal_seasonal": {"temporal_fourier_{}".format(i): TemporalFourierFeature(i, isoweek.Week(first_year,1), 52.1775) for i in range(4)} if self.include_temporal else {},
-                "temporal_trend": {"temporal_sigmoid_{}".format(i): TemporalSigmoidFeature(isoweek.Week(i,1), 2.0) for i in range(first_year,last_year+1)} if self.include_temporal else {},
+                # "temporal_seasonal": {"temporal_fourier_{}".format(i): TemporalFourierFeature(i, isoweek.Week(first_year,1), 52.1775) for i in range(4)} if self.include_temporal else {},
+                # "temporal_trend": {"temporal_sigmoid_{}".format(i): TemporalSigmoidFeature(isoweek.Week(i,1), 2.0) for i in range(first_year,last_year+1)} if self.include_temporal else {},
+                "temporal_trend": {"temporal_sigmoid": TemporalSigmoidFeature(pd.Timestamp('2020-01-28'), 2.0)} if self.include_temporal else {},
                 "spatiotemporal": {"demographic_{}".format(group): SpatioTemporalYearlyDemographicsFeature(self.county_info, group) for group in ["[0-5)", "[5-20)", "[20-65)"]} if self.include_demographics else {},
                 "spatial": {"eastwest": SpatialEastWestFeature(self.county_info)} if self.include_eastwest else {},
                 "exposure": {"exposure": SpatioTemporalYearlyDemographicsFeature(self.county_info, "total", 1.0/100000)}
@@ -137,21 +156,25 @@ class BaseModel(object):
                 self.Q[i*4:(i+1)*4, i*4:(i+1)*4] = T
 
 
-    def evaluate_features(self, weeks, counties):
+    def evaluate_features(self, days, counties):
+        """ TODO: days!
+        """
         all_features = {}
         for group_name,features in self.features.items():
             group_features = {}
             for feature_name,feature in features.items():
-                feature_matrix = feature(weeks, counties)
-                group_features[feature_name] = pd.DataFrame(feature_matrix[:,:], index=weeks, columns=counties).stack()
-            all_features[group_name] = pd.DataFrame([], index=pd.MultiIndex.from_product([weeks,counties]), columns=[]) if len(group_features)==0 else pd.DataFrame(group_features)
+                feature_matrix = feature(days, counties)
+                group_features[feature_name] = pd.DataFrame(feature_matrix[:,:], index=days, columns=counties).stack()
+            all_features[group_name] = pd.DataFrame([], index=pd.MultiIndex.from_product([days,counties]), columns=[]) if len(group_features)==0 else pd.DataFrame(group_features)
         return all_features
 
     def init_model(self, target):
-        weeks,counties = target.index, target.columns
+        """ TODO: days!
+        """
+        days,counties = target.index, target.columns
 
         # extract features
-        features = self.evaluate_features(weeks, counties)
+        features = self.evaluate_features(days, counties)
         Y_obs = target.stack().values.astype(np.float32)
         T_S = features["temporal_seasonal"].values.astype(np.float32)
         T_T = features["temporal_trend"].values.astype(np.float32)
@@ -206,6 +229,9 @@ class BaseModel(object):
         """
         # model = self.model(target)
 
+        """ TODO: days!
+        """
+
         self.init_model(target)
 
         if chains is None:
@@ -222,9 +248,9 @@ class BaseModel(object):
             # trace = trace[tune:]
         return trace
 
-    def sample_predictions(self, target_weeks, target_counties, parameters, init="auto"):
+    def sample_predictions(self, target_days, target_counties, parameters, init="auto"):
         # extract features
-        features = self.evaluate_features(target_weeks, target_counties)
+        features = self.evaluate_features(target_days, target_counties)
 
         T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
@@ -241,9 +267,9 @@ class BaseModel(object):
         W_s = parameters["W_s"]
         
 
-        ia_l = IAEffectLoader(None, self.ia_effect_filenames, target_weeks, target_counties)
+        ia_l = IAEffectLoader(None, self.ia_effect_filenames, target_days, target_counties)
 
-        num_predictions = len(target_weeks)*len(target_counties)
+        num_predictions = len(target_days)*len(target_counties)
         num_parameter_samples = α.size
         y = np.zeros((num_parameter_samples, num_predictions), dtype=int)
         μ = np.zeros((num_parameter_samples, num_predictions), dtype=np.float32)
