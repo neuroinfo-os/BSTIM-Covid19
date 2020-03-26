@@ -12,6 +12,9 @@ Key features of the model:
 
 ## Setup
 It is recommended to install a local virtual environment for python3, a requirements.txt is provided.
+
+Run ``virtualenv --no-site-packages --python=python3 .venv`` followed by ``pip install requirements.txt`` to get going.
+
 The experiment is then run by first sampling interactions effects and then the posterior, currently implemented via a SGE scripts ./src/gridjob_sample_ia.sge and ./src/gridjob_sample_posterior.sge . Adapt to different runtimes as needed.
 
 
