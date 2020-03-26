@@ -6,8 +6,7 @@ from shared_utils import *
 
 disease = "covid19"
 nums_sample = range(100) 
-# GID = int(os.environ["SGE_TASK_ID"])
-GID = 1
+GID = int(os.environ["SGE_TASK_ID"])
 num_sample = nums_sample[GID-1]
 
 filename = "../data/ia_effect_samples/{}_{}.pkl".format(disease, num_sample)
