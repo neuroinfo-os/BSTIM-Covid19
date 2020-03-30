@@ -3,10 +3,13 @@ from shared_utils import *
 from BaseModel import BaseModel
 import pymc3 as pm, pickle as pkl, pandas as pd, os
 
-i = int(os.environ["SGE_TASK_ID"])-1
+# i = int(os.environ["SGE_TASK_ID"])-1
+i = 0
 
 num_samples = 250
+# num_sample = 1
 num_chains = 4
+# num_chains = 1
 num_cores = num_chains
 
 model_complexity, disease = combinations[i]

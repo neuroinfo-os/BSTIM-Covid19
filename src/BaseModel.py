@@ -10,7 +10,8 @@ class SpatioTemporalFeature(object):
         self._call_ = np.frompyfunc(self.call, 2, 1)
 
     def __call__(self, times, locations):
-        return self._call_(np.asarray(times).reshape((-1,1)), np.asarray(locations).reshape((1,-1))).astype(np.float32)
+        _times = [pd.Timestamp(d) for d in times]
+        return self._call_(np.asarray(_times).reshape((-1,1)), np.asarray(locations).reshape((1,-1))).astype(np.float32)
 
 class SpatioTemporalYearlyDemographicsFeature(SpatioTemporalFeature):
     """ TODO:  
@@ -72,7 +73,7 @@ class TemporalSigmoidFeature(SpatioTemporalFeature):
 
 class IAEffectLoader(object):
     generates_stats = False
-    def __init__(self, var, filenames, weeks, counties):
+    def __init__(self, var, filenames, days, counties):
         self.vars = [var]
         self.samples = []
         for filename in filenames:
@@ -86,11 +87,11 @@ class IAEffectLoader(object):
                 print(e)
             else:
                 m = tmp["ia_effects"]
-                ws = list(tmp["predicted week"])
+                ds = list(tmp["predicted day"])
                 cs = list(tmp["predicted county"])
-                w_idx = np.array([ws.index(w) for w in weeks]).reshape((-1,1))
+                d_idx = np.array([ds.index(d) for d in days]).reshape((-1,1))
                 c_idx = np.array([cs.index(c) for c in counties])
-                self.samples.append(np.moveaxis(m[w_idx,c_idx,:], -1, 0).reshape((m.shape[-1], -1)).T)
+                self.samples.append(np.moveaxis(m[d_idx,c_idx,:], -1, 0).reshape((m.shape[-1], -1)).T)
 
     def step(self, point):
         new = point.copy()
@@ -176,7 +177,7 @@ class BaseModel(object):
         # extract features
         features = self.evaluate_features(days, counties)
         Y_obs = target.stack().values.astype(np.float32)
-        T_S = features["temporal_seasonal"].values.astype(np.float32)
+        # T_S = features["temporal_seasonal"].values.astype(np.float32)
         T_T = features["temporal_trend"].values.astype(np.float32)
         TS = features["spatiotemporal"].values.astype(np.float32)
         S = features["spatial"].values.astype(np.float32)
@@ -185,7 +186,7 @@ class BaseModel(object):
 
         # extract dimensions
         num_obs = np.prod(target.shape)
-        num_t_s = T_S.shape[1]
+        # num_t_s = T_S.shape[1]
         num_t_t = T_T.shape[1]
         num_ts = TS.shape[1]
         num_s = S.shape[1]
@@ -200,12 +201,14 @@ class BaseModel(object):
             δ     = pm.HalfCauchy("δ", 10, testval=1.0)
             α     = pm.Deterministic("α", np.float32(1.0)/δ)
             W_ia  = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(self.num_ia), shape=self.num_ia)
-            W_t_s = pm.Normal("W_t_s", mu=0, sd=10, testval=np.zeros(num_t_s), shape=num_t_s)
+            # W_t_s = pm.Normal("W_t_s", mu=0, sd=10, testval=np.zeros(num_t_s), shape=num_t_s)
             W_t_t = pm.Normal("W_t_t", mu=0, sd=10, testval=np.zeros(num_t_t), shape=num_t_t)
             W_ts  = pm.Normal("W_ts", mu=0, sd=10, testval=np.zeros(num_ts), shape=num_ts)
             W_s   = pm.Normal("W_s", mu=0, sd=10, testval=np.zeros(num_s), shape=num_s)
-            self.param_names = ["δ", "W_ia", "W_t_s", "W_t_t", "W_ts", "W_s"]
-            self.params = [δ, W_ia, W_t_s, W_t_t, W_ts, W_s]
+            # self.param_names = ["δ", "W_ia", "W_t_s", "W_t_t", "W_ts", "W_s"]
+            self.param_names = ["δ", "W_ia", "W_t_t", "W_ts", "W_s"]
+            # self.params = [δ, W_ia, W_t_s, W_t_t, W_ts, W_s]
+            self.params = [δ, W_ia, W_t_t, W_ts, W_s]
 
             # calculate interaction effect
             IA_ef = tt.dot(tt.dot(IA, self.Q), W_ia)
@@ -213,7 +216,8 @@ class BaseModel(object):
             # calculate mean rates
             μ = pm.Deterministic("μ", 
                 # (1.0+tt.exp(IA_ef))*
-                tt.exp(IA_ef + tt.dot(T_S, W_t_s) + tt.dot(T_T, W_t_t) + tt.dot(TS, W_ts) + tt.dot(S, W_s) + log_exposure)
+                # tt.exp(IA_ef + tt.dot(T_S, W_t_s) + tt.dot(T_T, W_t_t) + tt.dot(TS, W_ts) + tt.dot(S, W_s) + log_exposure)
+                tt.exp(IA_ef + tt.dot(T_T, W_t_t) + tt.dot(TS, W_ts) + tt.dot(S, W_s) + log_exposure)
             )
 
             # constrain to observations
@@ -252,7 +256,7 @@ class BaseModel(object):
         # extract features
         features = self.evaluate_features(target_days, target_counties)
 
-        T_S = features["temporal_seasonal"].values
+        # T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
         TS = features["spatiotemporal"].values
         S = features["spatial"].values
@@ -261,7 +265,7 @@ class BaseModel(object):
         # extract coefficient samples
         α = parameters["α"]
         W_ia = parameters["W_ia"]
-        W_t_s = parameters["W_t_s"]
+        # W_t_s = parameters["W_t_s"]
         W_t_t = parameters["W_t_t"]
         W_ts = parameters["W_ts"]
         W_s = parameters["W_s"]
@@ -277,7 +281,8 @@ class BaseModel(object):
         for i in range(num_parameter_samples):
             IA_ef = np.dot(np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
             # μ[i,:] = (1.0+np.exp(IA_ef))*np.exp(np.dot(T_S, W_t_s[i]) + np.dot(T_T, W_t_t[i]) + np.dot(TS, W_ts[i]) + np.dot(S, W_s[i]) + log_exposure)
-            μ[i,:] = np.exp(IA_ef + np.dot(T_S, W_t_s[i]) + np.dot(T_T, W_t_t[i]) + np.dot(TS, W_ts[i]) + np.dot(S, W_s[i]) + log_exposure)
+            # μ[i,:] = np.exp(IA_ef + np.dot(T_S, W_t_s[i]) + np.dot(T_T, W_t_t[i]) + np.dot(TS, W_ts[i]) + np.dot(S, W_s[i]) + log_exposure)
+            μ[i,:] = np.exp(IA_ef + np.dot(T_T, W_t_t[i]) + np.dot(TS, W_ts[i]) + np.dot(S, W_s[i]) + log_exposure)
             y[i,:] = pm.NegativeBinomial.dist(mu=μ[i,:], alpha=α[i]).random()
 
         return {"y": y, "μ": μ, "α": α}

@@ -106,6 +106,9 @@ venv.bak/
 # vscode settings
 .vscode
 
+# vim
+.*.swp
+
 # mkdocs documentation
 /site
 
