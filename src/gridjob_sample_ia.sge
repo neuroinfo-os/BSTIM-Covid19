@@ -7,7 +7,7 @@
 #$ -l h='!(ramsauer.ikw.uni-osnabrueck.de|vector.cv.uni-osnabrueck.de|righty.ni.uni-osnabrueck.de)'
 #$ -wd /net/store/ni/users/pnieters/src/BSTIM/src
 #$ -e /net/store/ni/users/pnieters/src/BSTIM/logs/e_$TASK_ID.txt
-#$ -e /net/store/ni/users/pnieters/src/BSTIM/logs/o_$TASK_ID.txt
+#$ -o /net/store/ni/users/pnieters/src/BSTIM/logs/o_$TASK_ID.txt
 #$ -pe default 4
 
 echo "Running job ${JOB_ID}, task ${SGE_TASK_ID} on `hostname`."
