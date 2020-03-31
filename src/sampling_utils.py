@@ -36,16 +36,16 @@ def uniform_locations_by_county(counties, n=500):
     return res
 
 
-def sample_time_and_space(data, times_by_week, locations_by_county):
+def sample_time_and_space(data, times_by_day, locations_by_county):
     n_total = data.sum().sum()
     t_all = np.empty((n_total,), dtype=object)
     x_all = np.empty((n_total,2))
     
     i = 0
     for (county_id, series) in data.iteritems():
-        for (week, n) in series.iteritems():
+        for (day, n) in series.iteritems():
             # draw n random times
-            times = times_by_week[week]
+            times = times_by_day[day]
             idx = np.random.choice(len(times), n)
             t_all[i:i+n] = times[idx]
             
