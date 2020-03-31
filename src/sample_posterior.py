@@ -32,8 +32,8 @@ data = load_daily_data(disease, prediction_region, county_info)
 data_train, target_train, data_test, target_test = split_data(
    data,
    train_start = pd.Timestamp(2020, 1, 28),
-   test_start = pd.Timestamp(2020, 3, 16),
-   post_test = pd.Timestamp(2020, 3, 23)
+   test_start = pd.Timestamp(2020, 3, 30),
+   post_test = pd.Timestamp(2020, 3, 30)
 )
 
 tspan = (target_train.index[0],target_train.index[-1])
