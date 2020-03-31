@@ -24,6 +24,7 @@ parameters = OrderedDict()
 data = load_daily_data(disease, prediction_region, counties)
 
 # samples random times --> check the data conversion carefully
+# check if correct
 times=uniform_times_by_day(data.index)
 locs=uniform_locations_by_county(counties)
 temporal_bfs = lambda x: bspline_bfs(x, np.array([0,0,1,2,3,4,5])*24*3600.0, 2) # was *7*24*3600.0 before

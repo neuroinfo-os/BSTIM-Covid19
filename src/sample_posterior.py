@@ -1,4 +1,3 @@
-from config import *
 from shared_utils import *
 from BaseModel import BaseModel
 import pymc3 as pm, pickle as pkl, pandas as pd, os
@@ -12,10 +11,15 @@ num_chains = 4
 # num_chains = 1
 num_cores = num_chains
 
-model_complexity, disease = combinations[i]
-use_age, use_eastwest     = combinations_age_eastwest[model_complexity]
+# model_complexity, disease = combinations[i]
+# use_age, use_eastwest     = combinations_age_eastwest[model_complexity]
 
+# get rid of config dependency until we have decided on model
 prediction_region = "germany"
+model_complexity = 0
+disease = "covid19"
+use_age = True
+use_eastwest = True
 
 filename_params = "../data/mcmc_samples_backup/parameters_{}_{}_{}".format(disease, use_age, use_eastwest)
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(disease, use_age, use_eastwest)
