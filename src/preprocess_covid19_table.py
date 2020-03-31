@@ -43,4 +43,4 @@ if __name__ == "__main__":
                 series[d_id] = cases
         df.insert(len(df.columns), counties[county_name], series)
 
-    df.to_csv(args.output_csv)
+    df.to_csv(args.output_csv, sep=";")
