@@ -48,7 +48,7 @@ def load_data(disease, prediction_region, counties, separator=";"):
     data.index = parse_yearweek(data.index)
     return data
 
-def load_daily_data(disease, prediction_region, counties, seperator=";"):
+def load_daily_data(disease, prediction_region, counties, seperator=","):
     data = pd.read_csv("../data/diseases/{}.csv".format(disease), sep=seperator, encoding='iso-8859-1', index_col=0)
 
     if "99999" in data.columns:

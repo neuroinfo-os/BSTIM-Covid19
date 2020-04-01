@@ -1,5 +1,5 @@
 import pandas as pd, numpy as np
-import json,csv, argparse
+import json, csv, argparse, re
 
 from collections import OrderedDict
 
@@ -28,8 +28,12 @@ if __name__ == "__main__":
 
     covid19_data = pd.read_csv(args.input_csv, sep=',')
 
-    start_date = pd.Timestamp(covid19_data['Meldedatum'].min())
-    end_date = pd.Timestamp(covid19_data['Meldedatum'].max())
+    # this complicated procedure removes timezone information.
+    regex = re.compile(r"([0-9]+)-([0-9]+)-([0-9]+)T.*")
+    start_year, start_month, start_day = regex.search(covid19_data['Meldedatum'].min()).groups()
+    end_year, end_month, end_day = regex.search(covid19_data['Meldedatum'].max()).groups()
+    start_date = pd.Timestamp(int(start_year), int(start_month), int(start_day))
+    end_date = pd.Timestamp(int(start_year), int(start_month), int(start_day))
 
     dates = [day for day in pd.date_range(start_date, end_date)]
     df = pd.DataFrame(index=dates)
@@ -43,4 +47,4 @@ if __name__ == "__main__":
                 series[d_id] = cases
         df.insert(len(df.columns), counties[county_name], series)
 
-    df.to_csv(args.output_csv, sep=";")
+    df.to_csv(args.output_csv, sep=",")

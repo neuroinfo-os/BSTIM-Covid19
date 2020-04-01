@@ -31,9 +31,9 @@ with open('../data/counties/counties.pkl',"rb") as f:
 data = load_daily_data(disease, prediction_region, county_info)
 data_train, target_train, data_test, target_test = split_data(
    data,
-   train_start = pd.Timestamp(2020, 1, 28),
-   test_start = pd.Timestamp(2020, 3, 30),
-   post_test = pd.Timestamp(2020, 3, 30)
+   train_start = pd.Timestamp("2020-01-28", tz='UTC'),
+   test_start = pd.Timestamp("2020-03-30", tz='UTC'),
+   post_test = pd.Timestamp("2020-03-30", tz='UTC')
 )
 
 tspan = (target_train.index[0],target_train.index[-1])
