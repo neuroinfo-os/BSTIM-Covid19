@@ -33,7 +33,7 @@ if __name__ == "__main__":
     start_year, start_month, start_day = regex.search(covid19_data['Meldedatum'].min()).groups()
     end_year, end_month, end_day = regex.search(covid19_data['Meldedatum'].max()).groups()
     start_date = pd.Timestamp(int(start_year), int(start_month), int(start_day))
-    end_date = pd.Timestamp(int(start_year), int(start_month), int(start_day))
+    end_date = pd.Timestamp(int(end_year), int(end_month), int(end_day))
 
     dates = [day for day in pd.date_range(start_date, end_date)]
     df = pd.DataFrame(index=dates)
