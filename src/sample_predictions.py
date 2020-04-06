@@ -54,7 +54,7 @@ model = BaseModel(tspan,
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
     disease, use_age, use_eastwest)
 print("Sampling predictions on the testing set.")
-pred = model.sample_predictions(target_test.index, target_test.columns, trace)
+pred = model.sample_predictions(target_train.index, target_train.columns, trace)
 with open(filename_pred, 'wb') as f:
     pkl.dump(pred, f)
 

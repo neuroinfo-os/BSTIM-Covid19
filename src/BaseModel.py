@@ -86,6 +86,23 @@ class TemporalSigmoidFeature(SpatioTemporalFeature):
         t_delta = (t - self.t0) / self.scale
         return sp.special.expit(t_delta.days + (t_delta.seconds / (3600 * 24)))
 
+class TemporalPolynomialFeature(SpatioTemporalFeature):
+
+    def __init__(self, t0, tmax, order):
+        self.t0 = t0
+        self.order = order
+        super().__init__()
+
+    def call(self, t, x):
+        """
+            t: day
+            x: location
+        """
+        t_delta = (t - self.t0) / self.scale
+        # _ff = t_delta / tmax.days ( --> correct conversion!)
+        # return _ff^self.order ( --> np.pow)
+        pass
+
 
 class IAEffectLoader(object):
     generates_stats = False
@@ -163,6 +180,14 @@ class BaseModel(object):
         self.include_demographics = include_demographics
         self.include_temporal = include_temporal
         self.trange = trange
+
+        """Model for Covid-19 daily reports (RKI)
+        * Trend: (polynomial days/max_days) // degree: 4
+        * Periodic: (periodic polynomial days/7) // degree: 3
+        * Interactions: (sampled IA Kernel (from cases and geographical data))
+        * Demographic: ("Spatial": East/West)
+        * Exposure: ("fixed log population to adjust growth rate slightly")
+        """
 
         self.features = {
             "temporal_trend": {
@@ -333,7 +358,7 @@ class BaseModel(object):
         ia_l = IAEffectLoader(None, self.ia_effect_filenames,
                               target_days, target_counties)
 
-        num_predictions = len(target_days) * len(target_counties)
+        num_predictions = len(target_days) * len(target_counties) #
         num_parameter_samples = α.size
         y = np.zeros((num_parameter_samples, num_predictions), dtype=int)
         μ = np.zeros((num_parameter_samples, num_predictions),

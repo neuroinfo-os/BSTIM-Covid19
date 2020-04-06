@@ -106,8 +106,10 @@ def split_data(
 
 
 def quantile_negbin(qs, mean, dispersion=0):
-    """ For `n` values in `qs` and `m` values in `mean`, computes the m by n matrix of `qs` quantiles for distributions with means `mean`.
-    If dispersion is set to 0, a Poisson distribution is assumed, otherwise a Negative Binomial with corresponding dispersion parameter is used."""
+    """ For `n` values in `qs` and `m` values in `mean`, computes the m
+    by n matrix of `qs` quantiles for distributions with means `mean`.
+    If dispersion is set to 0, a Poisson distribution is assumed, 
+    otherwise a Negative Binomial with corresponding dispersion parameter is used."""
     qs = np.array(qs).ravel()
     mean = np.array(mean).ravel()
     res = np.empty((len(mean), len(qs)))
