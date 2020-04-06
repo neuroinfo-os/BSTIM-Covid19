@@ -108,6 +108,7 @@ venv.bak/
 
 # vim
 .*.swp
+.*.swo
 
 # mkdocs documentation
 /site

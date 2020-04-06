@@ -164,7 +164,7 @@ def load_model(disease, use_age, use_eastwest):
     return model
 
 def load_trace(disease, use_age, use_eastwest):
-    filename_params = "../data/mcmc_samples/parameters_{}_{}_{}".format(disease, use_age, use_eastwest)
+    filename_params = "../data/mcmc_samples_backup/parameters_{}_{}_{}".format(disease, use_age, use_eastwest)
 
     model = load_model(disease, use_age, use_eastwest)
     with model:

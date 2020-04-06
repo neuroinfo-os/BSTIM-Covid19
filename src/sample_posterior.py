@@ -33,7 +33,7 @@ data_train, target_train, data_test, target_test = split_data(
    data,
    train_start = pd.Timestamp(2020,1,28),
    test_start = pd.Timestamp(2020, 3, 30),
-   post_test = pd.Timestamp(2020, 3, 30)
+   post_test = pd.Timestamp(2020, 3, 31)
 )
 
 tspan = (target_train.index[0],target_train.index[-1])
@@ -42,19 +42,19 @@ print("training for {} in {} with model complexity {} from {} to {}\nWill create
 
 model = BaseModel(tspan, county_info, ["../data/ia_effect_samples/{}_{}.pkl".format(disease, i) for i in range(100)], include_eastwest=use_eastwest, include_demographics=use_age)
 
-print("Sampling parameters on the training set.")
-trace = model.sample_parameters(target_train, samples=num_samples, tune=100, target_accept=0.95, max_treedepth=15, chains=num_chains, cores=num_cores)
+# print("Sampling parameters on the training set.")
+# trace = model.sample_parameters(target_train, samples=num_samples, tune=100, target_accept=0.95, max_treedepth=15, chains=num_chains, cores=num_cores)
 
-with open(filename_model, "wb") as f:
-   pkl.dump(model.model, f)
+# with open(filename_model, "wb") as f:
+#    pkl.dump(model.model, f)
 
-with model.model:
-   pm.save_trace(trace, filename_params, overwrite=True)
+# with model.model:
+#    pm.save_trace(trace, filename_params, overwrite=True)
 
-print("Sampling predictions on the testing set.")
-pred = model.sample_predictions(target_test.index, target_test.columns, trace)
-with open(filename_pred, 'wb') as f:
-   pkl.dump(pred, f)
+# print("Sampling predictions on the testing set.")
+# pred = model.sample_predictions(target_test.index, target_test.columns, trace)
+# with open(filename_pred, 'wb') as f:
+#    pkl.dump(pred, f)
 
 # for file in [filename_params, filename_pred]:
 #     set_file_permissions(file, uid=46836, gid=10033)
