@@ -28,27 +28,28 @@ with open('../data/counties/counties.pkl', "rb") as f:
 
 print("Evaluating model for {}...".format(disease))
 
-data = load_data(disease, prediction_region, county_info)
-data_train, target_train, data_test, target_test = split_data(data,
-                                                              data,
-                                                              train_start=pd.Timestamp(
-                                                                  2020, 1, 28),
-                                                              test_start=pd.Timestamp(
-                                                                  2020, 3, 30),
-                                                              post_test=pd.Timestamp(
-                                                                  2020, 3, 31)
-                                                              )
+data = load_daily_data(disease, prediction_region, county_info)
+data_train, target_train, data_test, target_test = split_data(
+    data, train_start=pd.Timestamp(
+        2020, 1, 28), test_start=pd.Timestamp(
+        2020, 3, 30), post_test=pd.Timestamp(
+        2020, 3, 31))
 
+# NOTE: I think the tspan in BaseModel is actually never used?!
 tspan = (target_train.index[0], target_train.index[-1])
 
 name = "dev"
-use_age = "true"
-use_eastwest = "true"
+use_age = True
+use_eastwest = True
 # load sample trace
 trace = load_trace(disease, use_age, use_eastwest)
 
-model = BaseModel(tspan, county_info, ["../data/ia_effect_samples/{}_{}.pkl".format(
-    disease, i) for i in range(100)], include_eastwest=use_eastwest, include_demographics=use_age)
+model = BaseModel(tspan,
+                  county_info,
+                  ["../data/ia_effect_samples/{}_{}.pkl".format(disease,
+                                                                i) for i in range(100)],
+                  include_eastwest=use_eastwest,
+                  include_demographics=use_age)
 
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
     disease, use_age, use_eastwest)

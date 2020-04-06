@@ -5,4 +5,5 @@ prediction_regions = ["germany"]
 
 # combinations_age_eastwest = [(False,False),(False,True),(True,True)]
 combinations_age_eastwest = [(True, True)]
-combinations = list(it.product(range(len(combinations_age_eastwest)), diseases))
+combinations = list(it.product(
+    range(len(combinations_age_eastwest)), diseases))
