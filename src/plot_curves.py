@@ -231,10 +231,6 @@ for j, name in enumerate(plot_county_names[disease]):
                  color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
     if (i == 2) & (j == 0):
-#         ax.legend([p_real[0], p_pred[0], p_hhh4[0], p_quant, p_quant2],
-#                   ["reported", "predicted", "hhh4",
-#                       "25\%-75\% quantile", "5\%-95\% quantile"],
-#                   fontsize=12, loc="upper right")
         ax.legend([p_real[0], p_pred[0], p_quant, p_quant2],
                   ["reported", "predicted", 
                       "25\%-75\% quantile", "5\%-95\% quantile"],

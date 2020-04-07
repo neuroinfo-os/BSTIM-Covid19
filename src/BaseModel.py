@@ -358,7 +358,7 @@ class BaseModel(object):
         ia_l = IAEffectLoader(None, self.ia_effect_filenames,
                               target_days, target_counties)
 
-        num_predictions = len(target_days) * len(target_counties) #
+        num_predictions = len(target_days) * len(target_counties)
         num_parameter_samples = α.size
         y = np.zeros((num_parameter_samples, num_predictions), dtype=int)
         μ = np.zeros((num_parameter_samples, num_predictions),
