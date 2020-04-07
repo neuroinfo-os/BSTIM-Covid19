@@ -43,11 +43,11 @@ loc0 = np.array([[11.0767, 49.4521]])
 locs = np.hstack((np.zeros(200).reshape((-1, 1)),
                   np.linspace(-0.67, 0.67, 200).reshape((-1, 1)))) + loc0
 t0 = np.array([0.0])
-ts = np.linspace(0 * 7 * 24 * 3600, 5 * 7 * 24 * 3600, 200)
+ts = np.linspace(0 * 24 * 3600, 5 * 24 * 3600, 200) # plot for 5 weeks / 5 days instead?
 
 
 def temporal_bfs(x): return bspline_bfs(
-    x, np.array([0, 0, 1, 2, 3, 4, 5]) * 7 * 24 * 3600.0, 2)
+    x, np.array([0, 0, 1, 2, 3, 4, 5]) * 24 * 3600.0, 2)
 
 
 def spatial_bfs(x): return [gaussian_bf(x, σ)
