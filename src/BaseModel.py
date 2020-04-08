@@ -26,8 +26,7 @@ class SpatioTemporalFeature(object):
 class SpatioTemporalYearlyDemographicsFeature(SpatioTemporalFeature):
     """ TODO:
     * county data must be updated to include 2019/2020 demographic data
-    * call must be by date --> if yearweek is a isoweek, it's a pandas timestamp now!
-    * temporary fix: always call latest known population -> 2018
+      |> fix call
     """
 
     def __init__(self, county_dict, group, scale=1.0):
@@ -58,10 +57,6 @@ class SpatialEastWestFeature(SpatioTemporalFeature):
 
 
 class TemporalFourierFeature(SpatioTemporalFeature):
-    """ NOTE: this periodic feature models per year, is not needed for Covid-19.
-            must be updated if periodic features are to be included --> daily, not weekly scale!
-    """
-
     def __init__(self, i, t0, scale):
         self.t0 = t0
         self.scale = scale
@@ -72,11 +67,19 @@ class TemporalFourierFeature(SpatioTemporalFeature):
     def call(self, t, x):
         return self.fun((t - self.t0) / self.scale * self.τ)
 
+class TemporalPeriodicPolynomialFeature(SpatioTemporalFeature):
+    def __init__(self, t0, period, order):
+        self.t0 = t0
+        self.period = period
+        self.order = order
+        super().__init__()
+
+    def call(self, t, x):
+        tdelta = (t - self.t0).days % self.period
+        return (tdelta / self.period) ** self.order
+
 
 class TemporalSigmoidFeature(SpatioTemporalFeature):
-    """ NOTE: units is days now -> all inc. ts as pd.Timestamps
-    """
-
     def __init__(self, t0, scale):
         self.t0 = t0
         self.scale = scale
@@ -87,21 +90,15 @@ class TemporalSigmoidFeature(SpatioTemporalFeature):
         return sp.special.expit(t_delta.days + (t_delta.seconds / (3600 * 24)))
 
 class TemporalPolynomialFeature(SpatioTemporalFeature):
-
     def __init__(self, t0, tmax, order):
         self.t0 = t0
         self.order = order
+        self.scale = (tmax - t0).days
         super().__init__()
 
     def call(self, t, x):
-        """
-            t: day
-            x: location
-        """
-        t_delta = (t - self.t0) / self.scale
-        # _ff = t_delta / tmax.days ( --> correct conversion!)
-        # return _ff^self.order ( --> np.pow)
-        pass
+        t_delta = (t - self.t0).days / self.scale
+        return t_delta ** self.order
 
 
 class IAEffectLoader(object):
@@ -167,18 +164,18 @@ class BaseModel(object):
             num_ia=16,
             model=None,
             include_ia=True,
-            include_eastwest=True,
             include_demographics=True,
             include_temporal=True,
+            include_periodic=True,
             orthogonalize=False):
 
         self.county_info = counties
         self.ia_effect_filenames = ia_effect_filenames
         self.num_ia = num_ia if include_ia else 0
         self.include_ia = include_ia
-        self.include_eastwest = include_eastwest
         self.include_demographics = include_demographics
         self.include_temporal = include_temporal
+        self.include_periodic = include_periodic
         self.trange = trange
 
         """Model for Covid-19 daily reports (RKI)
@@ -191,9 +188,13 @@ class BaseModel(object):
 
         self.features = {
             "temporal_trend": {
-                "temporal_sigmoid": TemporalSigmoidFeature(
-                    pd.Timestamp('2020-01-28'),
-                    2.0)} if self.include_temporal else {},
+                "temporal_sigmoid_{}".format(i): TemporalPolynomialFeature(
+                    pd.Timestamp('2020-01-28'), pd.Timestamp('2020-03-30'), 4)
+                    for i in range(5)} if self.include_temporal else {},
+            "temporal_seasonal": {
+                "temporal_periodic_polynomial_{}".format(i): TemporalPeriodicPolynomialFeature(
+                    pd.Timestamp('2020-01-28'), 7, i)
+                    for i in range(4)} if self.include_periodic else {},
             "spatiotemporal": {
                 "demographic_{}".format(group): SpatioTemporalYearlyDemographicsFeature(
                     self.county_info,
@@ -201,9 +202,6 @@ class BaseModel(object):
                         "[0-5)",
                         "[5-20)",
                         "[20-65)"]} if self.include_demographics else {},
-            "spatial": {
-                            "eastwest": SpatialEastWestFeature(
-                                self.county_info)} if self.include_eastwest else {},
             "exposure": {
                                     "exposure": SpatioTemporalYearlyDemographicsFeature(
                                         self.county_info,
@@ -236,18 +234,18 @@ class BaseModel(object):
         # extract features
         features = self.evaluate_features(days, counties)
         Y_obs = target.stack().values.astype(np.float32)
+        T_S = features["temporal_seasonal"].values.astype(np.float32)
         T_T = features["temporal_trend"].values.astype(np.float32)
         TS = features["spatiotemporal"].values.astype(np.float32)
-        S = features["spatial"].values.astype(np.float32)
 
         log_exposure = np.log(
             features["exposure"].values.astype(np.float32).ravel())
 
         # extract dimensions
         num_obs = np.prod(target.shape)
+        num_t_s = T_S.shape[1]
         num_t_t = T_T.shape[1]
         num_ts = TS.shape[1]
-        num_s = S.shape[1]
 
         with pm.Model() as self.model:
             # interaction effects are generated externally -> flat prior
@@ -260,14 +258,14 @@ class BaseModel(object):
             α = pm.Deterministic("α", np.float32(1.0) / δ)
             W_ia = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
                 self.num_ia), shape=self.num_ia)
+            W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
+                              testval=np.zeros(num_t_s), shape=num_t_s)
             W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
                               testval=np.zeros(num_t_t), shape=num_t_t)
             W_ts = pm.Normal("W_ts", mu=0, sd=10,
                              testval=np.zeros(num_ts), shape=num_ts)
-            W_s = pm.Normal("W_s", mu=0, sd=10,
-                            testval=np.zeros(num_s), shape=num_s)
-            self.param_names = ["δ", "W_ia", "W_t_t", "W_ts", "W_s"]
-            self.params = [δ, W_ia, W_t_t, W_ts, W_s]
+            self.param_names = ["δ", "W_ia", "W_t_s", "W_t_t", "W_ts"]
+            self.params = [δ, W_ia, W_t_s, W_t_t, W_ts]
 
             # calculate interaction effect
             IA_ef = tt.dot(tt.dot(IA, self.Q), W_ia)
@@ -278,14 +276,14 @@ class BaseModel(object):
                 tt.exp(
                     IA_ef +
                     tt.dot(
+                        T_S,
+                        W_t_s) + 
+                    tt.dot(
                         T_T,
                         W_t_t) +
                     tt.dot(
                         TS,
                         W_ts) +
-                    tt.dot(
-                        S,
-                        W_s) +
                     log_exposure))
 
             # constrain to observations
@@ -341,19 +339,17 @@ class BaseModel(object):
         # extract features
         features = self.evaluate_features(target_days, target_counties)
 
-        # T_S = features["temporal_seasonal"].values
+        T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
         TS = features["spatiotemporal"].values
-        S = features["spatial"].values
         log_exposure = np.log(features["exposure"].values.ravel())
 
         # extract coefficient samples
         α = parameters["α"]
         W_ia = parameters["W_ia"]
-        # W_t_s = parameters["W_t_s"]
+        W_t_s = parameters["W_t_s"]
         W_t_t = parameters["W_t_t"]
         W_ts = parameters["W_ts"]
-        W_s = parameters["W_s"]
 
         ia_l = IAEffectLoader(None, self.ia_effect_filenames,
                               target_days, target_counties)
@@ -368,9 +364,9 @@ class BaseModel(object):
             IA_ef = np.dot(
                 np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
             μ[i, :] = np.exp(IA_ef +
+                             np.dot(T_S, W_t_s[i]) +
                              np.dot(T_T, W_t_t[i]) +
                              np.dot(TS, W_ts[i]) +
-                             np.dot(S, W_s[i]) +
                              log_exposure)
             y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()
 

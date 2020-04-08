@@ -32,8 +32,9 @@ times = uniform_times_by_day(data.index)
 locs = uniform_locations_by_county(counties)
 
 
+#NOTE: Do we want basis functions with a longer temporal horizon?
 def temporal_bfs(x): return bspline_bfs(x, np.array(
-    [0, 0, 1, 2, 3, 4, 5]) * 24 * 3600.0, 2)  # was *7*24*3600.0 before
+    [0, 0, 1, 2, 3, 4, 5]) * 24 * 3600.0, 2) 
 
 
 def spatial_bfs(x): return [gaussian_bf(x, σ)
