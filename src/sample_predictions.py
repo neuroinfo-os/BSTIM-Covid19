@@ -48,7 +48,6 @@ model = BaseModel(tspan,
                   county_info,
                   ["../data/ia_effect_samples/{}_{}.pkl".format(disease,
                                                                 i) for i in range(100)],
-                  include_eastwest=use_eastwest,
                   include_demographics=use_age)
 
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(

@@ -182,7 +182,6 @@ class BaseModel(object):
         * Trend: (polynomial days/max_days) // degree: 4
         * Periodic: (periodic polynomial days/7) // degree: 3
         * Interactions: (sampled IA Kernel (from cases and geographical data))
-        * Demographic: ("Spatial": East/West)
         * Exposure: ("fixed log population to adjust growth rate slightly")
         """
 
