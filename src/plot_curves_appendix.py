@@ -12,9 +12,6 @@ diseases = ["campylobacter", "rotavirus", "borreliosis"]
 with open('../data/counties/counties.pkl', "rb") as f:
     counties = pkl.load(f)
 
-xlim = (5.5, 15.5)
-ylim = (47, 56)
-
 countyByName = OrderedDict([('Düsseldorf', '05111'), ('Recklinghausen', '05562'),
                             ("Hannover", "03241"), ("Hamburg", "02000"),
                             ("Berlin-Mitte", "11001"), ("Osnabrück", "03404"),
@@ -76,23 +73,12 @@ C1 = "#D55E00"
 C2 = "#E69F00"
 C3 = "#0073CF"
 
-# with open('../data/comparison.pkl', "rb") as f:
-#     best_model = pkl.load(f)
-
-# for i, disease in enumerate(diseases):
+# for i, disease in enumerate(diseases): ! Replace with new configs!
 i = 0
 disease = "covid19"
-    # Load data
-#     use_age = best_model[disease]["use_age"]
 use_age = True
-#     use_eastwest = best_model[disease]["use_eastwest"]
 use_eastwest = True
 prediction_region = "germany"
-#     if disease == "borreliosis":
-#         prediction_region = "bavaria"
-#         use_eastwest = False
-#     else:
-#         prediction_region = "germany"
 
 data = load_daily_data(disease, prediction_region, counties)
 data = data[data.index < pd.Timestamp(2020, 3, 30)]
@@ -103,12 +89,11 @@ _, target, _, _ = split_data(
         2020, 1, 28), test_start=pd.Timestamp(
         2020, 3, 30), post_test=pd.Timestamp(
         2020, 3, 31)) # plots for the training period!
-# _, _, _, target = split_data(data)
 county_ids = target.columns
 
     # Load our prediction samples
 res = load_pred(disease, use_age, use_eastwest)
-n_days = 62 # for now; get from timestamps up top!
+n_days = 62 # for now; get from timestamps up top! / configs!
 
 prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
 prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
@@ -136,12 +121,6 @@ prediction_q95 = pd.DataFrame(
     index=target.index,
     columns=target.columns)
 
-    # Load hhh4 predictions for reference
-#     hhh4_predictions = pd.read_csv("../data/diseases/{}_hhh4.csv".format(
-#         "borreliosis_notrend" if disease == "borreliosis" else disease))
-#     weeks = hhh4_predictions.pop("weeks")
-#     hhh4_predictions.index = parse_yearweek(weeks)
-# 
 fig = plt.figure(figsize=(12, 12))
 grid = plt.GridSpec(5, 5, top=0.90, bottom=0.11,
                     left=0.07, right=0.92, hspace=0.2, wspace=0.3)
@@ -152,32 +131,33 @@ for j, name in enumerate(plot_county_names[disease]):
         grid[np.unravel_index(list(range(25))[j], (5, 5))])
 
     county_id = countyByName[name]
-    dates = target.index.values
+    dates = [pd.Timestamp(day) for day in target.index.values]
+    days = [ (day - min(dates)).days for day in dates]
 
     # plot our predictions w/ quartiles
-    p_pred = ax.plot_date(
-        dates,
+    p_pred = ax.plot(
+        days,
         prediction_mean[county_id],
         "-",
         color=C1,
         linewidth=2.0,
         zorder=4)
     p_quant = ax.fill_between(
-        dates,
+        days,
         prediction_q25[county_id],
         prediction_q75[county_id],
         facecolor=C2,
         alpha=0.5,
         zorder=1)
-    ax.plot_date(
-        dates,
+    ax.plot(
+        days,
         prediction_q25[county_id],
         ":",
         color=C2,
         linewidth=2.0,
         zorder=3)
-    ax.plot_date(
-        dates,
+    ax.plot(
+        days,
         prediction_q75[county_id],
         ":",
         color=C2,
@@ -186,7 +166,7 @@ for j, name in enumerate(plot_county_names[disease]):
 
     # plot hhh4 reference prediction
 #     p_hhh4 = ax.plot_date(
-#         dates,
+#         days,
 #         hhh4_predictions[county_id],
 #         "-",
 #         color=C3,
@@ -194,7 +174,7 @@ for j, name in enumerate(plot_county_names[disease]):
 #         zorder=3)
 
     # plot ground truth
-    p_real = ax.plot_date(dates, target[county_id], "k.")
+    p_real = ax.plot(days, target[county_id], "k.")
 
     ax.set_title(name, fontsize=18)
     ax.tick_params(axis="both", direction='out', size=2, labelsize=14)
@@ -202,15 +182,15 @@ for j, name in enumerate(plot_county_names[disease]):
 
     ax.autoscale(False)
     p_quant2 = ax.fill_between(
-        dates,
+        days,
         prediction_q5[county_id],
         prediction_q95[county_id],
         facecolor=C2,
         alpha=0.25,
         zorder=0)
-    ax.plot_date(dates, prediction_q5[county_id], ":",
+    ax.plot(days, prediction_q5[county_id], ":",
                  color=C2, alpha=0.5, linewidth=2.0, zorder=1)
-    ax.plot_date(dates, prediction_q95[county_id], ":",
+    ax.plot(days, prediction_q95[county_id], ":",
                  color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
 plt.legend([p_real[0], p_pred[0], p_quant, p_quant2],
