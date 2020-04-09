@@ -167,15 +167,15 @@ for j, name in enumerate(plot_county_names[disease]):
     p_real = ax.plot(days, target[county_id], "k.")
 
     ax.set_title(name, fontsize=18)
-    ax.set_xticks(days)
+    ax.set_xticks(days[::5])
     ax.tick_params(axis="both", direction='out', size=2, labelsize=14)
-    if j < 19:
-        plt.setp(ax.get_xticklabels(), visible=False)
-    else:
+    plt.setp(ax.get_xticklabels(), visible=False)
+    if j >= 19:
         plt.setp(ax.get_xticklabels(), rotation=60)
-        for (li, label) in enumerate(ax.get_xticklabels()):
-            if li % 5 != 0:
-                label.set_visible(False)
+        plt.setp(ax.get_xticklabels()[::2], visible=True)
+#         for (li, label) in enumerate(ax.get_xticklabels()):
+#             if li % 10 != 0:
+#                 label.set_visible(False)
 
     ax.autoscale(False)
     p_quant2 = ax.fill_between(
