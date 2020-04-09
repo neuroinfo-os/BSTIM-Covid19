@@ -169,7 +169,13 @@ for j, name in enumerate(plot_county_names[disease]):
     ax.set_title(name, fontsize=18)
     ax.set_xticks(days)
     ax.tick_params(axis="both", direction='out', size=2, labelsize=14)
-    plt.setp(ax.get_xticklabels(), visible=j > 19, rotation=60)
+    if j < 19:
+        plt.setp(ax.get_xticklabels(), visible=False)
+    else:
+        plt.setp(ax.get_xticklabels(), rotation=60)
+        for (li, label) in enumerate(ax.get_xticklabels()):
+            if li % 5 != 0:
+                label.set_visible(False)
 
     ax.autoscale(False)
     p_quant2 = ax.fill_between(
