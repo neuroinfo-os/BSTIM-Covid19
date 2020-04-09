@@ -38,12 +38,15 @@ countyByName = OrderedDict([('Düsseldorf', '05111'), ('Recklinghausen', '05562'
                             ("Fürstenfeldbruck", "09179"), ('Rosenheim', "09187"),
                             ("Straubing", "09263"), ("Erding", "09177"),
                             ("Tirschenreuth", "09377"), ('Miltenberg', "09676"),
-                            ('Neumarkt i.d.OPf.', "09373")])
+                            ('Neumarkt i.d.OPf.', "09373"),
+                            ('Heinsberg', "05370"), ('Landsberg am Lech', "09181"),
+                            ('Rottal-Inn', "09277"), ("Tübingen", "08416"), 
+                            ("Augsburg", "09772"), ("Bielefeld", "05711")])
 
 plot_county_names = {
     "covid19": [
         "Düsseldorf",
-        "Recklinghausen",
+        "Heinsberg",
         "Hannover",
         "München",
         "Hamburg",
@@ -52,9 +55,9 @@ plot_county_names = {
         "Frankfurt (Main)",
         "Görlitz",
         "Stuttgart",
-        "Potsdam",
+        "Landsberg am Lech",
         "Köln",
-        "Aachen",
+        "Rottal-Inn",
         "Rostock",
         "Flensburg",
         "Frankfurt (Oder)",
@@ -62,9 +65,9 @@ plot_county_names = {
         "Münster",
         "Berlin Neukölln",
         "Göttingen",
-        "Cottbus",
-        "Erlangen",
-        "Regensburg",
+        "Bielefeld",
+        "Tübingen",
+        "Augsburg",
         "Bayreuth",
         "Nürnberg"]}
 
@@ -173,9 +176,6 @@ for j, name in enumerate(plot_county_names[disease]):
     if j >= 19:
         plt.setp(ax.get_xticklabels(), rotation=60)
         plt.setp(ax.get_xticklabels()[::2], visible=True)
-#         for (li, label) in enumerate(ax.get_xticklabels()):
-#             if li % 10 != 0:
-#                 label.set_visible(False)
 
     ax.autoscale(False)
     p_quant2 = ax.fill_between(
