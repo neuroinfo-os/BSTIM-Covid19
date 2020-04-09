@@ -10,6 +10,8 @@ from matplotlib import rc
 from shared_utils import *
 from pymc3.stats import quantiles
 from matplotlib import pyplot as plt
+# from pandas import register_matplotlib_converters
+# register_matplotlib_converters() # the fk python
 plt.style.use('ggplot')
 
 with open('../data/counties/counties.pkl', "rb") as f:
@@ -90,13 +92,13 @@ ax_p = fig.add_subplot(grid[0, i])
 
 ax_p.fill_between(days, np.exp(TP_quantiles[25]), np.exp(
     TP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-ax_p.plot_date(days, np.exp(TP.mean(axis=0)),
+ax_p.plot(days, np.exp(TP.mean(axis=0)),
                "-", color=C1, lw=2, zorder=5)
-ax_p.plot_date(days, np.exp(
+ax_p.plot(days, np.exp(
     TP_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-ax_p.plot_date(days, np.exp(
+ax_p.plot(days, np.exp(
     TP_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-ax_p.plot_date(days, np.exp(TP[:25, :].T),
+ax_p.plot(days, np.exp(TP[:25, :].T),
                "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
 ax_p.tick_params(axis="x", rotation=45)
@@ -106,13 +108,13 @@ ax_t = fig.add_subplot(grid[1, i], sharex=ax_p)
 
 ax_t.fill_between(days, np.exp(TT_quantiles[25]), np.exp(
     TT_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-ax_t.plot_date(days, np.exp(TT.mean(axis=0)),
+ax_t.plot(days, np.exp(TT.mean(axis=0)),
                "-", color=C1, lw=2, zorder=5)
-ax_t.plot_date(days, np.exp(
+ax_t.plot(days, np.exp(
     TT_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-ax_t.plot_date(days, np.exp(
+ax_t.plot(days, np.exp(
     TT_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-ax_t.plot_date(days, np.exp(TT[:25, :].T),
+ax_t.plot(days, np.exp(TT[:25, :].T),
                "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
 ax_t.tick_params(axis="x", rotation=45)
@@ -122,13 +124,13 @@ ax_tp = fig.add_subplot(grid[2, i], sharex=ax_p)
 
 ax_tp.fill_between(days, np.exp(TTP_quantiles[25]), np.exp(
     TTP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-ax_tp.plot_date(days, np.exp(TTP.mean(axis=0)),
+ax_tp.plot(days, np.exp(TTP.mean(axis=0)),
                 "-", color=C1, lw=2, zorder=5)
-ax_tp.plot_date(days, np.exp(
+ax_tp.plot(days, np.exp(
     TTP_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-ax_tp.plot_date(days, np.exp(
+ax_tp.plot(days, np.exp(
     TTP_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-ax_tp.plot_date(days, np.exp(TTP[:25, :].T),
+ax_tp.plot(days, np.exp(TTP[:25, :].T),
                 "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
 ax_tp.tick_params(axis="x", rotation=45)
@@ -138,29 +140,31 @@ ax_tp.tick_params(axis="x", rotation=45)
 
 ax_p.set_title("campylob." if disease ==
                "campylobacter" else disease, fontsize=22)
-ax_tp.set_xlabel("time [years]", fontsize=22)
+ax_tp.set_xlabel("time [days]", fontsize=22)
 
 if i == 0:
     ax_p.set_ylabel("periodic\ncontribution", fontsize=22)
     ax_t.set_ylabel("trend\ncontribution", fontsize=22)
     ax_tp.set_ylabel("combined\ncontribution", fontsize=22)
 # elif i==2:
-ax_t.set_xlim((isoweek.Week(2013, 1).wednesday(),
-               isoweek.Week(2016, 1).wednesday()))
-ax_t.set_xticks([isoweek.Week(i, 1).wednesday()
-                 for i in range(2013, 2017)])
-ax_t.set_xticklabels(range(2013, 2017))
+ax_t.set_xlim(days[0], days[-1])
+# ax_t.set_xlim((isoweek.Week(2013, 1).wednesday(),
+#                isoweek.Week(2016, 1).wednesday()))
+# ax_t.set_xticks([isoweek.Week(i, 1).wednesday()
+#                  for i in range(2013, 2017)])
+# ax_t.set_xticks()
+# ax_t.set_xticklabels(range(2013, 2017))
 
 ax_t.tick_params(labelbottom=False, labelleft=True, labelsize=18, length=6)
 ax_p.tick_params(labelbottom=False, labelleft=True, labelsize=18, length=6)
 ax_tp.tick_params(labelbottom=True, labelleft=True, labelsize=18, length=6)
 
-fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"A}$",
-         fontsize=22, transform=ax_p.transAxes)
-fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"B}$",
-         fontsize=22, transform=ax_t.transAxes)
-fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"C}$",
-         fontsize=22, transform=ax_tp.transAxes)
+# fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"A}$",
+#          fontsize=22, transform=ax_p.transAxes, usetex=True)
+# fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"B}$",
+#          fontsize=22, transform=ax_t.transAxes, usetex=True)
+# fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"C}$",
+#          fontsize=22, transform=ax_tp.transAxes, usetex=True)
 
 # plt.show()
 fig.savefig("../figures/temporal_contribution.pdf")
