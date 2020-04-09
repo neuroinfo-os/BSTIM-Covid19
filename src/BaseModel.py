@@ -189,7 +189,7 @@ class BaseModel(object):
         self.features = {
             "temporal_trend": {
                 "temporal_polynomial_{}".format(i): TemporalPolynomialFeature(
-                    pd.Timestamp('2020-01-28'), pd.Timestamp('2020-03-30'), 4)
+                    pd.Timestamp('2020-01-28'), pd.Timestamp('2020-03-30'), i)
                     for i in range(5)} if self.include_temporal else {},
             "temporal_seasonal": {
                 "temporal_periodic_polynomial_{}".format(i): TemporalPeriodicPolynomialFeature(
