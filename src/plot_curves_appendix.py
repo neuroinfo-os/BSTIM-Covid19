@@ -82,8 +82,7 @@ prediction_region = "germany"
 
 data = load_daily_data(disease, prediction_region, counties)
 data = data[data.index < pd.Timestamp(2020, 3, 30)]
-# if disease == "borreliosis":
-#       data = data[data.index >= parse_yearweek("2013-KW1")]
+
 _, target, _, _ = split_data(
     data, train_start=pd.Timestamp(
         2020, 1, 28), test_start=pd.Timestamp(
@@ -164,19 +163,11 @@ for j, name in enumerate(plot_county_names[disease]):
         linewidth=2.0,
         zorder=3)
 
-    # plot hhh4 reference prediction
-#     p_hhh4 = ax.plot_date(
-#         days,
-#         hhh4_predictions[county_id],
-#         "-",
-#         color=C3,
-#         linewidth=2.0,
-#         zorder=3)
-
     # plot ground truth
     p_real = ax.plot(days, target[county_id], "k.")
 
     ax.set_title(name, fontsize=18)
+    ax.set_xticks(days)
     ax.tick_params(axis="both", direction='out', size=2, labelsize=14)
     plt.setp(ax.get_xticklabels(), visible=j > 19, rotation=60)
 
@@ -198,7 +189,7 @@ plt.legend([p_real[0], p_pred[0], p_quant, p_quant2],
                "25\%-75\% quantile", "5\%-95\% quantile"],
            fontsize=16, ncol=5, loc="upper center", bbox_to_anchor=(0, -0.01, 1, 1),
            bbox_transform=plt.gcf().transFigure)
-fig.text(0.5, 0.02, "Time [calendar weeks]", ha='center', fontsize=22)
+fig.text(0.5, 0.02, "Time [days since Jan. 28]", ha='center', fontsize=22)
 fig.text(0.01, 0.46, "Reported/predicted infections",
          va='center', rotation='vertical', fontsize=22)
 plt.savefig("../figures/curves_{}_appendix.pdf".format(disease))
