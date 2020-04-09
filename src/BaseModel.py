@@ -182,12 +182,13 @@ class BaseModel(object):
         * Trend: (polynomial days/max_days) // degree: 4
         * Periodic: (periodic polynomial days/7) // degree: 3
         * Interactions: (sampled IA Kernel (from cases and geographical data))
+        * Spatiotemporal: 
         * Exposure: ("fixed log population to adjust growth rate slightly")
         """
 
         self.features = {
             "temporal_trend": {
-                "temporal_sigmoid_{}".format(i): TemporalPolynomialFeature(
+                "temporal_polynomial_{}".format(i): TemporalPolynomialFeature(
                     pd.Timestamp('2020-01-28'), pd.Timestamp('2020-03-30'), 4)
                     for i in range(5)} if self.include_temporal else {},
             "temporal_seasonal": {
@@ -202,10 +203,10 @@ class BaseModel(object):
                         "[5-20)",
                         "[20-65)"]} if self.include_demographics else {},
             "exposure": {
-                                    "exposure": SpatioTemporalYearlyDemographicsFeature(
-                                        self.county_info,
-                                        "total",
-                                        1.0 / 100000)}}
+                        "exposure": SpatioTemporalYearlyDemographicsFeature(
+                            self.county_info,
+                            "total",
+                            1.0 / 100000)}}
 
         self.Q = np.eye(16, dtype=np.float32)
         if orthogonalize:

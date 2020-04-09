@@ -12,8 +12,6 @@ from pymc3.stats import quantiles
 from matplotlib import pyplot as plt
 plt.style.use('ggplot')
 
-with open('../data/comparison.pkl', "rb") as f:
-    best_model = pkl.load(f)
 with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
 
@@ -43,11 +41,6 @@ fig = plt.figure(figsize=(12, 9))
 grid = plt.GridSpec(3, len(diseases), top=0.93, bottom=0.12,
                     left=0.11, right=0.97, hspace=0.28, wspace=0.30)
 
-# for i, disease in enumerate(diseases):
-#     use_age = best_model[disease]["use_age"]
-#     use_eastwest = best_model[disease]["use_eastwest"]
-#     prediction_region = "bavaria" if disease == "borreliosis" else "germany"
-
 i = 0
 disease = "covid19"
 use_age = True
@@ -57,7 +50,7 @@ prediction_region = "germany"
 
 data = load_daily_data(disease, prediction_region, county_info)
 # data_train, target_train, data_test, target_test = split_data(data)
-data_train, target_train, data_test, target_test = split_data(
+__, target_train, _, _ = split_data(
     data, train_start=pd.Timestamp(
         2020, 1, 28), test_start=pd.Timestamp(
         2020, 3, 30), post_test=pd.Timestamp(
@@ -67,7 +60,6 @@ model = BaseModel(tspan,
                   county_info,
                   ["../data/ia_effect_samples/{}_{}.pkl".format(disease,
                                                                 i) for i in range(100)],
-                  include_eastwest=use_eastwest,
                   include_demographics=use_age)
 
 features = model.evaluate_features(
@@ -89,20 +81,22 @@ TT_quantiles = quantiles(TT, (25, 75))
 TP_quantiles = quantiles(TP, (25, 75))
 TTP_quantiles = quantiles(TTP, (25, 75))
 
-dates = [n.wednesday() for n in target_train.index.values]
+dates = [pd.Timestamp(day) for day in target_train.index.values]
+days = [ (day - min(dates)).days for day in dates]
+
 
 # Temporal periodic effect
 ax_p = fig.add_subplot(grid[0, i])
 
-ax_p.fill_between(dates, np.exp(TP_quantiles[25]), np.exp(
+ax_p.fill_between(days, np.exp(TP_quantiles[25]), np.exp(
     TP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-ax_p.plot_date(dates, np.exp(TP.mean(axis=0)),
+ax_p.plot_date(days, np.exp(TP.mean(axis=0)),
                "-", color=C1, lw=2, zorder=5)
-ax_p.plot_date(dates, np.exp(
+ax_p.plot_date(days, np.exp(
     TP_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-ax_p.plot_date(dates, np.exp(
+ax_p.plot_date(days, np.exp(
     TP_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-ax_p.plot_date(dates, np.exp(TP[:25, :].T),
+ax_p.plot_date(days, np.exp(TP[:25, :].T),
                "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
 ax_p.tick_params(axis="x", rotation=45)
@@ -110,15 +104,15 @@ ax_p.tick_params(axis="x", rotation=45)
 # Temporal trend effect
 ax_t = fig.add_subplot(grid[1, i], sharex=ax_p)
 
-ax_t.fill_between(dates, np.exp(TT_quantiles[25]), np.exp(
+ax_t.fill_between(days, np.exp(TT_quantiles[25]), np.exp(
     TT_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-ax_t.plot_date(dates, np.exp(TT.mean(axis=0)),
+ax_t.plot_date(days, np.exp(TT.mean(axis=0)),
                "-", color=C1, lw=2, zorder=5)
-ax_t.plot_date(dates, np.exp(
+ax_t.plot_date(days, np.exp(
     TT_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-ax_t.plot_date(dates, np.exp(
+ax_t.plot_date(days, np.exp(
     TT_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-ax_t.plot_date(dates, np.exp(TT[:25, :].T),
+ax_t.plot_date(days, np.exp(TT[:25, :].T),
                "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
 ax_t.tick_params(axis="x", rotation=45)
@@ -126,15 +120,15 @@ ax_t.tick_params(axis="x", rotation=45)
 # Temporal trend+periodic effect
 ax_tp = fig.add_subplot(grid[2, i], sharex=ax_p)
 
-ax_tp.fill_between(dates, np.exp(TTP_quantiles[25]), np.exp(
+ax_tp.fill_between(days, np.exp(TTP_quantiles[25]), np.exp(
     TTP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-ax_tp.plot_date(dates, np.exp(TTP.mean(axis=0)),
+ax_tp.plot_date(days, np.exp(TTP.mean(axis=0)),
                 "-", color=C1, lw=2, zorder=5)
-ax_tp.plot_date(dates, np.exp(
+ax_tp.plot_date(days, np.exp(
     TTP_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-ax_tp.plot_date(dates, np.exp(
+ax_tp.plot_date(days, np.exp(
     TTP_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-ax_tp.plot_date(dates, np.exp(TTP[:25, :].T),
+ax_tp.plot_date(days, np.exp(TTP[:25, :].T),
                 "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
 ax_tp.tick_params(axis="x", rotation=45)
