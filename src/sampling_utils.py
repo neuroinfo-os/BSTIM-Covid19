@@ -49,84 +49,6 @@ def uniform_locations_by_county(counties, n=500):
     return res
 
 
-def _np_times_and_counties(times_by_day, locations_by_county):
-    """ convert dicts to np.arrays for faster access """
-
-    convert_t_pd = np.frompyfunc(pd.Timestamp, 1, 1)
-    convert_t_flt = np.frompyfunc(datetime.datetime.timestamp, 1, 1)
-
-    np_times_by_day = pd.Dataframe.from_dict(
-        times_by_day, orient='index').to_numpy(
-        dtype='datetime64')
-    np_times_by_day = convert_t_pd(np_times_by_day)
-    np_times_by_day = convert_t_flt(np_times_by_day)
-
-    max_coords = 0
-    for item in locations_by_county.items():
-        max_coords = max(len(item[1]), max_coords)
-    np_locations_by_county = np.empty(
-        [len(locations_by_county.keys()), max_coords, 2], dtype='float64')
-    for i, item in enumerate(locations_by_county.items()):
-        np_locations_by_county[i][:] = item[1][1]
-
-    return (np_times_by_day, np_locations_by_county)
-
-
-def _allocate_samples(data, times_by_day, locations_by_county, idx):
-    """ calculate fixed dataframe for time/space samples """
-
-    day_offset = np.where(idx)[0][0]
-    n_total = data.sum().sum()
-
-    n_samples_county = np.array(data.values).flatten('F')
-
-    day_ids = np.tile(np.arange(len(data.index)), len(data.columns))
-    day_samples = [day_ids[i] for i, samples in enumerate(
-        n_samples_county) for x in range(samples)]
-
-    time_of_day = data.index.tolist()
-    av_time_of_day = [len(times_by_day[d]) for d in time_of_day]
-    av_times_sample = [av_time_of_day[day_ids[i]] for i, samples in enumerate(
-        n_samples_county) for x in range(samples)]
-
-    county_ids = np.repeat(np.arange(len(data.columns)), len(data.index))
-    county_samples = [county_ids[i]
-                      for i, samples in enumerate(county_ids) for x in range(samples)]
-
-    av_county_locs = [len(locations_by_county[c]) for c in data.column]
-    av_locs_sample = [av_county_locs[county_ids[i]]
-                      for i, samples in enumerate(n_samples_county) for x in range(samples)]
-    return (
-        n_total,
-        day_offset,
-        day_samples,
-        av_times_sample,
-        county_samples,
-        av_locs_sample)
-
-
-def _sample_time_and_space(
-        n_counties,
-        n_total,
-        day_offset,
-        day_samples,
-        av_times_sample,
-        county_samples,
-        av_locs_sample,
-        rnd_times,
-        rnd_locs):
-    """ fast kernel for time/space samples """
-    
-    n_all = n_total * n_counties
-    av_times_sample_all = np.tile(av_times_sample, n_counties)
-    rnd_times_sampe_all = np.floor(av_times_sample_all * rnd_times.random((n_all,))).astype('int32')
-
-    # TODO
-    # t_all = [times_by_day]
-
-    pass
-
-
 def sample_time_and_space(data, times_by_day, locations_by_county):
     n_total = data.sum().sum()
     t_all = np.empty((n_total,), dtype=object)
@@ -187,12 +109,12 @@ def bspline_bfs(x, knots, P):
 
 def jacobian_sq(latitude, R=6365.902):
     """
-        jacobian_sq(latitude) // TODO: reexport from geo_utils? // import to geo_utils?1
+        jacobian_sq(latitude)
 
     Computes the "square root" (Cholesky factor) of the Jacobian of the cartesian projection from polar coordinates (in degrees longitude, latitude) onto cartesian coordinates (in km east/west, north/south) at a given latitude (the projection's Jacobian is invariante wrt. longitude).
     """
-    return R * (np.pi / 180.0) * (abs(tt.cos(tt.deg2rad(latitude))) * \
-                np.array([[1.0, 0.0], [0.0, 0.0]]) + np.array([[0.0, 0.0], [0.0, 1.0]]))
+    return R * (np.pi / 180.0) * (abs(tt.cos(tt.deg2rad(latitude))) *
+                                  np.array([[1.0, 0.0], [0.0, 0.0]]) + np.array([[0.0, 0.0], [0.0, 1.0]]))
 
 
 def build_ia_bfs(temporal_bfs, spatial_bfs):
