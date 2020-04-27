@@ -150,3 +150,7 @@ def interaction_kernel(save_plot=False):
         fig.savefig("../figures/interaction_kernels.pdf")
 
     return fig
+
+if __name__ == "__main__":
+
+    interaction_kernel(save_plot=True)

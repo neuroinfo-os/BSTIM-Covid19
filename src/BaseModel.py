@@ -100,13 +100,24 @@ class TemporalPolynomialFeature(SpatioTemporalFeature):
         t_delta = (t - self.t0).days / self.scale
         return t_delta ** self.order
 
+class ReportDelayPolynomialFeature(SpatioTemporalFeature):
+    def __init__(self, t0, t_max, order):
+        self.t0 = t0
+        self.order = order
+        self.scale = (t_max - t0).days
+        super().__init__()
+    
+    def call(self, t, x):
+        """ sketch; make sure types match properly! add scale """ 
+        _t = 0 if t <= self.t0 else (t - self.t0).days / self.scale
+        return _t ** self.order
 
 class IAEffectLoader(object):
     generates_stats = False
 
     def __init__(self, var, filenames, days, counties):
         self.vars = [var]
-        self.samples = []
+        self.samples = [] 
         for filename in filenames:
             try:
                 with open(filename, "rb") as f:
@@ -126,6 +137,9 @@ class IAEffectLoader(object):
                     m[d_idx, c_idx, :], -1, 0).reshape((m.shape[-1], -1)).T)
 
     def step(self, point):
+        #NOTE: This thing is called during sampling? Check day and return 0 possible? Possible f*cks the sampler!
+        #NOTE: Also possible: Expand basis functions and sample 300 interaction kernels, load 3 with different filenames.
+        #NOTE: That could also happen smoothly without too many complications --> makes the sampler happier?
         new = point.copy()
         # res = new[self.vars[0].name]
         new_res = self.samples[np.random.choice(len(self.samples))]
@@ -164,6 +178,7 @@ class BaseModel(object):
             num_ia=16,
             model=None,
             include_ia=True,
+            include_report_delay=True,
             include_demographics=True,
             include_temporal=True,
             include_periodic=True,
@@ -173,18 +188,11 @@ class BaseModel(object):
         self.ia_effect_filenames = ia_effect_filenames
         self.num_ia = num_ia if include_ia else 0
         self.include_ia = include_ia
+        self.include_report_delay = include_report_delay
         self.include_demographics = include_demographics
         self.include_temporal = include_temporal
         self.include_periodic = include_periodic
         self.trange = trange
-
-        """Model for Covid-19 daily reports (RKI)
-        * Trend: (polynomial days/max_days) // degree: 4
-        * Periodic: (periodic polynomial days/7) // degree: 3
-        * Interactions: (sampled IA Kernel (from cases and geographical data))
-        * Spatiotemporal: 
-        * Exposure: ("fixed log population to adjust growth rate slightly")
-        """
 
         self.features = {
             "temporal_trend": {
@@ -202,6 +210,14 @@ class BaseModel(object):
                         "[0-5)",
                         "[5-20)",
                         "[20-65)"]} if self.include_demographics else {},
+            "temporal_report_delay" : {
+                 "report_delay_{}".format(i): ReportDelayPolynomialFeature(
+                     pd.Timestamp('2020-04-17'), pd.Timestamp('2020-04-22'), i)
+                     for i in range(3)} if self.include_report_delay else {},
+            # "temporal_report_delay" : {
+            #      "report_delay".format(i): ReportDelayPolynomialFeature(
+            #          pd.Timestamp('2020-04-17'), pd.Timestamp('2020-04-22'), 4)
+            #          if self.include_report_delay else {},
             "exposure": {
                         "exposure": SpatioTemporalYearlyDemographicsFeature(
                             self.county_info,
@@ -236,6 +252,7 @@ class BaseModel(object):
         Y_obs = target.stack().values.astype(np.float32)
         T_S = features["temporal_seasonal"].values.astype(np.float32)
         T_T = features["temporal_trend"].values.astype(np.float32)
+        T_D = features["temporal_report_delay"].values.astype(np.float32)
         TS = features["spatiotemporal"].values.astype(np.float32)
 
         log_exposure = np.log(
@@ -245,12 +262,13 @@ class BaseModel(object):
         num_obs = np.prod(target.shape)
         num_t_s = T_S.shape[1]
         num_t_t = T_T.shape[1]
+        num_t_d = T_D.shape[1]
         num_ts = TS.shape[1]
 
         with pm.Model() as self.model:
             # interaction effects are generated externally -> flat prior
             IA = pm.Flat("IA", testval=np.ones(
-                (num_obs, self.num_ia)), shape=(num_obs, self.num_ia))
+                  (num_obs, self.num_ia)), shape=(num_obs, self.num_ia))
 
             # priors
             # δ = 1/√α
@@ -262,28 +280,30 @@ class BaseModel(object):
                               testval=np.zeros(num_t_s), shape=num_t_s)
             W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
                               testval=np.zeros(num_t_t), shape=num_t_t)
+            W_t_d = pm.Normal("W_t_d", mu=0, sd=10,
+                              testval=np.zeros(num_t_d), shape=num_t_d)
             W_ts = pm.Normal("W_ts", mu=0, sd=10,
                              testval=np.zeros(num_ts), shape=num_ts)
-            self.param_names = ["δ", "W_ia", "W_t_s", "W_t_t", "W_ts"]
-            self.params = [δ, W_ia, W_t_s, W_t_t, W_ts]
+            self.param_names = ["δ", "W_ia", "W_t_s", "W_t_t", "W_t_d", "W_ts"]
+            self.params = [δ, W_ia, W_t_s, W_t_t, W_t_d, W_ts]
 
             # calculate interaction effect
-            IA_ef = tt.dot(tt.dot(IA, self.Q), W_ia)
+            # --> if we can get the date here, we can select the correct set of weights for calculation
+            IA_ef1 = tt.dot(tt.dot(IA, self.Q), W_ia) * rec_fn(__day)
+            IA_ef2 = tt.dot(tt.dot(IA, self.Q), W_ia) * rec_fn(__day)
+            IA_ef3 = tt.dot(tt.dot(IA, self.Q), W_ia) * rec_fn(__day)
 
             # calculate mean rates
             μ = pm.Deterministic(
                 "μ",
                 tt.exp(
-                    IA_ef +
-                    tt.dot(
-                        T_S,
-                        W_t_s) + 
-                    tt.dot(
-                        T_T,
-                        W_t_t) +
-                    tt.dot(
-                        TS,
-                        W_ts) +
+                    IA_ef1 +
+                    IA_ef2 +
+                    IA_ef3 +
+                    tt.dot(T_S, W_t_s) + 
+                    tt.dot(T_T, W_t_t) +
+                    tt.dot(T_D,W_t_d) +
+                    tt.dot(TS, W_ts) +
                     log_exposure))
 
             # constrain to observations
@@ -341,6 +361,7 @@ class BaseModel(object):
 
         T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
+        T_D = features["temporal_report_delay"].values
         TS = features["spatiotemporal"].values
         log_exposure = np.log(features["exposure"].values.ravel())
 
@@ -349,6 +370,7 @@ class BaseModel(object):
         W_ia = parameters["W_ia"]
         W_t_s = parameters["W_t_s"]
         W_t_t = parameters["W_t_t"]
+        W_t_d = parameters["W_t_d"]
         W_ts = parameters["W_ts"]
 
         ia_l = IAEffectLoader(None, self.ia_effect_filenames,
@@ -366,6 +388,7 @@ class BaseModel(object):
             μ[i, :] = np.exp(IA_ef +
                              np.dot(T_S, W_t_s[i]) +
                              np.dot(T_T, W_t_t[i]) +
+                             np.dot(T_D, W_t_d[i]) + 
                              np.dot(TS, W_ts[i]) +
                              log_exposure)
             y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()

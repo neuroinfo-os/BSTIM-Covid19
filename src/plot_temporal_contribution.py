@@ -172,3 +172,6 @@ def temporal_contribution(save_plot=False):
         fig.savefig("../figures/temporal_contribution.pdf")
 
     return fig
+
+if __name__ == "__main__":
+    temporal_contribution(save_plot=True)

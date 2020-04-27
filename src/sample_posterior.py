@@ -8,6 +8,7 @@ import os
 # i = int(os.environ["SGE_TASK_ID"])-1
 i = 0
 
+#NOTE: for jureca, extend to the number of available cores
 num_samples = 250
 # num_sample = 1
 num_chains = 4
@@ -38,8 +39,8 @@ data = load_daily_data(disease, prediction_region, county_info)
 data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=pd.Timestamp(2020, 1, 28),
-    test_start=pd.Timestamp(2020, 3, 30),
-    post_test=pd.Timestamp(2020, 3, 31)
+    test_start=pd.Timestamp(2020, 4, 22),
+    post_test=pd.Timestamp(2020, 4, 23)
 )
 
 tspan = (target_train.index[0], target_train.index[-1])

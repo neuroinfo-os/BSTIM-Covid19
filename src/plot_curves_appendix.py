@@ -204,4 +204,8 @@ def curves_appendix(save_plot=False):
 
     return plt
 
+if __name__ == "__main__":
+
+    curves_appendix(save_plot=True)
+
 # plt.show()

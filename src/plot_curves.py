@@ -252,3 +252,8 @@ def curves(save_plot=False):
         plt.savefig("../figures/curves.pdf")
 
     return plt
+
+if __name__ == "__main__": 
+
+    curves(save_plot=True)
+

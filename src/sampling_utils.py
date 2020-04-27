@@ -73,6 +73,7 @@ def sample_time_and_space(data, times_by_day, locations_by_county):
 
 
 def gaussian_bf(dx, σ):
+    """ spatial basis function """
     σ = np.float32(σ)
     res = tt.zeros_like(dx)
     idx = (abs(dx) < np.float32(5) * σ)  # .nonzero()
@@ -86,6 +87,9 @@ def gaussian_gram(σ):
 
 
 def bspline_bfs(x, knots, P):
+    """ temporal basis function
+            x: t-delta distance to last knot (horizon 5)
+    """
     knots = knots.astype(np.float32)
     idx = ((x >= knots[0]) & (x < knots[-1]))  # .nonzero()
     xx = x[idx]
@@ -112,6 +116,7 @@ def jacobian_sq(latitude, R=6365.902):
         jacobian_sq(latitude)
 
     Computes the "square root" (Cholesky factor) of the Jacobian of the cartesian projection from polar coordinates (in degrees longitude, latitude) onto cartesian coordinates (in km east/west, north/south) at a given latitude (the projection's Jacobian is invariante wrt. longitude).
+    TODO: don't import jacobian_sq from geo_utils to remove potential conflicts
     """
     return R * (np.pi / 180.0) * (abs(tt.cos(tt.deg2rad(latitude))) *
                                   np.array([[1.0, 0.0], [0.0, 0.0]]) + np.array([[0.0, 0.0], [0.0, 1.0]]))
@@ -136,7 +141,7 @@ def build_ia_bfs(temporal_bfs, spatial_bfs):
     # temporal distance btw. each times in t1 and t2
     dt = t1.reshape((-1, 1)) - t2.reshape((1, -1))
 
-    ft = tt.stack(temporal_bfs(dt.reshape((-1,))), axis=0)
+    ft = tt.stack(temporal_bfs(dt.reshape((-1,))), axis=0) # cast to floats?
     fx = tt.stack(spatial_bfs(dx.reshape((-1,))), axis=0)
 
     # aggregate contributions of all cases
@@ -175,7 +180,7 @@ class IAEffectSampler(object):
                         self.num_features), dtype=np.float32)
         for i, day in enumerate(days):
             for j, county in enumerate(counties):
-                idx = ((day - pd.Timedelta(days=5)) <=
+                idx = ((day - pd.Timedelta(days=self.time_horizon)) <=
                        self.data.index) * (self.data.index < day)
                 # print("sampling day {} for county {} using data in range {}".format(day, county, idx))
                 t_data, x_data = sample_time_and_space(
