@@ -8,6 +8,15 @@
 
 * Priority 2: Model Extensions
     * IA Kernel with limited temporal support & different sets of weights.
+    * rm delay polynomial from model for predictions
 
 * Dashboard:
     * temporal evolution of deviance per county deviance for growing test set must be implemented
+
+
+* Workflow (current -- keep up to date):
+    1. download current .csv database (see Readme, manual atm)
+    1. sample_ia_effects.py
+    1. sample_posterior.py
+    1. Plots:
+        (curves, curves_appendix, interaction_kernel, temporal_contribution)

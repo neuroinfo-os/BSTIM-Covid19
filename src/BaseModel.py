@@ -382,13 +382,21 @@ class BaseModel(object):
         μ = np.zeros((num_parameter_samples, num_predictions),
                      dtype=np.float32)
 
+        # only consider the mean effect of the delay polynomial // should be a function?!
+        mean_delay = np.zeros((num_predictions,))
+        for i in range(num_parameter_samples):
+            mean_delay += np.dot(T_D, W_t_d[i])
+
+        mean_delay /= num_parameter_samples
+
         for i in range(num_parameter_samples):
             IA_ef = np.dot(
                 np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
             μ[i, :] = np.exp(IA_ef +
                              np.dot(T_S, W_t_s[i]) +
                              np.dot(T_T, W_t_t[i]) +
-                             np.dot(T_D, W_t_d[i]) + 
+                             mean_delay +
+                             # np.dot(T_D, W_t_d[i]) + 
                              np.dot(TS, W_ts[i]) +
                              log_exposure)
             y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()
