@@ -22,6 +22,7 @@ num_cores = num_chains
 prediction_region = "germany"
 model_complexity = 0
 disease = "covid19"
+# change these to reflect our comparison! Use_ia_effect & use delay_polynomial (dropped from predictions?!)
 use_age = True
 use_eastwest = True
 

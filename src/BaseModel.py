@@ -117,7 +117,7 @@ class IAEffectLoader(object):
 
     def __init__(self, var, filenames, days, counties):
         self.vars = [var]
-        self.samples = [] 
+        self.samples = [] # <--
         for filename in filenames:
             try:
                 with open(filename, "rb") as f:
@@ -144,6 +144,7 @@ class IAEffectLoader(object):
         # res = new[self.vars[0].name]
         new_res = self.samples[np.random.choice(len(self.samples))]
         new[self.vars[0].name] = new_res
+        # random choice; but block structure <-- this must have "design matrix" shape/content
         return new
 
     def stop_tuning(self, *args):
@@ -274,7 +275,11 @@ class BaseModel(object):
             # δ = 1/√α
             δ = pm.HalfCauchy("δ", 10, testval=1.0)
             α = pm.Deterministic("α", np.float32(1.0) / δ)
-            W_ia = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
+            W_ia1 = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
+                self.num_ia), shape=self.num_ia)
+            W_ia2 = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
+                self.num_ia), shape=self.num_ia)
+            W_ia3 = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
                 self.num_ia), shape=self.num_ia)
             W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
                               testval=np.zeros(num_t_s), shape=num_t_s)
@@ -289,9 +294,9 @@ class BaseModel(object):
 
             # calculate interaction effect
             # --> if we can get the date here, we can select the correct set of weights for calculation
-            IA_ef1 = tt.dot(tt.dot(IA, self.Q), W_ia) * rec_fn(__day)
-            IA_ef2 = tt.dot(tt.dot(IA, self.Q), W_ia) * rec_fn(__day)
-            IA_ef3 = tt.dot(tt.dot(IA, self.Q), W_ia) * rec_fn(__day)
+            IA_ef1 = tt.dot(tt.dot(IA, self.Q), W_ia1)
+            IA_ef2 = tt.dot(tt.dot(IA, self.Q), W_ia2)
+            IA_ef3 = tt.dot(tt.dot(IA, self.Q), W_ia3)
 
             # calculate mean rates
             μ = pm.Deterministic(
@@ -383,11 +388,11 @@ class BaseModel(object):
                      dtype=np.float32)
 
         # only consider the mean effect of the delay polynomial // should be a function?!
-        mean_delay = np.zeros((num_predictions,))
-        for i in range(num_parameter_samples):
-            mean_delay += np.dot(T_D, W_t_d[i])
+        # mean_delay = np.zeros((num_predictions,))
+        # for i in range(num_parameter_samples):
+        #     mean_delay += np.dot(T_D, W_t_d[i])
 
-        mean_delay /= num_parameter_samples
+        # mean_delay /= num_parameter_samples
 
         for i in range(num_parameter_samples):
             IA_ef = np.dot(
@@ -395,7 +400,7 @@ class BaseModel(object):
             μ[i, :] = np.exp(IA_ef +
                              np.dot(T_S, W_t_s[i]) +
                              np.dot(T_T, W_t_t[i]) +
-                             mean_delay +
+                             # mean_delay +
                              # np.dot(T_D, W_t_d[i]) + 
                              np.dot(TS, W_ts[i]) +
                              log_exposure)
