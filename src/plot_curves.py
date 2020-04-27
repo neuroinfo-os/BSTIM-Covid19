@@ -7,7 +7,7 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 
-def curves(save_plot=False):
+def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
@@ -15,15 +15,13 @@ def curves(save_plot=False):
     # with open('../data/comparison.pkl', "rb") as f:
     #     best_model = pkl.load(f)
 
-    # update to day an new limits!
-    prediction_day = 30
+    # update to day and new limits!
     xlim = (5.5, 15.5)
     ylim = (47, 56) # <- 10 weeks
 
     countyByName = OrderedDict(
         [('Dortmund', '05913'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
-    plot_county_names = {"covid19": ["Dortmund", "Leipzig"], "rotavirus": [
-        "Dortmund", "Leipzig"], "borreliosis": ["Nürnberg", "München"]}
+    plot_county_names = {"covid19": ["Dortmund", "Leipzig"]}
 
     # colors for curves
     C1 = "#D55E00"
@@ -51,17 +49,7 @@ def curves(save_plot=False):
     # for i, disease in enumerate(diseases):
     i = 0
     disease = "covid19"
-    use_age = True
-    use_eastwest = True
     prediction_region = "germany"
-    # Load data
-    # use_age = best_model[disease]["use_age"]
-    # use_eastwest = best_model[disease]["use_eastwest"]
-    # if disease == "borreliosis":
-    #     prediction_region = "bavaria"
-    #     use_eastwest = False
-    # else:
-    #     prediction_region = "germany"
 
     data = load_daily_data(disease, prediction_region, counties)
     data = data[data.index < pd.Timestamp(2020, 3, 30)]
@@ -75,7 +63,7 @@ def curves(save_plot=False):
     # _, _, _, target = split_data(data)
     county_ids = target.columns
 
-    res = load_pred(disease, use_age, use_eastwest)
+    res = load_pred(disease, use_interactions, use_report_delay)
     n_days = 62 # for now; get from timestamps up top!
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
@@ -179,14 +167,6 @@ def curves(save_plot=False):
             linewidth=2.0,
             zorder=3)
 
-        # plot hhh4 reference prediction
-    #     p_hhh4 = ax.plot_date(
-    #         dates,
-    #         hhh4_predictions[county_id],
-    #         "-",
-    #         color=C3,
-    #         linewidth=2.0,
-    #         zorder=3)
 
         # plot ground truth
         p_real = ax.plot_date(dates, target[county_id], "k.")

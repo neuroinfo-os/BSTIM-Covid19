@@ -11,7 +11,6 @@ import itertools as it
 diseases = ["covid19"]
 prediction_regions = ["germany"]
 
-# combinations_age_eastwest = [(False,False),(False,True),(True,True)]
-combinations_age_eastwest = [(True, True)] 
+combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
 combinations = list(it.product(
-    range(len(combinations_age_eastwest)), diseases))
+    range(len(combinations_ia_report)), diseases))

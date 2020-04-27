@@ -108,7 +108,6 @@ class ReportDelayPolynomialFeature(SpatioTemporalFeature):
         super().__init__()
     
     def call(self, t, x):
-        """ sketch; make sure types match properly! add scale """ 
         _t = 0 if t <= self.t0 else (t - self.t0).days / self.scale
         return _t ** self.order
 
@@ -137,9 +136,6 @@ class IAEffectLoader(object):
                     m[d_idx, c_idx, :], -1, 0).reshape((m.shape[-1], -1)).T)
 
     def step(self, point):
-        #NOTE: This thing is called during sampling? Check day and return 0 possible? Possible f*cks the sampler!
-        #NOTE: Also possible: Expand basis functions and sample 300 interaction kernels, load 3 with different filenames.
-        #NOTE: That could also happen smoothly without too many complications --> makes the sampler happier?
         new = point.copy()
         # res = new[self.vars[0].name]
         new_res = self.samples[np.random.choice(len(self.samples))]
@@ -199,7 +195,7 @@ class BaseModel(object):
             "temporal_trend": {
                 "temporal_polynomial_{}".format(i): TemporalPolynomialFeature(
                     pd.Timestamp('2020-01-28'), pd.Timestamp('2020-03-30'), i)
-                    for i in range(5)} if self.include_temporal else {},
+                    for i in range(4)} if self.include_temporal else {},
             "temporal_seasonal": {
                 "temporal_periodic_polynomial_{}".format(i): TemporalPeriodicPolynomialFeature(
                     pd.Timestamp('2020-01-28'), 7, i)
@@ -212,20 +208,16 @@ class BaseModel(object):
                         "[5-20)",
                         "[20-65)"]} if self.include_demographics else {},
             "temporal_report_delay" : {
-                 "report_delay_{}".format(i): ReportDelayPolynomialFeature(
-                     pd.Timestamp('2020-04-17'), pd.Timestamp('2020-04-22'), i)
-                     for i in range(3)} if self.include_report_delay else {},
-            # "temporal_report_delay" : {
-            #      "report_delay".format(i): ReportDelayPolynomialFeature(
-            #          pd.Timestamp('2020-04-17'), pd.Timestamp('2020-04-22'), 4)
-            #          if self.include_report_delay else {},
+                 "report_delay": ReportDelayPolynomialFeature(
+                     pd.Timestamp('2020-04-17'), pd.Timestamp('2020-04-22'), 4)}
+                     if self.include_report_delay else {},
             "exposure": {
                         "exposure": SpatioTemporalYearlyDemographicsFeature(
                             self.county_info,
                             "total",
                             1.0 / 100000)}}
 
-        self.Q = np.eye(16, dtype=np.float32)
+        self.Q = np.eye(self.num_ia, dtype=np.float32)
         if orthogonalize:
             # transformation to orthogonalize IA features
             T = np.linalg.inv(np.linalg.cholesky(
@@ -272,15 +264,12 @@ class BaseModel(object):
                   (num_obs, self.num_ia)), shape=(num_obs, self.num_ia))
 
             # priors
+            # NOTE: Vary parameters over time -> W_ia dependent on time
             # δ = 1/√α
             δ = pm.HalfCauchy("δ", 10, testval=1.0)
             α = pm.Deterministic("α", np.float32(1.0) / δ)
-            W_ia1 = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
-                self.num_ia), shape=self.num_ia)
-            W_ia2 = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
-                self.num_ia), shape=self.num_ia)
-            W_ia3 = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
-                self.num_ia), shape=self.num_ia)
+            W_ia = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
+                 self.num_ia), shape=self.num_ia)
             W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
                               testval=np.zeros(num_t_s), shape=num_t_s)
             W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
@@ -294,20 +283,16 @@ class BaseModel(object):
 
             # calculate interaction effect
             # --> if we can get the date here, we can select the correct set of weights for calculation
-            IA_ef1 = tt.dot(tt.dot(IA, self.Q), W_ia1)
-            IA_ef2 = tt.dot(tt.dot(IA, self.Q), W_ia2)
-            IA_ef3 = tt.dot(tt.dot(IA, self.Q), W_ia3)
+            IA_ef = tt.dot(tt.dot(IA, self.Q), W_ia)
 
             # calculate mean rates
             μ = pm.Deterministic(
                 "μ",
                 tt.exp(
-                    IA_ef1 +
-                    IA_ef2 +
-                    IA_ef3 +
+                    IA_ef +
                     tt.dot(T_S, W_t_s) + 
                     tt.dot(T_T, W_t_t) +
-                    tt.dot(T_D,W_t_d) +
+                    tt.dot(T_D, W_t_d) +
                     tt.dot(TS, W_ts) +
                     log_exposure))
 
