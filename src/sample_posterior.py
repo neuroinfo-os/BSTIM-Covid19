@@ -6,6 +6,7 @@ import pickle as pkl
 import pandas as pd
 import os
 
+# SGE_TASK_ID=4 python sample_posterior.py
 i = int(os.environ["SGE_TASK_ID"])-1
 
 #NOTE: for jureca, extend to the number of available cores (chains and cores!)

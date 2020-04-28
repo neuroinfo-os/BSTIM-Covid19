@@ -116,7 +116,7 @@ class IAEffectLoader(object):
 
     def __init__(self, var, filenames, days, counties):
         self.vars = [var]
-        self.samples = [] # <--
+        self.samples = []
         for filename in filenames:
             try:
                 with open(filename, "rb") as f:
@@ -282,8 +282,8 @@ class BaseModel(object):
             self.params = [δ, W_ia, W_t_s, W_t_t, W_t_d, W_ts]
 
             # calculate interaction effect
-            # --> if we can get the date here, we can select the correct set of weights for calculation
             IA_ef = tt.dot(tt.dot(IA, self.Q), W_ia)
+            IA_ef = 0
 
             # calculate mean rates
             μ = pm.Deterministic(
@@ -298,6 +298,10 @@ class BaseModel(object):
 
             # constrain to observations
             pm.NegativeBinomial("Y", mu=μ, alpha=α, observed=Y_obs)
+
+    def map_estimate():
+        """ TODO Q: how to include IA?"""
+        pass
 
     def sample_parameters(
             self,
@@ -335,7 +339,9 @@ class BaseModel(object):
                 vars=self.params,
                 target_accept=target_accept,
                 max_treedepth=max_treedepth)
-            steps = (([ia_effect_loader] if self.include_ia else []) + [nuts])
+            #NOTE: does not work without IA Kernel -- [] + nuts
+            #steps = (([ia_effect_loader] if self.include_ia else []) + [nuts])
+            steps = [ia_effect_loader, nuts]
             trace = pm.sample(samples, steps, chains=chains, cores=cores,
                               compute_convergence_checks=False, **kwargs)
         return trace
