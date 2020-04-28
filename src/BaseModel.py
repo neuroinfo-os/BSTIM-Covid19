@@ -283,7 +283,6 @@ class BaseModel(object):
 
             # calculate interaction effect
             IA_ef = tt.dot(tt.dot(IA, self.Q), W_ia)
-            IA_ef = 0
 
             # calculate mean rates
             μ = pm.Deterministic(
