@@ -11,11 +11,12 @@
 # #SBATCH --mail-type=ALL
 # #SBATCH --mail-user=<email>
 
+# ATTENTION:
+#     1. ensure SLURM output/errors directory exists
+#     2. do not switch to zsh in ~/.bashrc because of "jutil env" 
+
 # select project
 jutil env activate -p covid19dynstat
-
-# ensure SLURM output/errors directory exists
-mkdir -p ${PROJECT}/${USER}/runs/
 
 # run tasks
 srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_ia.slurm.sh
