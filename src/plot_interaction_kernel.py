@@ -8,8 +8,10 @@ from plot_utils import *
 from shared_utils import *
 import matplotlib
 from matplotlib import pyplot as plt
+theano.config.compute_test_value = 'off'
 
 def interaction_kernel(use_report_delay=True, save_plot=False):
+    theano.config.compute_test_value = 'off'
 
     use_interactions = True
     plt.style.use("ggplot")
