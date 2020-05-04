@@ -12,7 +12,7 @@ from pymc3.stats import quantiles
 from matplotlib import pyplot as plt
 # from pandas import register_matplotlib_converters
 # register_matplotlib_converters() # the fk python
-def temporal_contribution(save_plot=False):
+def temporal_contribution(use_interactions=True, use_report_delay=True, save_plot=False):
 
     plt.style.use('ggplot')
 
@@ -47,8 +47,6 @@ def temporal_contribution(save_plot=False):
 
     i = 0
     disease = "covid19"
-    use_age = True
-    use_eastwest = True
     prediction_region = "germany"
 
 
@@ -57,30 +55,41 @@ def temporal_contribution(save_plot=False):
     __, target_train, _, _ = split_data(
         data, train_start=pd.Timestamp(
             2020, 1, 28), test_start=pd.Timestamp(
-            2020, 3, 30), post_test=pd.Timestamp(
-            2020, 3, 31)) # plots for the training period!
+            2020, 4, 22), post_test=pd.Timestamp(
+            2020, 4, 23)) # plots for the training period!
     tspan = (target_train.index[0], target_train.index[-1])
     model = BaseModel(tspan,
                     county_info,
                     ["../data/ia_effect_samples/{}_{}.pkl".format(disease,
                                                                     i) for i in range(100)],
-                    include_demographics=use_age)
+                    include_ia=use_interactions,
+                    include_report_delay=use_report_delay)
 
     features = model.evaluate_features(
         target_train.index, target_train.columns)
 
     trend_features = features["temporal_trend"].swaplevel(0, 1).loc["09162"]
-    periodic_features = features["temporal_seasonal"].swaplevel(
-        0, 1).loc["09162"]
+    periodic_features = features["temporal_seasonal"].swaplevel(0, 1).loc["09162"]
     #t_all = t_all_b if disease == "borreliosis" else t_all_cr
 
-    trace = load_trace(disease, use_age, use_eastwest)
+    trace = load_trace(disease, use_interactions, use_report_delay)
     trend_params = pm.trace_to_dataframe(trace, varnames=["W_t_t"])
     periodic_params = pm.trace_to_dataframe(trace, varnames=["W_t_s"])
 
     TT = trend_params.values.dot(trend_features.values.T)
     TP = periodic_params.values.dot(periodic_features.values.T)
     TTP = TT + TP
+
+    # add report delay if used
+    if use_report_delay:
+        delay_features = features["temporal_report_delay"].swaplevel(0,1).loc["09162"]
+        delay_params = pm.trace_to_dataframe(trace,varnames=["W_t_d"])
+        TD =delay_params.values.dot(delay_features.values.T)
+
+        TTP += TD
+        TD_quantiles = quantiles(TD, (25, 75))
+
+
     TT_quantiles = quantiles(TT, (25, 75))
     TP_quantiles = quantiles(TP, (25, 75))
     TTP_quantiles = quantiles(TTP, (25, 75))
@@ -121,6 +130,22 @@ def temporal_contribution(save_plot=False):
 
     ax_t.tick_params(axis="x", rotation=45)
 
+    if use_report_delay:
+        ax_td = fig.add_subplot(grid[1, i], sharex=ax_p)
+
+        ax_td.fill_between(days, np.exp(TD_quantiles[25]), np.exp(
+            TD_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
+        ax_td.plot(days, np.exp(TD.mean(axis=0)),
+                    "-", color=C1, lw=2, zorder=5)
+        ax_td.plot(days, np.exp(
+            TD_quantiles[25]), "-", color=C2, lw=2, zorder=3)
+        ax_td.plot(days, np.exp(
+            TD_quantiles[75]), "-", color=C2, lw=2, zorder=3)
+        ax_td.plot(days, np.exp(TD[:25, :].T),
+                    "--", color=C3, lw=1, alpha=0.5, zorder=2)
+
+        ax_td.tick_params(axis="x", rotation=45)
+
     # Temporal trend+periodic effect
     ax_tp = fig.add_subplot(grid[2, i], sharex=ax_p)
 
@@ -144,10 +169,13 @@ def temporal_contribution(save_plot=False):
                 "campylobacter" else disease, fontsize=22)
     ax_tp.set_xlabel("time [days]", fontsize=22)
 
-    if i == 0:
-        ax_p.set_ylabel("periodic\ncontribution", fontsize=22)
-        ax_t.set_ylabel("trend\ncontribution", fontsize=22)
-        ax_tp.set_ylabel("combined\ncontribution", fontsize=22)
+    ax_p.set_ylabel("periodic\ncontribution", fontsize=22)
+    ax_t.set_ylabel("trend\ncontribution", fontsize=22)
+    ax_tp.set_ylabel("combined\ncontribution", fontsize=22)
+
+    if use_report_delay:
+        ax_td.set_ylabel("r.delay\ncontribution", fontsize=22)
+
     # elif i==2:
     ax_t.set_xlim(days[0], days[-1])
     # ax_t.set_xlim((isoweek.Week(2013, 1).wednesday(),
@@ -169,9 +197,12 @@ def temporal_contribution(save_plot=False):
     #          fontsize=22, transform=ax_tp.transAxes, usetex=True)
 
     if save_plot:
-        fig.savefig("../figures/temporal_contribution.pdf")
+        fig.savefig("../figures/temporal_contribution_{}_{}.pdf".format(use_interactions, use_report_delay))
 
     return fig
 
 if __name__ == "__main__":
-    temporal_contribution(save_plot=True)
+
+    combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
+    for i in range(4):
+        _ = temporal_contribution(combinations_ia_report[i][0], combinations_ia_report[i][1],save_plot=True)

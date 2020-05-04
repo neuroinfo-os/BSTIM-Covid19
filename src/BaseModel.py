@@ -403,14 +403,15 @@ class BaseModel(object):
 
         # extract coefficient samples
         α = parameters["α"]
-        W_ia = parameters["W_ia"]
         W_t_s = parameters["W_t_s"]
         W_t_t = parameters["W_t_t"]
         W_t_d = parameters["W_t_d"]
         W_ts = parameters["W_ts"]
 
-        ia_l = IAEffectLoader(None, self.ia_effect_filenames,
-                              target_days, target_counties)
+        if self.include_ia:
+            W_ia = parameters["W_ia"]
+            ia_l = IAEffectLoader(None, self.ia_effect_filenames,
+                                  target_days, target_counties)
 
         num_predictions = len(target_days) * len(target_counties)
         num_parameter_samples = α.size
@@ -423,18 +424,27 @@ class BaseModel(object):
         # for i in range(num_parameter_samples):
         #     mean_delay += np.dot(T_D, W_t_d[i])
 
+        # NOTE: the delay polynomial is left out here!
         # mean_delay /= num_parameter_samples
+        if self.include_ia:
+            for i in range(num_parameter_samples):
+                IA_ef = np.dot(
+                    np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
+                μ[i, :] = np.exp(IA_ef +
+                                 np.dot(T_S, W_t_s[i]) +
+                                 np.dot(T_T, W_t_t[i]) +
+                                 np.dot(TS, W_ts[i]) +
+                                 log_exposure)
+                y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()
 
-        for i in range(num_parameter_samples):
-            IA_ef = np.dot(
-                np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
-            μ[i, :] = np.exp(IA_ef +
-                             np.dot(T_S, W_t_s[i]) +
-                             np.dot(T_T, W_t_t[i]) +
-                             # mean_delay +
-                             # np.dot(T_D, W_t_d[i]) + 
-                             np.dot(TS, W_ts[i]) +
-                             log_exposure)
-            y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()
+        else:
+            for i in range(num_parameter_samples):
+                μ[i, :] = np.exp(np.dot(T_S, W_t_s[i]) +
+                                 np.dot(T_T, W_t_t[i]) +
+                                 np.dot(TS, W_ts[i]) +
+                                 log_exposure)
+                y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()
+
+
 
         return {"y": y, "μ": μ, "α": α}

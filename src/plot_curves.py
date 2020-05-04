@@ -52,19 +52,19 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
     prediction_region = "germany"
 
     data = load_daily_data(disease, prediction_region, counties)
-    data = data[data.index < pd.Timestamp(2020, 3, 30)]
+    data = data[data.index < pd.Timestamp(2020, 4, 23)]
     # if disease == "borreliosis":
     #       data = data[data.index >= parse_yearweek("2013-KW1")]
     _, target, _, _ = split_data(
         data, train_start=pd.Timestamp(
             2020, 1, 28), test_start=pd.Timestamp(
-            2020, 3, 30), post_test=pd.Timestamp(
-            2020, 3, 31)) # plots for the training period!
+            2020, 4, 22), post_test=pd.Timestamp(
+            2020, 4, 23)) # plots for the training period!
     # _, _, _, target = split_data(data)
     county_ids = target.columns
 
     res = load_pred(disease, use_interactions, use_report_delay)
-    n_days = 62 # for now; get from timestamps up top!
+    n_days = (pd.Timestamp(2020,4,22) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     # TODO: figure out where quantiles comes from and if its pymc3, how to replace it
@@ -229,11 +229,14 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
             va='center', rotation='vertical', fontsize=22)
 
     if save_plot:
-        plt.savefig("../figures/curves.pdf")
+        plt.savefig("../figures/curves_{}_{}.pdf".format(use_interactions, use_report_delay))
 
-    return plt
+    return fig
+
 
 if __name__ == "__main__": 
 
-    curves(save_plot=True)
+    combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
+    for i in range(4):
+        _ = curves(combinations_ia_report[i][0], combinations_ia_report[i][1],save_plot=True)
 

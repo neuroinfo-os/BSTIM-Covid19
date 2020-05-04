@@ -40,19 +40,20 @@ data_train, target_train, data_test, target_test = split_data(
 tspan = (target_train.index[0], target_train.index[-1])
 
 name = "dev"
-use_age = True
-use_eastwest = True
+use_interactions = False
+use_report_delay = True
 # load sample trace
-trace = load_trace(disease, use_age, use_eastwest)
+trace = load_trace(disease, use_interactions, use_report_delay)
 
 model = BaseModel(tspan,
                   county_info,
                   ["../data/ia_effect_samples/{}_{}.pkl".format(disease,
                                                                 i) for i in range(100)],
-                  include_demographics=use_age)
+                  include_ia=use_interactions,
+                  include_report_delay=use_report_delay)
 
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
-    disease, use_age, use_eastwest)
+    disease, use_interactions, use_report_delay)
 print("Sampling predictions on the testing set.")
 pred = model.sample_predictions(target_train.index, target_train.columns, trace)
 with open(filename_pred, 'wb') as f:

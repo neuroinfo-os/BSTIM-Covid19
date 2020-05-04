@@ -9,8 +9,9 @@ from shared_utils import *
 import matplotlib
 from matplotlib import pyplot as plt
 
-def interaction_kernel(save_plot=False):
+def interaction_kernel(use_report_delay=True, save_plot=False):
 
+    use_interactions = True
     plt.style.use("ggplot")
     matplotlib.rcParams['text.usetex'] = True
     matplotlib.rcParams['text.latex.unicode'] = True
@@ -48,14 +49,12 @@ def interaction_kernel(save_plot=False):
     t0 = np.array([0.0])
     ts = np.linspace(0 * 24 * 3600, 5 * 24 * 3600, 200) # plot for 5 weeks / 5 days instead?
 
-
     def temporal_bfs(x): return bspline_bfs(
         x, np.array([0, 0, 1, 2, 3, 4, 5]) * 24 * 3600.0, 2)
 
 
     def spatial_bfs(x): return [gaussian_bf(x, σ)
                                 for σ in [6.25, 12.5, 25.0, 50.0]]
-
 
     basis_kernels = build_ia_bfs(temporal_bfs, spatial_bfs)
 
@@ -64,17 +63,11 @@ def interaction_kernel(save_plot=False):
         for k in range(200):
             res[j, k, :] = basis_kernels(ts[k:k + 1], locs[j:j + 1, :], t0, loc0)
 
-    # for i, disease in enumerate(diseases):
-    # use_age = best_model[disease]["use_age"]
-    # use_eastwest = best_model[disease]["use_eastwest"]
-    # prediction_region = "bavaria" if disease == "borreliosis" else "germany"
 
     i = 0
     disease = 'covid19'
-    use_age = True
-    use_eastwest = True
 
-    trace = load_trace(disease, use_age, use_eastwest)
+    trace = load_trace(disease, use_interactions, use_report_delay)
 
     kernel_samples = res.dot(trace["W_ia"].T)
 
@@ -147,10 +140,11 @@ def interaction_kernel(save_plot=False):
             fontsize=22, transform=ax_sample2.transAxes)
 
     if save_plot:
-        fig.savefig("../figures/interaction_kernels.pdf")
+        fig.savefig("../figures/interaction_kernels_{}_{}.pdf".format(use_interactions, use_report_delay))
 
     return fig
 
 if __name__ == "__main__":
 
-    interaction_kernel(save_plot=True)
+    _ = interaction_kernel(True, save_plot=True)
+    _ = interaction_kernel(False, save_plot=True)
