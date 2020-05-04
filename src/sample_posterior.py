@@ -69,7 +69,7 @@ with model.model:
 
 print("Sampling predictions on the training set.")
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
-                                        disease, use_age, use_eastwest)
+                                        disease, use_interactions, use_report_delay)
 pred = model.sample_predictions(target_train.index, target_train.columns, trace)
 with open(filename_pred, 'wb') as f:
      pkl.dump(pred, f)
