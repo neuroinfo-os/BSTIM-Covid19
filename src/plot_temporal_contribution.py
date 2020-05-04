@@ -42,8 +42,13 @@ def temporal_contribution(use_interactions=True, use_report_delay=True, save_plo
 
     fig = plt.figure(figsize=(12, 9))
     #fig.suptitle("Learned interaction kernels and temporal contributions", fontsize=20)
-    grid = plt.GridSpec(3, len(diseases), top=0.93, bottom=0.12,
-                        left=0.11, right=0.97, hspace=0.28, wspace=0.30)
+    if use_report_delay:
+        grid = plt.GridSpec(4, len(diseases), top=0.93, bottom=0.12,
+                            left=0.11, right=0.97, hspace=0.28, wspace=0.30)
+    else:
+        grid = plt.GridSpec(3, len(diseases), top=0.93, bottom=0.12,
+                            left=0.11, right=0.97, hspace=0.28, wspace=0.30)
+
 
     i = 0
     disease = "covid19"
@@ -130,24 +135,12 @@ def temporal_contribution(use_interactions=True, use_report_delay=True, save_plo
 
     ax_t.tick_params(axis="x", rotation=45)
 
-    if use_report_delay:
-        ax_td = fig.add_subplot(grid[1, i], sharex=ax_p)
-
-        ax_td.fill_between(days, np.exp(TD_quantiles[25]), np.exp(
-            TD_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-        ax_td.plot(days, np.exp(TD.mean(axis=0)),
-                    "-", color=C1, lw=2, zorder=5)
-        ax_td.plot(days, np.exp(
-            TD_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-        ax_td.plot(days, np.exp(
-            TD_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-        ax_td.plot(days, np.exp(TD[:25, :].T),
-                    "--", color=C3, lw=1, alpha=0.5, zorder=2)
-
-        ax_td.tick_params(axis="x", rotation=45)
 
     # Temporal trend+periodic effect
-    ax_tp = fig.add_subplot(grid[2, i], sharex=ax_p)
+    if use_report_delay:
+        ax_tp = fig.add_subplot(grid[3, i], sharex=ax_p)
+    else:
+        ax_tp = fig.add_subplot(grid[2, i], sharex=ax_p)
 
     ax_tp.fill_between(days, np.exp(TTP_quantiles[25]), np.exp(
         TTP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
@@ -162,6 +155,21 @@ def temporal_contribution(use_interactions=True, use_report_delay=True, save_plo
 
     ax_tp.tick_params(axis="x", rotation=45)
 
+    if use_report_delay:
+        ax_td = fig.add_subplot(grid[2, i], sharex=ax_p)
+
+        ax_td.fill_between(days, np.exp(TD_quantiles[25]), np.exp(
+            TD_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
+        ax_td.plot(days, np.exp(TD.mean(axis=0)),
+                    "-", color=C1, lw=2, zorder=5)
+        ax_td.plot(days, np.exp(
+            TD_quantiles[25]), "-", color=C2, lw=2, zorder=3)
+        ax_td.plot(days, np.exp(
+            TD_quantiles[75]), "-", color=C2, lw=2, zorder=3)
+        ax_td.plot(days, np.exp(TD[:25, :].T),
+                    "--", color=C3, lw=1, alpha=0.5, zorder=2)
+
+        ax_td.tick_params(axis="x", rotation=45)
     # ax_p.set_xticks(np.arange(1,54))
     # ax_p.set_xticklabels(tticks_l_year)
 
