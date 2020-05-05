@@ -32,11 +32,16 @@ with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
 
 data = load_daily_data(disease, prediction_region, county_info)
+
+first_day = data.index.min()
+
+last_day = data.index.max()
+
 data_train, target_train, data_test, target_test = split_data(
     data,
-    train_start=pd.Timestamp(2020, 1, 28),
-    test_start=pd.Timestamp(2020, 4, 22),
-    post_test=pd.Timestamp(2020, 4, 23)
+    train_start=first_day,
+    test_start=last_day - pd.Timedelta(days=1),
+    post_test=last_day + pd.Timedelta(days=1)
 )
 
 tspan = (target_train.index[0], target_train.index[-1])
@@ -49,8 +54,11 @@ model = BaseModel(tspan,
                   ["../data/ia_effect_samples/{}_{}.pkl".format(disease,
                                                                 i) for i in range(100)],
                   include_ia=use_interactions,
-                  include_report_delay=use_report_delay)
-
+                  include_report_delay=use_report_delay,
+                  temporal_poly_order=4,
+                  periodic_poly_order=4,
+                  report_delay_order=4)
+"""
 print("Sampling parameters on the training set.")
 trace = model.sample_parameters(
     target_train,
@@ -73,3 +81,4 @@ filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
 pred = model.sample_predictions(target_train.index, target_train.columns, trace)
 with open(filename_pred, 'wb') as f:
      pkl.dump(pred, f)
+"""
