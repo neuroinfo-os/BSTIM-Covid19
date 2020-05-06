@@ -56,12 +56,16 @@ def temporal_contribution(use_interactions=True, use_report_delay=True, save_plo
 
 
     data = load_daily_data(disease, prediction_region, county_info)
-    # data_train, target_train, data_test, target_test = split_data(data)
-    __, target_train, _, _ = split_data(
-        data, train_start=pd.Timestamp(
-            2020, 1, 28), test_start=pd.Timestamp(
-            2020, 4, 22), post_test=pd.Timestamp(
-            2020, 4, 23)) # plots for the training period!
+    first_day = data.index.min()
+    last_day = data.index.max()
+
+    _, target_train, _, _ = split_data(
+        data,
+        train_start=first_day,
+        test_start=last_day - pd.Timedelta(days=1),
+        post_test=last_day + pd.Timedelta(days=1)
+    )
+
     tspan = (target_train.index[0], target_train.index[-1])
     model = BaseModel(tspan,
                     county_info,

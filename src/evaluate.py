@@ -40,12 +40,16 @@ prediction_region = "germany"
 res = load_pred(disease, use_age, use_eastwest)
 
 data = load_daily_data(disease, prediction_region, counties)
-# data = data[data.index < parse_yearweek("2018-KW1")]
+first_day = data.index.min()
+last_day = data.index.max()
+
 _, _, _, target = split_data(
-    data, train_start=pd.Timestamp(
-                        2020, 1, 28), test_start=pd.Timestamp(
-                        2020, 3, 30), post_test=pd.Timestamp(
-                        2020, 3, 31))
+    data,
+    train_start=first_day,
+    test_start=last_day - pd.Timedelta(days=1),
+    post_test=last_day + pd.Timedelta(days=1)
+)
+
 county_ids = target.columns
 
 summary = {}

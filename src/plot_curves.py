@@ -51,22 +51,24 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
     disease = "covid19"
     prediction_region = "germany"
 
-    data = load_daily_data(disease, prediction_region, counties)
-    data = data[data.index < pd.Timestamp(2020, 4, 23)]
-    # if disease == "borreliosis":
-    #       data = data[data.index >= parse_yearweek("2013-KW1")]
+    data = load_daily_data(disease, prediction_region, county_info)
+    first_day = data.index.min()
+    last_day = data.index.max()
+
     _, target, _, _ = split_data(
-        data, train_start=pd.Timestamp(
-            2020, 1, 28), test_start=pd.Timestamp(
-            2020, 4, 22), post_test=pd.Timestamp(
-            2020, 4, 23)) # plots for the training period!
-    # _, _, _, target = split_data(data)
+        data,
+        train_start=first_day,
+        test_start=last_day - pd.Timedelta(days=1),
+        post_test=last_day + pd.Timedelta(days=1))
+
     county_ids = target.columns
 
+    # Load our prediction samples
     res = load_pred(disease, use_interactions, use_report_delay)
-    n_days = (pd.Timestamp(2020,4,22) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
+    n_days = (last_day - first_day).days - 1 #offset test data
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
+
     # TODO: figure out where quantiles comes from and if its pymc3, how to replace it
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95)) 
 

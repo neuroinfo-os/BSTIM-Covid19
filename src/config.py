@@ -12,5 +12,7 @@ diseases = ["covid19"]
 prediction_regions = ["germany"]
 
 combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
+
+
 combinations = list(it.product(
     range(len(combinations_ia_report)), diseases))
