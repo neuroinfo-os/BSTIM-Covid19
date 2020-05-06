@@ -19,7 +19,7 @@ from config import *
 from matplotlib import pyplot as plt
 plt.style.use('ggplot')
 
-ia_delay_by_name = dict(zip(["A", "B", "C", "D"], combinations_age_eastwest))
+ia_delay_by_name = dict(zip(["A", "B", "C", "D"], combinations_ia_report))
 
 with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
@@ -49,12 +49,12 @@ for (name, (use_interaction, use_report_delay)) in ia_delay_by_name.items():
         waics[name] = pm.waic(trace).WAIC
 
     # do model selection
-    # best_key = min(waics, key=waics.get)
+    #best_key = min(waics, key=waics.get)
 
     # use_age, use_eastwest = age_eastwest_by_name[best_key]
 
-best_model[disease] = {"name": best_key, "use_age": use_age,
-                       "use_eastwest": use_eastwest, "comparison": waics}
+#best_model[disease] = {"name": best_key, "use_age": use_age,
+#                       "use_eastwest": use_eastwest, "comparison": waics}
 
 # with open('../data/comparison.pkl', "wb") as f:
 #     pkl.dump(best_model, f)
