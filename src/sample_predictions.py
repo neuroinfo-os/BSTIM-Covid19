@@ -22,6 +22,10 @@ plt.style.use('ggplot')
 disease = "covid19"
 prediction_region = "germany"
 
+# choose model
+i = 0
+use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
+
 with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
 
@@ -52,8 +56,8 @@ model = BaseModel(tspan,
                   include_ia=use_interactions,
                   include_report_delay=use_report_delay)
 
-filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
-    disease, use_interactions, use_report_delay)
+filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disease, i)
+
 print("Sampling predictions on the testing set.")
 pred = model.sample_predictions(target_train.index, target_train.columns, trace)
 with open(filename_pred, 'wb') as f:

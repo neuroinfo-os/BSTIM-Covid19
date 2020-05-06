@@ -176,10 +176,10 @@ class BaseModel(object):
             model=None,
             include_ia=True,
             include_report_delay=True,
-            report_delay_order=4
+            report_delay_order=4,
             include_demographics=True,
             include_temporal=True,
-            temporal_poly_order=4,
+            trend_poly_order=4,
             include_periodic=True,
             periodic_poly_order=4,
             orthogonalize=False):
@@ -189,16 +189,19 @@ class BaseModel(object):
         self.num_ia = num_ia if include_ia else 0
         self.include_ia = include_ia
         self.include_report_delay = include_report_delay
+        self.report_delay_order = report_delay_order
         self.include_demographics = include_demographics
         self.include_temporal = include_temporal
+        self.trend_poly_order = trend_poly_order
         self.include_periodic = include_periodic
+        self.periodic_poly_order = periodic_poly_order
         self.trange = trange # 0 -> 28th of Jan; 1-> Last
 
         self.features = {
             "temporal_trend": {
                 "temporal_polynomial_{}".format(i): TemporalPolynomialFeature(
-                    trange[0], trage[1], i)
-                    for i in range(self.temporal_poly_order+1)} if self.include_temporal else {},
+                    trange[0], trange[1], i)
+                    for i in range(self.trend_poly_order+1)} if self.include_temporal else {},
             "temporal_seasonal": {
                 "temporal_periodic_polynomial_{}".format(i): TemporalPeriodicPolynomialFeature(
                     trange[0], 7, i)
