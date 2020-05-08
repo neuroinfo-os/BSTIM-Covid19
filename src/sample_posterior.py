@@ -67,15 +67,17 @@ if SAMPLE_PARAMS:
         max_treedepth=15,
         chains=num_chains,
         cores=num_cores)
+
+    with open(filename_model, "wb") as f:
+    pkl.dump(model.model, f)
+
+    with model.model:
+        pm.save_trace(trace, filename_params, overwrite=True)
 else:
     print("Load parameters.")
     trace = load_trace(disease, use_interactions, use_report_delay)
 
-with open(filename_model, "wb") as f:
-    pkl.dump(model.model, f)
 
-with model.model:
-    pm.save_trace(trace, filename_params, overwrite=True)
 
 if SAMPLE_PREDS == "train":
     print("Sampling predictions on the training set.")
