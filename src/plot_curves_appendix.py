@@ -204,7 +204,9 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
 
 if __name__ == "__main__":
 
-    combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
-    for i in range(4):
+    #combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
+    # plot only for TRUE TRUE
+    combinations_ia_report=[(True,True)]
+    for i in range(1):
         _ = curves_appendix(combinations_ia_report[i][0], combinations_ia_report[i][1],save_plot=True)
 
