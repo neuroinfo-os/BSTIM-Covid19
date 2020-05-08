@@ -53,6 +53,10 @@ if __name__ == "__main__":
         covid19_data['Meldedatum'].min()).groups()
     end_year, end_month, end_day = regex.search(
         covid19_data['Meldedatum'].max()).groups()
+    
+    print("From: ", start_year, start_month, start_day)
+    print("To  : ", end_year, end_month, end_day)
+    
     start_date = pd.Timestamp(
         int(start_year), int(start_month), int(start_day))
     end_date = pd.Timestamp(int(end_year), int(end_month), int(end_day))
@@ -64,7 +68,7 @@ if __name__ == "__main__":
         series = np.zeros(len(df), dtype=np.int32)
         lk_data = covid19_data[covid19_data['Landkreis'] == county_name]
         for (d_id, day) in enumerate(dates):
-            day_string = "{:04d}-{:02d}-{:02d}T00:00:00.000Z".format(
+            day_string = "{:04d}/{:02d}/{:02d} 00:00:00".format(
                 day.year, day.month, day.day)
             cases = np.sum(lk_data[lk_data['Meldedatum']
                                    == day_string]['AnzahlFall'])
