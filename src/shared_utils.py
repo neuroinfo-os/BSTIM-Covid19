@@ -216,10 +216,19 @@ def load_trace(disease, use_age, use_eastwest):
     return trace
 
 
-def load_pred(disease, use_age, use_eastwest):
+def load_pred(disease, use_age, use_eastwest,part):
     # Load our prediction samples
-    filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
-        disease, use_age, use_eastwest)
+    if part=="both":
+        filename_pred = "../data/mcmc_samples_backup/predictions_total_{}_{}_{}.pkl".format(
+            disease, use_age, use_eastwest)
+    elif part=="train":
+        filename_pred = "../data/mcmc_samples_backup/predictions_training_{}_{}_{}.pkl".format(
+            disease, use_age, use_eastwest)
+    elif part=="test":
+        filename_pred = "../data/mcmc_samples_backup/predictions_test_{}_{}_{}.pkl".format(
+            disease, use_age, use_eastwest)
+    else:
+        print("Couldn't find predictions.")
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res

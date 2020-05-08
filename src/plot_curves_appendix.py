@@ -91,7 +91,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     county_ids = target.columns
 
         # Load our prediction samples
-    res = load_pred(disease, use_interactions, use_report_delay)
+    res = load_pred(disease, use_interactions, use_report_delay, part="both")
     n_days = (pd.Timestamp(2020,4,22) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
