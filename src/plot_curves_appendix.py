@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
 from config import *
 from shared_utils import *
@@ -187,6 +189,10 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
         ax.plot(days, prediction_q95[county_id], ":",
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
+
+
+        # Plot red line
+        ax.axvline(n_days-10)
 
     plt.legend([p_real[0], p_pred[0], p_quant, p_quant2],
             ["reported", "predicted",
