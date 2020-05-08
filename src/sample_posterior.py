@@ -16,6 +16,12 @@ num_chains = 4
 # num_chains = 1
 num_cores = num_chains
 
+# whether to sample the parameters or load them 
+SAMPLE_PARAMS = True
+
+# whether to sample predictions on training, test or both
+SAMPLE_PREDS = "both" # can be "train", "test" or "both"
+
 model_complexity, disease = combinations[i]
 use_interactions, use_report_delay = combinations_ia_report[model_complexity]
 prediction_region = "germany"
@@ -35,7 +41,7 @@ data = load_daily_data(disease, prediction_region, county_info)
 data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=pd.Timestamp(2020, 1, 28),
-    test_start=pd.Timestamp(2020, 4, 22),
+    test_start=pd.Timestamp(2020, 4, 12),
     post_test=pd.Timestamp(2020, 4, 23)
 )
 
@@ -51,15 +57,19 @@ model = BaseModel(tspan,
                   include_ia=use_interactions,
                   include_report_delay=use_report_delay)
 
-print("Sampling parameters on the training set.")
-trace = model.sample_parameters(
-    target_train,
-    samples=num_samples,
-    tune=100,
-    target_accept=0.95,
-    max_treedepth=15,
-    chains=num_chains,
-    cores=num_cores)
+if SAMPLE_PARAMS:
+    print("Sampling parameters on the training set.")
+    trace = model.sample_parameters(
+        target_train,
+        samples=num_samples,
+        tune=100,
+        target_accept=0.95,
+        max_treedepth=15,
+        chains=num_chains,
+        cores=num_cores)
+else:
+    print("Load parameters.")
+    trace = load_trace(disease, use_interactions, use_report_delay)
 
 with open(filename_model, "wb") as f:
     pkl.dump(model.model, f)
@@ -67,9 +77,39 @@ with open(filename_model, "wb") as f:
 with model.model:
     pm.save_trace(trace, filename_params, overwrite=True)
 
-print("Sampling predictions on the training set.")
-filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
-                                        disease, use_interactions, use_report_delay)
-pred = model.sample_predictions(target_train.index, target_train.columns, trace)
-with open(filename_pred, 'wb') as f:
-     pkl.dump(pred, f)
+if SAMPLE_PREDS == "train":
+    print("Sampling predictions on the training set.")
+    filename_pred = "../data/mcmc_samples_backup/predictions_train_{}_{}_{}.pkl".format(
+                                            disease, use_interactions, use_report_delay)
+    pred = model.sample_predictions(target_train.index, target_train.columns, trace)
+    with open(filename_pred, 'wb') as f:
+        pkl.dump(pred, f)
+
+elif SAMPLE_PREDS == "test":
+    print("Sampling predictions on the test set.")
+    filename_pred = "../data/mcmc_samples_backup/predictions_test_{}_{}_{}.pkl".format(
+                                            disease, use_interactions, use_report_delay)
+    pred = model.sample_predictions(target_test.index, target_test.columns, trace)
+    with open(filename_pred, 'wb') as f:
+        pkl.dump(pred, f)
+
+elif SAMPLE_PREDS == "both":
+    print("Sampling predictions on all data.")
+    filename_pred = "../data/mcmc_samples_backup/predictions_total_{}_{}_{}.pkl".format(
+                                            disease, use_interactions, use_report_delay)
+
+    # Split data new.
+    data_train, target_train, data_test, target_test = split_data(
+    data,
+    train_start=pd.Timestamp(2020, 1, 28),
+    test_start=pd.Timestamp(2020, 4, 22),
+    post_test=pd.Timestamp(2020, 4, 23)
+)
+    pred = model.sample_predictions(target_train.index, target_train.columns, trace)
+    with open(filename_pred, 'wb') as f:
+        pkl.dump(pred, f)
+
+else:
+    print("Couldn't sample predictions. Unknown flag.")
+    
+
