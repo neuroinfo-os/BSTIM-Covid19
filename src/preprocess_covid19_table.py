@@ -31,9 +31,20 @@ if __name__ == "__main__":
         dest="shapes_csv",
         default=["../data/raw/germany_county_shapes.json"],
         help="provide the shapes file for germany")
-    
+    parser.add_argument(
+        "--regex",
+        nargs=1,
+        dest="regex_Meldedatum",
+        default=[r"([0-9]+)-([0-9]+)-([0-9]+)T"],
+        help="regular expression to group Meldedatum")
+    parser.add_argument(
+        "--dayformat",
+        nargs=1,
+        dest="dayformat_Meldedatum",
+        default=[r"{:04d}-{:02d}-{:02d}T00:00:00.000Z"],
+        help="day format of Meldedatum")
     args = parser.parse_args()
-
+    
     counties = OrderedDict()
     with open(args.shapes_csv[0], "r") as data_file:
         shape_data = json.load(data_file)
@@ -47,8 +58,7 @@ if __name__ == "__main__":
     covid19_data = pd.read_csv(args.input_csv[0], sep=',')
 
     # this complicated procedure removes timezone information.
-    regex = re.compile(r"([0-9]{4})\/([0-9]{2})\/([0-9]{2}).*")
-    #regex = re.compile(r"([0-9]+)/([0-9]+)/([0-9]+).*")
+    regex = re.compile(args.regex_Meldedatum[0])
     start_year, start_month, start_day = regex.search(
         covid19_data['Meldedatum'].min()).groups()
     end_year, end_month, end_day = regex.search(
@@ -68,7 +78,7 @@ if __name__ == "__main__":
         series = np.zeros(len(df), dtype=np.int32)
         lk_data = covid19_data[covid19_data['Landkreis'] == county_name]
         for (d_id, day) in enumerate(dates):
-            day_string = "{:04d}/{:02d}/{:02d} 00:00:00".format(
+            day_string = args.dayformat_Meldedatum[0].format(
                 day.year, day.month, day.day)
             cases = np.sum(lk_data[lk_data['Meldedatum']
                                    == day_string]['AnzahlFall'])
