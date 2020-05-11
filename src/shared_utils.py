@@ -203,6 +203,14 @@ def load_model(disease, use_age, use_eastwest):
         model = pkl.load(f)
     return model
 
+def load_model_by_i(disease, i):
+    """ specialized to enumeratable experiments """
+    filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, i)
+
+    with open(filename_model, "rb") as f:
+        model = pkl.load(f)
+    return model
+
 
 def load_trace(disease, use_age, use_eastwest):
     filename_params = "../data/mcmc_samples_backup/parameters_{}_{}_{}".format(
@@ -215,6 +223,14 @@ def load_trace(disease, use_age, use_eastwest):
     del model
     return trace
 
+def load_trace_by_i(disease, i):
+    filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease, i)
+
+    model = load_model_by_i(disease, i)
+    with model:
+        trace = pm.load_trace(filename_params)
+    del model
+    return trace
 
 def load_pred(disease, use_age, use_eastwest):
     # Load our prediction samples
@@ -223,3 +239,10 @@ def load_pred(disease, use_age, use_eastwest):
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res
+
+def load_pred_by_i(disease, i):
+    filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disease, i)
+    with open(filename_pred, "rb") as f:
+        res = pkl.load(f)
+    return res
+

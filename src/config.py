@@ -1,16 +1,18 @@
 import itertools as it
 
-""" define all importamt meta variables and product lists of experiments """
+""" setup for model selection experiment """
 
-# TODO:
-#      * Interaction effect
-#      * Age (Demographic) as predictor
-#      * delay polynomial
-#      * LATER: dates for end of training start of testing
+# diseases = ["covid19"]
+# prediction_regions = ["germany"]
 
-diseases = ["covid19"]
-prediction_regions = ["germany"]
+opt_ia = [True, False]
+opt_report_delay = [True, False]
+opt_demographics = [True,False]
+opt_trend_order = [1,2,3,4]
+opt_periodic_order = [1,2,3,4]
 
-combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
-combinations = list(it.product(
-    range(len(combinations_ia_report)), diseases))
+combinations = list(it.product(opt_ia,
+                               opt_report_delay,
+                               opt_demographics,
+                               opt_trend_order,
+                               opt_periodic_order))

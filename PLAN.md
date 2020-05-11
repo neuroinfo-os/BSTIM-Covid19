@@ -20,6 +20,6 @@
             in /data/diseases)
     1. sample_ia_effects.py
     1. sample_posterior.py (sample_predictions is now subsumed in sample_posterior)
-    1. model_comparison.py
+    1. model_selection.py
     1. Plots: (via command-line calls to pdf; or via notebooks/visualization)
         (curves, curves_appendix, interaction_kernel, temporal_contribution)
