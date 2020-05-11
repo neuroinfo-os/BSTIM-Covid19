@@ -19,8 +19,6 @@ from config import *
 from matplotlib import pyplot as plt
 plt.style.use('ggplot')
 
-# ia_delay_by_name = dict(zip(["A", "B", "C", "D"], combinations_age_eastwest))
-
 
 with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
