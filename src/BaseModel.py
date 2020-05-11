@@ -114,7 +114,7 @@ class ReportDelayPolynomialFeature(SpatioTemporalFeature):
 class IAEffectLoader(object):
     generates_stats = False
 
-    def __init__(self, var, filenames, days, counties):
+    def __init__(self, var, filenames, days, counties, predict_for=None):
         self.vars = [var]
         self.samples = []
         for filename in filenames:
@@ -132,6 +132,20 @@ class IAEffectLoader(object):
                 cs = list(tmp["predicted county"])
                 d_idx = np.array([ds.index(d) for d in days]).reshape((-1, 1))
                 c_idx = np.array([cs.index(c) for c in counties])
+
+                if predict:
+                    n_days_pred = len(predict_for)
+
+                    # Repeat ia_effects for last day.
+                    last = m[-1,:,:]
+                    last = np.tile(last,(n_days_pred,1,1))
+                    m = np.concatenat((m,last), axis=0)
+
+                    # Update d_idx.
+                    d1 = [ds.index(d) for d in days]
+                    d2 = [ds.index(d) for d in predict_for]
+                    d_idx = np.array(d1 + d2).reshape(-1,1)
+
                 self.samples.append(np.moveaxis(
                     m[d_idx, c_idx, :], -1, 0).reshape((m.shape[-1], -1)).T)
 
@@ -391,6 +405,7 @@ class BaseModel(object):
             target_days,
             target_counties,
             parameters,
+            prediction_days,
             init="auto"):
         # extract features
         features = self.evaluate_features(target_days, target_counties)
@@ -411,7 +426,7 @@ class BaseModel(object):
         if self.include_ia:
             W_ia = parameters["W_ia"]
             ia_l = IAEffectLoader(None, self.ia_effect_filenames,
-                                  target_days, target_counties)
+                                  target_days, target_counties,predict_for=prediction_days)
 
         num_predictions = len(target_days) * len(target_counties)
         num_parameter_samples = α.size
