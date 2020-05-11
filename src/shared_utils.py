@@ -219,7 +219,7 @@ def load_trace(disease, use_age, use_eastwest):
 def load_pred(disease, use_age, use_eastwest,part):
     # Load our prediction samples
     if part=="both":
-        filename_pred = "../data/mcmc_samples_backup/predictions_total_{}_{}_{}.pkl".format(
+        filename_pred = "../data/mcmc_samples_backup/predictions_total_alldata_{}_{}_{}.pkl".format(
             disease, use_age, use_eastwest)
     elif part=="train":
         filename_pred = "../data/mcmc_samples_backup/predictions_training_{}_{}_{}.pkl".format(

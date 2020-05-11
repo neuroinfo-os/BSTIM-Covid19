@@ -41,8 +41,8 @@ data = load_daily_data(disease, prediction_region, county_info)
 data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=pd.Timestamp(2020, 1, 28),
-    test_start=pd.Timestamp(2020, 4, 12),
-    post_test=pd.Timestamp(2020, 4, 23)
+    test_start=pd.Timestamp(2020, 4, 22),
+    post_test=pd.Timestamp(2020, 4, 29)
 )
 
 tspan = (target_train.index[0], target_train.index[-1])
@@ -97,15 +97,15 @@ elif SAMPLE_PREDS == "test":
 
 elif SAMPLE_PREDS == "both":
     print("Sampling predictions on all data.")
-    filename_pred = "../data/mcmc_samples_backup/predictions_total_{}_{}_{}.pkl".format(
+    filename_pred = "../data/mcmc_samples_backup/predictions_total_alldata_{}_{}_{}.pkl".format(
                                             disease, use_interactions, use_report_delay)
 
     # Split data new.
     data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=pd.Timestamp(2020, 1, 28),
-    test_start=pd.Timestamp(2020, 4, 22),
-    post_test=pd.Timestamp(2020, 4, 23)
+    test_start=pd.Timestamp(2020, 4, 29),
+    post_test=pd.Timestamp(2020, 4, 30)
 )
     pred = model.sample_predictions(target_train.index, target_train.columns, trace)
     with open(filename_pred, 'wb') as f:
