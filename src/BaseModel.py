@@ -133,8 +133,8 @@ class IAEffectLoader(object):
                 d_idx = np.array([ds.index(d) for d in days]).reshape((-1, 1))
                 c_idx = np.array([cs.index(c) for c in counties])
 
+                # Simulate linear IA effects if predicting the future
                 if predict_for is not None:
-                    
                     d1 = [ds.index(d) for d in days]
                     d2 = list(range(d1[-1],d1[-1]+len(predict_for)))
                     n_days_pred = len(d2)
@@ -142,7 +142,6 @@ class IAEffectLoader(object):
                     last = m[-1,:,:]
                     last = np.tile(last,(n_days_pred,1,1))
                     m = np.concatenate((m,last), axis=0)
-
                     # Update d_idx.
                     d_idx = np.array(d1 + d2).reshape(-1,1)
 
@@ -407,11 +406,9 @@ class BaseModel(object):
             parameters,
             prediction_days,
             init="auto"):
-        # extract features
-        print(type(target_days))
-        print(type(prediction_days))
         all_days = pd.DatetimeIndex([d for d in target_days] + [d for d in prediction_days])
-        print(all_days)
+        
+        # extract features
         features = self.evaluate_features(all_days, target_counties)
 
         T_S = features["temporal_seasonal"].values

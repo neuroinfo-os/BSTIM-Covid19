@@ -83,19 +83,19 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     disease = "covid19"
     prediction_region = "germany"
 
-    data = load_daily_data(disease, prediction_region, counties)
-    data = data[data.index < pd.Timestamp(2020, 4, 23)]
-
+    data = load_daily_data(disease, prediction_region, counties, pad=7)
+    #data = data[data.index < pd.Timestamp(2020, 4, 23)]
+ 
     _, target, _, _ = split_data(
         data, train_start=pd.Timestamp(
             2020, 1, 28), test_start=pd.Timestamp(
-            2020, 4, 27), post_test=pd.Timestamp(
-            2020, 4, 23)) # plots for the training period!
+            2020, 4, 22), post_test=pd.Timestamp(
+            2020, 4, 28)) # plots for the training period!
     county_ids = target.columns
 
-        # Load our prediction samples
+    # Load our prediction samples
     res = load_pred(disease, use_interactions, use_report_delay, part="both")
-    n_days =90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 # (pd.Timestamp(2020,4,22) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
+    n_days = (pd.Timestamp(2020,4,27) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
@@ -193,8 +193,8 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
 
-        # Plot red line
-        ax.axvline(n_days-10)
+        # Plot red line for indicating where predictions start.
+        ax.axvline(n_days-(pd.Timestamp(2020,4,27) - pd.Timestamp(2020,4:,22)).days)
 
     plt.legend([p_real[0], p_pred[0], p_quant, p_quant2],
             ["reported", "predicted",

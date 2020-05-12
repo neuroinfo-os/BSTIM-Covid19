@@ -17,7 +17,7 @@ num_chains = 4
 num_cores = num_chains
 
 # whether to sample the parameters or load them 
-SAMPLE_PARAMS = False
+SAMPLE_PARAMS = True
 
 # whether to sample predictions on training, test or both
 SAMPLE_PREDS = "both" # can be "train", "test" or "both"
@@ -42,7 +42,7 @@ data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=pd.Timestamp(2020, 1, 28),
     test_start=pd.Timestamp(2020, 4, 22),
-    post_test=pd.Timestamp(2020, 4, 29)
+    post_test=pd.Timestamp(2020, 4, 27)
 )
 
 tspan = (target_train.index[0], target_train.index[-1])
