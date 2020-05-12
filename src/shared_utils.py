@@ -21,6 +21,7 @@ import gc
 from BaseModel import BaseModel
 import itertools as it
 import os
+from datetime import timedelta
 
 yearweek_regex = re.compile(r"([0-9]+)-KW([0-9]+)")
 
@@ -61,7 +62,7 @@ def load_data(disease, prediction_region, counties, separator=";"):
     return data
 
 
-def load_daily_data(disease, prediction_region, counties, seperator=","):
+def load_daily_data(disease, prediction_region, counties, seperator=",", pad=None):
     data = pd.read_csv("../data/diseases/{}.csv".format(disease),
                        sep=seperator, encoding='iso-8859-1', index_col=0)
 
@@ -70,8 +71,16 @@ def load_daily_data(disease, prediction_region, counties, seperator=","):
 
     data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
-    data.index = [pd.Timestamp(date) for date in data.index]
 
+    if pad is not None:
+        # get last date
+        last_date = pd.Timestamp(data.iloc[:, -1].index[-1])
+        extra_range = pd.date_range(
+            last_date+timedelta(1), last_date+timedelta(pad))
+        for x in extra_range:
+            data = data.append(pd.Series(name=str(x)[:11]))
+
+    data.index = [pd.Timestamp(date) for date in data.index]
     return data
 
 
@@ -216,15 +225,15 @@ def load_trace(disease, use_age, use_eastwest):
     return trace
 
 
-def load_pred(disease, use_age, use_eastwest,part):
+def load_pred(disease, use_age, use_eastwest, part):
     # Load our prediction samples
-    if part=="both":
-        filename_pred = "../data/mcmc_samples_backup/predictions_total_alldata_{}_{}_{}.pkl".format(
+    if part == "both":
+        filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
             disease, use_age, use_eastwest)
-    elif part=="train":
+    elif part == "train":
         filename_pred = "../data/mcmc_samples_backup/predictions_training_{}_{}_{}.pkl".format(
             disease, use_age, use_eastwest)
-    elif part=="test":
+    elif part == "test":
         filename_pred = "../data/mcmc_samples_backup/predictions_test_{}_{}_{}.pkl".format(
             disease, use_age, use_eastwest)
     else:

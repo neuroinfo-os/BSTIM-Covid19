@@ -1,6 +1,7 @@
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
+from datetime import timedelta
 from config import *
 from shared_utils import *
 from plot_utils import *
@@ -88,38 +89,39 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     _, target, _, _ = split_data(
         data, train_start=pd.Timestamp(
             2020, 1, 28), test_start=pd.Timestamp(
-            2020, 4, 22), post_test=pd.Timestamp(
+            2020, 4, 27), post_test=pd.Timestamp(
             2020, 4, 23)) # plots for the training period!
     county_ids = target.columns
 
         # Load our prediction samples
     res = load_pred(disease, use_interactions, use_report_delay, part="both")
-    n_days = (pd.Timestamp(2020,4,22) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
+    n_days =90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 #90 # (pd.Timestamp(2020,4,22) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
 
+    ext_index = pd.DatetimeIndex([d for d in target.index] + [d for d in pd.date_range(target.index[-1]+timedelta(1), pd.Timestamp(2020,4,26))])
     prediction_mean = pd.DataFrame(
         data=np.mean(
             prediction_samples,
             axis=0),
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q25 = pd.DataFrame(
         data=prediction_quantiles[25],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q75 = pd.DataFrame(
         data=prediction_quantiles[75],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q5 = pd.DataFrame(
         data=prediction_quantiles[5],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q95 = pd.DataFrame(
         data=prediction_quantiles[95],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
 
     fig = plt.figure(figsize=(12, 12))
@@ -133,7 +135,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             grid[np.unravel_index(list(range(25))[j], (5, 5))])
 
         county_id = countyByName[name]
-        dates = [pd.Timestamp(day) for day in target.index.values]
+        dates = [pd.Timestamp(day) for day in ext_index]
         days = [ (day - min(dates)).days for day in dates]
 
         # plot our predictions w/ quartiles
@@ -167,7 +169,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             zorder=3)
 
         # plot ground truth
-        p_real = ax.plot(days, target[county_id], "k.")
+        p_real = ax.plot(days[:-4], target[county_id], "k.")
 
         ax.set_title(name, fontsize=18)
         ax.set_xticks(days[::5])

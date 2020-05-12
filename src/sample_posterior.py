@@ -37,7 +37,7 @@ filename_model = "../data/mcmc_samples_backup/model_{}_{}_{}.pkl".format(
 with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
 
-data = load_daily_data(disease, prediction_region, county_info)
+data = load_daily_data(disease, prediction_region, county_info, pad=7)
 data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=pd.Timestamp(2020, 1, 28),
@@ -91,7 +91,7 @@ train_start=pd.Timestamp(2020, 1, 28),
 test_start=pd.Timestamp(2020, 4, 22),
 post_test=pd.Timestamp(2020, 4, 27)
 )
-pred = model.sample_predictions(target_train.index, target_train.columns, trace,target_test)    
+pred = model.sample_predictions(target_train.index, target_train.columns, trace,target_test.index)    
 with open(filename_pred, 'wb') as f:
     pkl.dump(pred, f)
 

@@ -133,17 +133,17 @@ class IAEffectLoader(object):
                 d_idx = np.array([ds.index(d) for d in days]).reshape((-1, 1))
                 c_idx = np.array([cs.index(c) for c in counties])
 
-                if predict:
-                    n_days_pred = len(predict_for)
-
+                if predict_for is not None:
+                    
+                    d1 = [ds.index(d) for d in days]
+                    d2 = list(range(d1[-1],d1[-1]+len(predict_for)))
+                    n_days_pred = len(d2)
                     # Repeat ia_effects for last day.
                     last = m[-1,:,:]
                     last = np.tile(last,(n_days_pred,1,1))
-                    m = np.concatenat((m,last), axis=0)
+                    m = np.concatenate((m,last), axis=0)
 
                     # Update d_idx.
-                    d1 = [ds.index(d) for d in days]
-                    d2 = [ds.index(d) for d in predict_for]
                     d_idx = np.array(d1 + d2).reshape(-1,1)
 
                 self.samples.append(np.moveaxis(
@@ -408,7 +408,11 @@ class BaseModel(object):
             prediction_days,
             init="auto"):
         # extract features
-        features = self.evaluate_features(target_days, target_counties)
+        print(type(target_days))
+        print(type(prediction_days))
+        all_days = pd.DatetimeIndex([d for d in target_days] + [d for d in prediction_days])
+        print(all_days)
+        features = self.evaluate_features(all_days, target_counties)
 
         T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
@@ -428,7 +432,7 @@ class BaseModel(object):
             ia_l = IAEffectLoader(None, self.ia_effect_filenames,
                                   target_days, target_counties,predict_for=prediction_days)
 
-        num_predictions = len(target_days) * len(target_counties)
+        num_predictions = len(target_days) * len(target_counties) + len(prediction_days) * len(target_counties)
         num_parameter_samples = α.size
         y = np.zeros((num_parameter_samples, num_predictions), dtype=int)
         μ = np.zeros((num_parameter_samples, num_predictions),
@@ -443,8 +447,17 @@ class BaseModel(object):
         # mean_delay /= num_parameter_samples
         if self.include_ia:
             for i in range(num_parameter_samples):
+                print("shapes")
+                print(TS.shape)
+                print(W_ts[i].shape)
+                print(T_S.shape)
+                print(W_t_s[i].shape)
+                print(T_T.shape)
+                print(W_t_t[i].shape)
+                print(log_exposure.shape)
                 IA_ef = np.dot(
                     np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
+                print(IA_ef.shape)
                 μ[i, :] = np.exp(IA_ef +
                                  np.dot(T_S, W_t_s[i]) +
                                  np.dot(T_T, W_t_t[i]) +
