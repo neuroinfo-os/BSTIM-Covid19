@@ -412,6 +412,8 @@ class BaseModel(object):
         features = self.evaluate_features(all_days, target_counties)
 
         T_S = features["temporal_seasonal"].values
+        # set periodic to mean
+        T_S = np.ones(T_S.shape) * np.mean(T_S)
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values
         TS = features["spatiotemporal"].values
@@ -444,17 +446,8 @@ class BaseModel(object):
         # mean_delay /= num_parameter_samples
         if self.include_ia:
             for i in range(num_parameter_samples):
-                print("shapes")
-                print(TS.shape)
-                print(W_ts[i].shape)
-                print(T_S.shape)
-                print(W_t_s[i].shape)
-                print(T_T.shape)
-                print(W_t_t[i].shape)
-                print(log_exposure.shape)
                 IA_ef = np.dot(
                     np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
-                print(IA_ef.shape)
                 μ[i, :] = np.exp(IA_ef +
                                  np.dot(T_S, W_t_s[i]) +
                                  np.dot(T_T, W_t_t[i]) +
