@@ -413,8 +413,9 @@ class BaseModel(object):
 
         T_S = features["temporal_seasonal"].values
         # set periodic to mean
-        print(T_S.shape)
-        T_S = np.ones(T_S.shape) * np.mean(T_S)
+        meants = np.mean(T_S, axis=0)
+        meants = np.reshape(meants, newshape=(1,-1))
+        T_S = np.ones((T_S.shape[0],1)) @ meants
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values
         TS = features["spatiotemporal"].values
