@@ -413,6 +413,7 @@ class BaseModel(object):
 
         T_S = features["temporal_seasonal"].values
         # set periodic to mean
+        print(T_S.shape)
         T_S = np.ones(T_S.shape) * np.mean(T_S)
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values

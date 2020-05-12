@@ -169,7 +169,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             zorder=3)
 
         # plot ground truth
-        p_real = ax.plot(days[:-4], target[county_id], "k.")
+        p_real = ax.plot(days[:-5], target[county_id], "k.")
 
         ax.set_title(name, fontsize=18)
         ax.set_xticks(days[::5])
@@ -194,7 +194,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
 
 
         # Plot red line for indicating where predictions start.
-        ax.axvline(n_days-(pd.Timestamp(2020,4,27) - pd.Timestamp(2020,4:,22)).days)
+        ax.axvline(n_days-(pd.Timestamp(2020,4,27) - pd.Timestamp(2020,4,22)).days)
 
     plt.legend([p_real[0], p_pred[0], p_quant, p_quant2],
             ["reported", "predicted",
