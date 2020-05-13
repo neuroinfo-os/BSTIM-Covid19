@@ -405,21 +405,24 @@ class BaseModel(object):
             target_counties,
             parameters,
             prediction_days,
+            average_periodic_feature=True
             init="auto"):
         all_days = pd.DatetimeIndex([d for d in target_days] + [d for d in prediction_days])
         
         # extract features
         features = self.evaluate_features(all_days, target_counties)
 
-        T_S = features["temporal_seasonal"].values
-        # set periodic to mean
-        meants = np.mean(T_S, axis=0)
-        meants = np.reshape(meants, newshape=(1,-1))
-        T_S = np.ones((T_S.shape[0],1)) @ meants
+        T_S = features["temporal_seasonal"].values       
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values
         TS = features["spatiotemporal"].values
         log_exposure = np.log(features["exposure"].values.ravel())
+
+        # average per week instead?
+        if average_periodic_feature:
+            mean = np.mean(T_S, axis=0)
+            mean = np.reshape(meants, newshape=(1,-1))
+            T_S = np.ones((T_S.shape[0],1)) @ meants  
 
         # extract coefficient samples
         α = parameters["α"]
