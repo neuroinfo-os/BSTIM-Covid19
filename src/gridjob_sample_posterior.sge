@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -N COVID19-MCMC
-#$ -t 1-4
+#$ -t 1-128
 #$ -l mem=14G
 #$ -m n
 #$ -q ni.q

@@ -19,27 +19,31 @@ from config import *
 from matplotlib import pyplot as plt
 plt.style.use('ggplot')
 
-# age_eastwest_by_name = dict(zip(["A","B","C"],combinations_age_eastwest))
 disease = "covid19"
 prediction_region = "germany"
+
+# choose model
+i = 0
+use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
 
 with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
 
 print("Evaluating model for {}...".format(disease))
 
-#TODO: change the dates || import them from somewhere sensible like config
 data = load_daily_data(disease, prediction_region, county_info)
-data_train, target_train, data_test, target_test = split_data(
-    data, train_start=pd.Timestamp(
-        2020, 1, 28), test_start=pd.Timestamp(
-        2020, 4, 22), post_test=pd.Timestamp(
-        2020, 4, 23))
+first_day = data.index.min()
+last_day = data.index.max()
 
-# NOTE: I think the tspan in BaseModel is actually never used?!
+data_train, target_train, data_test, target_test = split_data(
+    data,
+    train_start=first_day,
+    test_start=last_day - pd.Timedelta(days=1),
+    post_test=last_day + pd.Timedelta(days=1)
+)
+
 tspan = (target_train.index[0], target_train.index[-1])
 
-name = "dev"
 use_interactions = False
 use_report_delay = True
 # load sample trace
@@ -52,12 +56,10 @@ model = BaseModel(tspan,
                   include_ia=use_interactions,
                   include_report_delay=use_report_delay)
 
-filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
-    disease, use_interactions, use_report_delay)
+filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disease, i)
+
 print("Sampling predictions on the testing set.")
 pred = model.sample_predictions(target_train.index, target_train.columns, trace)
 with open(filename_pred, 'wb') as f:
     pkl.dump(pred, f)
 
-del trace
-del model

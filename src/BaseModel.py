@@ -189,9 +189,12 @@ class BaseModel(object):
             model=None,
             include_ia=True,
             include_report_delay=True,
+            report_delay_order=4,
             include_demographics=True,
             include_temporal=True,
+            trend_poly_order=4,
             include_periodic=True,
+            periodic_poly_order=4,
             orthogonalize=False):
 
         self.county_info = counties
@@ -199,20 +202,23 @@ class BaseModel(object):
         self.num_ia = num_ia if include_ia else 0
         self.include_ia = include_ia
         self.include_report_delay = include_report_delay
+        self.report_delay_order = report_delay_order
         self.include_demographics = include_demographics
         self.include_temporal = include_temporal
+        self.trend_poly_order = trend_poly_order
         self.include_periodic = include_periodic
-        self.trange = trange
+        self.periodic_poly_order = periodic_poly_order
+        self.trange = trange # 0 -> 28th of Jan; 1-> Last
 
         self.features = {
             "temporal_trend": {
                 "temporal_polynomial_{}".format(i): TemporalPolynomialFeature(
-                    pd.Timestamp('2020-01-28'), pd.Timestamp('2020-03-30'), i)
-                    for i in range(4)} if self.include_temporal else {},
+                    trange[0], trange[1], i)
+                    for i in range(self.trend_poly_order+1)} if self.include_temporal else {},
             "temporal_seasonal": {
                 "temporal_periodic_polynomial_{}".format(i): TemporalPeriodicPolynomialFeature(
-                    pd.Timestamp('2020-01-28'), 7, i)
-                    for i in range(4)} if self.include_periodic else {},
+                    trange[0], 7, i)
+                    for i in range(self.periodic_poly_order+1)} if self.include_periodic else {},
             "spatiotemporal": {
                 "demographic_{}".format(group): SpatioTemporalYearlyDemographicsFeature(
                     self.county_info,
@@ -222,7 +228,7 @@ class BaseModel(object):
                         "[20-65)"]} if self.include_demographics else {},
             "temporal_report_delay" : {
                  "report_delay": ReportDelayPolynomialFeature(
-                     pd.Timestamp('2020-04-17'), pd.Timestamp('2020-04-22'), 4)}
+                     trange[1] - pd.Timedelta(days=5), trange[1], self.report_delay_order)}
                      if self.include_report_delay else {},
             "exposure": {
                         "exposure": SpatioTemporalYearlyDemographicsFeature(
@@ -230,13 +236,13 @@ class BaseModel(object):
                             "total",
                             1.0 / 100000)}}
 
-        self.Q = np.eye(self.num_ia, dtype=np.float32)
-        if orthogonalize:
-            # transformation to orthogonalize IA features
-            T = np.linalg.inv(np.linalg.cholesky(
-                gaussian_gram([6.25, 12.5, 25.0, 50.0]))).T
-            for i in range(4):
-                self.Q[i * 4:(i + 1) * 4, i * 4:(i + 1) * 4] = T
+        # self.Q = np.eye(self.num_ia, dtype=np.float32)
+        # if orthogonalize:
+        #     # transformation to orthogonalize IA features
+        #     T = np.linalg.inv(np.linalg.cholesky(
+        #         gaussian_gram([6.25, 12.5, 25.0, 50.0]))).T
+        #     for i in range(4):
+        #         self.Q[i * 4:(i + 1) * 4, i * 4:(i + 1) * 4] = T
 
     def evaluate_features(self, days, counties):
         all_features = {}
@@ -297,7 +303,7 @@ class BaseModel(object):
                 self.params = [δ, W_ia, W_t_s, W_t_t, W_t_d, W_ts]
 
                 # calculate interaction effect 
-                IA_ef = tt.dot(tt.dot(IA, self.Q), W_ia)
+                IA_ef = tt.dot(IA, W_ia)
 
                 # calculate mean rates
                 μ = pm.Deterministic(
@@ -451,8 +457,8 @@ class BaseModel(object):
         # mean_delay /= num_parameter_samples
         if self.include_ia:
             for i in range(num_parameter_samples):
-                IA_ef = np.dot(
-                    np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
+                IA_ef = np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], W_ia[i])
+                    # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
                 μ[i, :] = np.exp(IA_ef +
                                  np.dot(T_S, W_t_s[i]) +
                                  np.dot(T_T, W_t_t[i]) +

@@ -78,29 +78,33 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     C2 = "#E69F00"
     C3 = "#0073CF"
 
-    # for i, disease in enumerate(diseases): ! Replace with new configs!
     i = 0
     disease = "covid19"
     prediction_region = "germany"
 
-    data = load_daily_data(disease, prediction_region, counties, pad=7)
-    #data = data[data.index < pd.Timestamp(2020, 4, 23)]
- 
+
+    days_into_future = 5
+    data = load_daily_data(disease, prediction_region, county_info, pad=days_into_future)
+    first_day = data.index.min()
+    last_day = data.index.max()
+
     _, target, _, _ = split_data(
-        data, train_start=pd.Timestamp(
-            2020, 1, 28), test_start=pd.Timestamp(
-            2020, 4, 22), post_test=pd.Timestamp(
-            2020, 4, 28)) # plots for the training period!
+        data,
+        train_start=first_day,
+        test_start=last_day - pd.Timedelta(days=days_into_future-1),
+        post_test=last_day + pd.Timedelta(days=1))
+
     county_ids = target.columns
 
     # Load our prediction samples
-    res = load_pred(disease, use_interactions, use_report_delay, part="both")
-    n_days = (pd.Timestamp(2020,4,27) - pd.Timestamp(2020,1,28)).days # for now; get from timestamps up top!
+    res = load_pred(disease, use_interactions, use_report_delay)
+    n_days = ((last_day - pd.Timedelta(days=1)) - first_day).days
+
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
 
-    ext_index = pd.DatetimeIndex([d for d in target.index] + [d for d in pd.date_range(target.index[-1]+timedelta(1), pd.Timestamp(2020,4,26))])
+    ext_index = pd.DatetimeIndex([d for d in target.index] + [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day])
     prediction_mean = pd.DataFrame(
         data=np.mean(
             prediction_samples,
