@@ -411,7 +411,7 @@ class BaseModel(object):
             target_counties,
             parameters,
             prediction_days,
-            average_periodic_feature=True
+            average_periodic_feature=True,
             init="auto"):
         all_days = pd.DatetimeIndex([d for d in target_days] + [d for d in prediction_days])
         
@@ -427,8 +427,8 @@ class BaseModel(object):
         # average per week instead?
         if average_periodic_feature:
             mean = np.mean(T_S, axis=0)
-            mean = np.reshape(meants, newshape=(1,-1))
-            T_S = np.ones((T_S.shape[0],1)) @ meants  
+            mean = np.reshape(mean, newshape=(1,-1))
+            T_S = np.ones((T_S.shape[0],1)) @ mean  
 
         # extract coefficient samples
         α = parameters["α"]
