@@ -35,13 +35,13 @@ if __name__ == "__main__":
         "--regex",
         nargs=1,
         dest="regex_Meldedatum",
-        default=[r"([0-9]+)-([0-9]+)-([0-9]+)T"],
+        default=[r"([0-9]+)/([0-9]+)/([0-9]+)"],
         help="regular expression to group Meldedatum")
     parser.add_argument(
         "--dayformat",
         nargs=1,
         dest="dayformat_Meldedatum",
-        default=[r"{:04d}-{:02d}-{:02d}T00:00:00.000Z"],
+        default=[r"{:04d}/{:02d}/{:02d} 00:00:00"],
         help="day format of Meldedatum")
     args = parser.parse_args()
     
