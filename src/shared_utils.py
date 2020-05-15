@@ -241,19 +241,10 @@ def load_trace_by_i(disease, i):
     del model
     return trace
 
-def load_pred(disease, use_age, use_eastwest, part="both"):
+def load_pred(disease, use_age, use_eastwest):
     # Load our prediction samples
-    if part == "both":
-        filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
+    filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
             disease, use_age, use_eastwest)
-    elif part == "train":
-        filename_pred = "../data/mcmc_samples_backup/predictions_training_{}_{}_{}.pkl".format(
-            disease, use_age, use_eastwest)
-    elif part == "test":
-        filename_pred = "../data/mcmc_samples_backup/predictions_test_{}_{}_{}.pkl".format(
-            disease, use_age, use_eastwest)
-    else:
-        print("Couldn't find predictions.")
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res

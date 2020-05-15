@@ -84,7 +84,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
 
 
     days_into_future = 5
-    data = load_daily_data(disease, prediction_region, county_info, pad=days_into_future)
+    data = load_daily_data(disease, prediction_region, counties, pad=days_into_future)
     first_day = data.index.min()
     last_day = data.index.max()
 
@@ -98,13 +98,14 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
 
     # Load our prediction samples
     res = load_pred(disease, use_interactions, use_report_delay)
-    n_days = ((last_day - pd.Timedelta(days=1)) - first_day).days
-
+    n_days = (last_day  - first_day).days
+    print(n_days)
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
 
-    ext_index = pd.DatetimeIndex([d for d in target.index] + [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day])
+    ext_index = pd.DatetimeIndex([d for d in target.index] + [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day-timedelta(1))])
+    print(ext_index)
     prediction_mean = pd.DataFrame(
         data=np.mean(
             prediction_samples,
@@ -173,7 +174,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             zorder=3)
 
         # plot ground truth
-        p_real = ax.plot(days[:-5], target[county_id], "k.")
+        p_real = ax.plot(days[:-4], target[county_id], "k.")
 
         ax.set_title(name, fontsize=18)
         ax.set_xticks(days[::5])
