@@ -114,7 +114,7 @@ class ReportDelayPolynomialFeature(SpatioTemporalFeature):
 class IAEffectLoader(object):
     generates_stats = False
 
-    def __init__(self, var, filenames, days, counties):
+    def __init__(self, var, filenames, days, counties, predict_for=None):
         self.vars = [var]
         self.samples = []
         for filename in filenames:
@@ -132,6 +132,19 @@ class IAEffectLoader(object):
                 cs = list(tmp["predicted county"])
                 d_idx = np.array([ds.index(d) for d in days]).reshape((-1, 1))
                 c_idx = np.array([cs.index(c) for c in counties])
+
+                # Simulate linear IA effects if predicting the future
+                if predict_for is not None:
+                    d1 = [ds.index(d) for d in days]
+                    d2 = list(range(d1[-1],d1[-1]+len(predict_for)))
+                    n_days_pred = len(d2)
+                    # Repeat ia_effects for last day.
+                    last = m[-1,:,:]
+                    last = np.tile(last,(n_days_pred,1,1))
+                    m = np.concatenate((m,last), axis=0)
+                    # Update d_idx.
+                    d_idx = np.array(d1 + d2).reshape(-1,1)
+
                 self.samples.append(np.moveaxis(
                     m[d_idx, c_idx, :], -1, 0).reshape((m.shape[-1], -1)).T)
 
@@ -397,15 +410,25 @@ class BaseModel(object):
             target_days,
             target_counties,
             parameters,
+            prediction_days,
+            average_periodic_feature=True,
             init="auto"):
+        all_days = pd.DatetimeIndex([d for d in target_days] + [d for d in prediction_days])
+        
         # extract features
-        features = self.evaluate_features(target_days, target_counties)
+        features = self.evaluate_features(all_days, target_counties)
 
-        T_S = features["temporal_seasonal"].values
+        T_S = features["temporal_seasonal"].values       
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values
         TS = features["spatiotemporal"].values
         log_exposure = np.log(features["exposure"].values.ravel())
+
+        # average per week instead?
+        if average_periodic_feature:
+            mean = np.mean(T_S, axis=0)
+            mean = np.reshape(mean, newshape=(1,-1))
+            T_S = np.ones((T_S.shape[0],1)) @ mean  
 
         # extract coefficient samples
         α = parameters["α"]
@@ -417,9 +440,9 @@ class BaseModel(object):
         if self.include_ia:
             W_ia = parameters["W_ia"]
             ia_l = IAEffectLoader(None, self.ia_effect_filenames,
-                                  target_days, target_counties)
+                                  target_days, target_counties,predict_for=prediction_days)
 
-        num_predictions = len(target_days) * len(target_counties)
+        num_predictions = len(target_days) * len(target_counties) + len(prediction_days) * len(target_counties)
         num_parameter_samples = α.size
         y = np.zeros((num_parameter_samples, num_predictions), dtype=int)
         μ = np.zeros((num_parameter_samples, num_predictions),

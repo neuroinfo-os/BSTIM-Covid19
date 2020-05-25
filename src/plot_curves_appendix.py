@@ -1,4 +1,7 @@
+import matplotlib
+matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
+from datetime import timedelta
 from config import *
 from shared_utils import *
 from plot_utils import *
@@ -79,46 +82,51 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     disease = "covid19"
     prediction_region = "germany"
 
-    data = load_daily_data(disease, prediction_region, county_info)
+
+    days_into_future = 5
+    data = load_daily_data(disease, prediction_region, counties, pad=days_into_future)
     first_day = data.index.min()
     last_day = data.index.max()
 
     _, target, _, _ = split_data(
         data,
         train_start=first_day,
-        test_start=last_day - pd.Timedelta(days=1),
+        test_start=last_day - pd.Timedelta(days=days_into_future-1),
         post_test=last_day + pd.Timedelta(days=1))
 
     county_ids = target.columns
 
     # Load our prediction samples
     res = load_pred(disease, use_interactions, use_report_delay)
-    n_days = ((last_day - pd.Timedelta(days=1)) - first_day).days
+    n_days = (last_day  - first_day).days
+    print(n_days)
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
 
+    ext_index = pd.DatetimeIndex([d for d in target.index] + [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day-timedelta(1))])
+    print(ext_index)
     prediction_mean = pd.DataFrame(
         data=np.mean(
             prediction_samples,
             axis=0),
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q25 = pd.DataFrame(
         data=prediction_quantiles[25],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q75 = pd.DataFrame(
         data=prediction_quantiles[75],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q5 = pd.DataFrame(
         data=prediction_quantiles[5],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
     prediction_q95 = pd.DataFrame(
         data=prediction_quantiles[95],
-        index=target.index,
+        index=ext_index,
         columns=target.columns)
 
     fig = plt.figure(figsize=(12, 12))
@@ -132,7 +140,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             grid[np.unravel_index(list(range(25))[j], (5, 5))])
 
         county_id = countyByName[name]
-        dates = [pd.Timestamp(day) for day in target.index.values]
+        dates = [pd.Timestamp(day) for day in ext_index]
         days = [ (day - min(dates)).days for day in dates]
 
         # plot our predictions w/ quartiles
@@ -166,7 +174,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             zorder=3)
 
         # plot ground truth
-        p_real = ax.plot(days, target[county_id], "k.")
+        p_real = ax.plot(days[:-4], target[county_id], "k.")
 
         ax.set_title(name, fontsize=18)
         ax.set_xticks(days[::5])
@@ -189,6 +197,10 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
         ax.plot(days, prediction_q95[county_id], ":",
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
+
+        # Plot red line for indicating where predictions start.
+        ax.axvline(n_days-(pd.Timestamp(2020,4,27) - pd.Timestamp(2020,4,22)).days)
+
     plt.legend([p_real[0], p_pred[0], p_quant, p_quant2],
             ["reported", "predicted",
                 "25\%-75\% quantile", "5\%-95\% quantile"],
@@ -205,7 +217,9 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
 
 if __name__ == "__main__":
 
-    combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
-    for i in range(4):
+    #combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
+    # plot only for TRUE TRUE
+    combinations_ia_report=[(True,True)]
+    for i in range(1):
         _ = curves_appendix(combinations_ia_report[i][0], combinations_ia_report[i][1],save_plot=True)
 
