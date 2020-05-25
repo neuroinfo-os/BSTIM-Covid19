@@ -39,7 +39,11 @@ waics = {}
 # for (name, (use_interaction, use_report_delay)) in ia_delay_by_name.items():
 for (i, _) in enumerate(combinations):
     # load sample trace
-    trace = load_trace_by_i(disease, i)
+    try:
+        trace = load_trace_by_i(disease, i)
+    except:
+        print("Model nr. {} does not exist, skipping...\n".format(i))
+        continue
     # load model
     model = load_model_by_i(disease, i)
 

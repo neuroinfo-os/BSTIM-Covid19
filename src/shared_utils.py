@@ -216,6 +216,9 @@ def load_trace(disease, use_age, use_eastwest):
     filename_params = "../data/mcmc_samples_backup/parameters_{}_{}_{}".format(
         disease, use_age, use_eastwest)
 
+    if ~os.path.isfile(filename_params):
+        raise OSError(401, "File not found")
+
     model = load_model(disease, use_age, use_eastwest)
     with model:
         trace = pm.load_trace(filename_params)
