@@ -134,7 +134,7 @@ class IAEffectLoader(object):
                 c_idx = np.array([cs.index(c) for c in counties])
 
                 # Simulate linear IA effects if predicting the future
-                if predict_for is not None:
+                if not predict_for and predict_for is not None:
                     d1 = [ds.index(d) for d in days]
                     d2 = list(range(d1[-1],d1[-1]+len(predict_for)))
                     n_days_pred = len(d2)
@@ -413,8 +413,8 @@ class BaseModel(object):
             prediction_days,
             average_periodic_feature=True,
             init="auto"):
+
         all_days = pd.DatetimeIndex([d for d in target_days] + [d for d in prediction_days])
-        
         # extract features
         features = self.evaluate_features(all_days, target_counties)
 

@@ -15,10 +15,10 @@ num_chains = 4
 num_cores = num_chains
 
 # whether to sample the parameters or load them 
-SAMPLE_PARAMS = True
+SAMPLE_PARAMS = False
 
 # whether to sample predictions on training, test or both
-SAMPLE_PREDS = "both" # can be "train", "test" or "both"
+SAMPLE_PREDS = "test" # can be "train", "test" or "both"
 
 disease = "covid19"
 prediction_region = "germany"
@@ -36,8 +36,8 @@ with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
 
 # pad = days to look into the future
-days_into_future = 5
-data = load_daily_data(disease, prediction_region, county_info, pad=days_into_future)
+# days_into_future = 5
+data = load_daily_data(disease, prediction_region, county_info) #, pad=days_into_future)
 
 first_day = data.index.min()
 last_day = data.index.max()
@@ -45,7 +45,8 @@ last_day = data.index.max()
 data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=first_day,
-    test_start=last_day - pd.Timedelta(days=days_into_future-1),
+#     test_start=last_day - pd.Timedelta(days=days_into_future-1),
+    test_start=last_day - pd.Timedelta(1),
     post_test=last_day + pd.Timedelta(days=1)
 )
 
@@ -83,11 +84,18 @@ if SAMPLE_PARAMS:
         pm.save_trace(trace, filename_params, overwrite=True)
 else:
     print("Load parameters.")
-    trace = load_trace(disease, use_ia, use_report_delay)
+    trace = load_trace_by_i(disease, i)
 
 print("Sampling predictions on the training and test set.")
 
-pred = model.sample_predictions(target_train.index, target_train.columns, trace, target_test.index)
+if SAMPLE_PREDS == "both":
+    pred = model.sample_predictions(target_train.index, target_train.columns, trace, target_test.index)
+elif SAMPLE_PREDS == "train":
+    pred = model.sample_predictions(target_train.index, target_train.columns, trace, [])
+elif SAMPLE_PREDS == "test":
+    pred = model.sample_predictions(target_test.index, target_test.columns, trace, [])
+else:
+    print("Unknown prediction sampling parameter SAMPLE_PREDS = {}".format(SAMPLE_PREDS))
 
 with open(filename_pred, 'wb') as f:
     pkl.dump(pred, f)

@@ -21,23 +21,19 @@ measures = {
             pred_val**2 /
             alpha_val))}
 
-with open('../data/comparison.pkl', "rb") as f:
-    best_model = pkl.load(f)
-
 with open('../data/counties/counties.pkl', "rb") as f:
     counties = pkl.load(f)
 
-summary = OrderedDict()
 
 # TODO: import the correct last date
 # for i, disease in enumerate(diseases):
 
 disease = "covid19"
-use_age = best_model[disease]["use_age"]
-use_eastwest = best_model[disease]["use_eastwest"]
+# use_age = best_model[disease]["use_age"]
+# use_eastwest = best_model[disease]["use_eastwest"]
 prediction_region = "germany"
 
-res = load_pred(disease, use_age, use_eastwest)
+# res = load_pred(disease, use_age, use_eastwest)
 
 data = load_daily_data(disease, prediction_region, counties)
 first_day = data.index.min()
@@ -52,28 +48,57 @@ _, _, _, target = split_data(
 
 county_ids = target.columns
 
-summary = {}
+# summary -> csv only for mean and sd; ohter get seperate files!
+summary = {
+    "ID": [],
+    "interaction effect": [],
+    "report delay": [],
+    "demographics": [],
+    "trend order": [],
+    "period order": [],
+    "deviance mean": [],
+    "deviance sd": [],
+    "DS score mean": [],
+    "DS score sd": [],
+}
 
-for measure, f in measures.items():
-    print("Evaluating {} for disease {}, measure {}".format(
-        name, disease, measure))
-    measure_df = pd.DataFrame(
-        f(
-            target.values.astype(
-                np.float32).reshape(
-                (1, -1)).repeat(
-                res["y"].shape[0], axis=0), res["μ"].astype(
-                np.float32), res["α"].astype(
-                np.float32).reshape(
-                    (-1, 1))).mean(
-                        axis=0).reshape(
-                            target.shape), index=target.index, columns=target.columns)
+measure_data = {}
 
-    summary[measure] = measure_df
-    summary[measure + " mean"] = np.mean(measure_df.mean())
-    summary[measure + " sd"] = np.std(measure_df.mean())
+for (i,_) in enumerate(combinations):
 
-with open("../data/measures_{}_summary.pkl".format(disease), "wb") as f:
-    pkl.dump(summary, f)
+    try:
+        res = load_pred_by_i(disease, i)
+    except:
+        print("Model nr. {} does not exist, skipping...\n".format(i))
+        continue
+
+    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
+    summary["ID"].append(i)
+    summary["interaction effect"].append(use_ia)
+    summary["report delay"].append(use_report_delay)
+    summary["demographics"].append(use_demographics)
+    summary["trend order"].append(trend_order)
+    summary["period order"].append(periodic_order)
+
+
+    for measure, f in measures.items():
+        print("Evaluating model {} for disease {}, measure {}".format(
+            i, disease, measure))
+        measure_df = pd.DataFrame(
+            f(target.values.astype(np.float32).reshape((1, -1)).repeat(res["y"].shape[0], axis=0),
+              res["μ"].astype(np.float32),
+              res["α"].astype(np.float32).reshape((-1, 1))).mean(axis=0).reshape(target.shape),
+              index=target.index, columns=target.columns)
+
+        measure_data[i + "_" + measure] = measure_df
+
+        summary[measure + " mean"].append(np.mean(measure_df.mean()))
+        summary[measure + " sd"].append(np.std(measure_df.mean()))
+
+df = pd.DataFrame(summary)
+df.to_csv("../data/measures_{}_summary.csv".format(disease), sep=",")
+
+with open("../data/measures_{}_data.pkl".format(disease), "wb") as f:
+    pkl.dump(measure_data, f)
 
 del summary
