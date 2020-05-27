@@ -21,6 +21,7 @@ SAMPLE_PARAMS = True
 disease = "covid19"
 prediction_region = "germany"
 
+# model 15 selected by WAICS
 use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[15]
 
 # use_interactions, use_report_delay = combinations_ia_report[model_complexity]
@@ -36,7 +37,7 @@ with open('../data/counties/counties.pkl', "rb") as f:
 
 # pad = days to look into the future
 days_into_future = 5
-data = load_daily_data(disease, prediction_region, county_info) #, pad=days_into_future)
+data = load_daily_data(disease, prediction_region, county_info, pad=days_into_future)
 
 first_day = data.index.min()
 last_day = data.index.max()
