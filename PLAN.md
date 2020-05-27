@@ -23,3 +23,20 @@
     1. model_selection.py
     1. Plots: (via command-line calls to pdf; or via notebooks/visualization)
         (curves, curves_appendix, interaction_kernel, temporal_contribution)
+
+* "Final Run"
+    1. 1 Model (id = 15 in combinations -> max parameters)
+    1. results:
+        * parameter trace
+        * prediction on training & test set for plotting
+            * no nowcast; 5 days from now for train cut-off/ forecast begin. 5 days into the future.
+            * plots?
+            * deviance / DS score distributions!
+
+
+* Plots
+    1. 1A qudaratisch; 1B 1C + 2?!--> appendix
+    1. mean trend + periodic // no confidence intervals because VERY LARGE VARIANCE (that seems correlated)
+    1. deviance/DS score into appendix distribution outlier? ("interpretation")
+    1. Main fig: 2 cities full model \\ -5W(nowcast) -> -5D (forecast) -> +5D (forecast forecast)
+    
