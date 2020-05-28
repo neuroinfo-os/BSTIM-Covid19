@@ -84,7 +84,7 @@ def curves_appendix(model_i, save_plot=False):
     prediction_region = "germany"
 
 
-#    days_into_future = 5
+    #    days_into_future = 5
     data = load_daily_data(disease+"_old", prediction_region, counties) #, pad=days_into_future)
     first_day = data.index.min()
     last_day = data.index.max()
@@ -92,7 +92,7 @@ def curves_appendix(model_i, save_plot=False):
     _, target, _, _ = split_data(
         data,
         train_start=first_day,
-#        test_start=last_day - pd.Timedelta(days=days_into_future-1),
+    #        test_start=last_day - pd.Timedelta(days=days_into_future-1),
         test_start=last_day - pd.Timedelta(days=1),
         post_test=last_day + pd.Timedelta(days=1))
 
@@ -106,29 +106,34 @@ def curves_appendix(model_i, save_plot=False):
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
 
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
-            [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day-timedelta(1))])
+           [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day-timedelta(1))])
 
     prediction_mean = pd.DataFrame(
         data=np.mean(
             prediction_samples,
             axis=0),
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q25 = pd.DataFrame(
         data=prediction_quantiles[25],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q75 = pd.DataFrame(
         data=prediction_quantiles[75],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q5 = pd.DataFrame(
         data=prediction_quantiles[5],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q95 = pd.DataFrame(
         data=prediction_quantiles[95],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
 
     fig = plt.figure(figsize=(12, 12))
@@ -142,7 +147,8 @@ def curves_appendix(model_i, save_plot=False):
             grid[np.unravel_index(list(range(25))[j], (5, 5))])
 
         county_id = countyByName[name]
-        dates = [pd.Timestamp(day) for day in ext_index]
+        #dates = [pd.Timestamp(day) for day in ext_index]
+        dates = [pd.Timestamp(day) for day in target.index.values]
         days = [ (day - min(dates)).days for day in dates]
 
         # plot our predictions w/ quartiles
@@ -175,8 +181,8 @@ def curves_appendix(model_i, save_plot=False):
             linewidth=2.0,
             zorder=3)
 
-        # plot ground truth
-        p_real = ax.plot(days[:-4], target[county_id], "k.")
+        # plot ground truth !
+        p_real = ax.plot(days, target[county_id], "k.")
 
         ax.set_title(name, fontsize=18)
         ax.set_xticks(days[::5])
@@ -211,7 +217,7 @@ def curves_appendix(model_i, save_plot=False):
     fig.text(0.5, 0.02, "Time [days since Jan. 28]", ha='center', fontsize=22)
     fig.text(0.01, 0.46, "Reported/predicted infections",
             va='center', rotation='vertical', fontsize=22)
-    
+
     if save_plot:
         plt.savefig("../figures/curves_{}_appendix_{}.pdf".format(disease, model_i))
 
