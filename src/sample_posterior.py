@@ -15,7 +15,7 @@ num_chains = 4
 num_cores = num_chains
 
 # whether to sample the parameters or load them 
-SAMPLE_PARAMS = False
+SAMPLE_PARAMS = True
 
 # whether to sample predictions on training, test or both
 SAMPLE_PREDS = "train" # can be "train", "test" or "both"
@@ -37,7 +37,7 @@ with open('../data/counties/counties.pkl', "rb") as f:
 
 # pad = days to look into the future
 # days_into_future = 5
-data = load_daily_data(disease+"_old", prediction_region, county_info) #, pad=days_into_future)
+data = load_daily_data(disease, prediction_region, county_info) #, pad=days_into_future)
 
 first_day = data.index.min()
 last_day = data.index.max()
