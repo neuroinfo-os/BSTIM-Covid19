@@ -10,10 +10,14 @@ import matplotlib
 from matplotlib import pyplot as plt
 theano.config.compute_test_value = 'off'
 
-def interaction_kernel(use_report_delay=True, save_plot=False):
+def interaction_kernel(model_i, save_plot=False):
     theano.config.compute_test_value = 'off'
 
-    use_interactions = True
+    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
+
+    if not use_ia:
+        raise ValueError("Model nr. {} does not include an interaction kernel".format(model_i))
+
     plt.style.use("ggplot")
     matplotlib.rcParams['text.usetex'] = True
     matplotlib.rcParams['text.latex.unicode'] = True
@@ -30,7 +34,7 @@ def interaction_kernel(use_report_delay=True, save_plot=False):
     #fig.suptitle("Learned interaction kernels and temporal contributions", fontsize=20)
     grid = plt.GridSpec(
         3,
-        2 * len(diseases),
+        2 * 1,
         top=0.92,
         bottom=0.1,
         left=0.09,
@@ -69,7 +73,7 @@ def interaction_kernel(use_report_delay=True, save_plot=False):
     i = 0
     disease = 'covid19'
 
-    trace = load_trace(disease, use_interactions, use_report_delay)
+    trace = load_trace_by_i(disease, model_i)
 
     kernel_samples = res.dot(trace["W_ia"].T)
 
@@ -142,11 +146,10 @@ def interaction_kernel(use_report_delay=True, save_plot=False):
             fontsize=22, transform=ax_sample2.transAxes)
 
     if save_plot:
-        fig.savefig("../figures/interaction_kernels_{}_{}.pdf".format(use_interactions, use_report_delay))
+        fig.savefig("../figures/interaction_kernels_{}.pdf".format(model_i))
 
     return fig
 
 if __name__ == "__main__":
 
-    _ = interaction_kernel(True, save_plot=True)
-    _ = interaction_kernel(False, save_plot=True)
+    _ = interaction_kernel(15, save_plot=True)
