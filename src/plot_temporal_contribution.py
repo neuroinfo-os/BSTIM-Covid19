@@ -15,9 +15,9 @@ from config import * # <-- to select the right model
 # from pandas import register_matplotlib_converters
 # register_matplotlib_converters() # the fk python
 
-def temporal_contribution(i, combinations, save_plot=False):
+def temporal_contribution(model_i, combinations, save_plot=False):
 
-    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
+    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
 
     plt.style.use('ggplot')
 
@@ -42,7 +42,7 @@ def temporal_contribution(i, combinations, save_plot=False):
     prediction_region = "germany"
 
 
-    data = load_daily_data(disease, prediction_region, county_info)
+    data = load_daily_data(disease+"_old", prediction_region, county_info)
     first_day = data.index.min()
     last_day = data.index.max()
 
@@ -73,7 +73,7 @@ def temporal_contribution(i, combinations, save_plot=False):
     periodic_features = features["temporal_seasonal"].swaplevel(0, 1).loc["09162"]
     #t_all = t_all_b if disease == "borreliosis" else t_all_cr
 
-    trace = load_trace(disease, use_interactions, use_report_delay)
+    trace = load_trace_by_i(disease, model_i)
     trend_params = pm.trace_to_dataframe(trace, varnames=["W_t_t"])
     periodic_params = pm.trace_to_dataframe(trace, varnames=["W_t_s"])
 
@@ -184,11 +184,10 @@ def temporal_contribution(i, combinations, save_plot=False):
     ax_tp.tick_params(labelbottom=True, labelleft=True, labelsize=18, length=6)
 
     if save_plot:
-        fig.savefig("../figures/temporal_contribution_{}.pdf".format(i))
+        fig.savefig("../figures/temporal_contribution_{}.pdf".format(model_i))
 
     return fig
 
 if __name__ == "__main__":
 
-    for i in range(4):
-        _ = temporal_contribution(i, combinations,save_plot=True)
+    _ = temporal_contribution(15, combinations,save_plot=True)

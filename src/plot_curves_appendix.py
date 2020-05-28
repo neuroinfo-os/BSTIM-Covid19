@@ -10,7 +10,8 @@ import numpy as np
 from collections import OrderedDict
 from pymc3.stats import quantiles
 
-def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=False):
+def curves_appendix(model_i, save_plot=False):
+
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
 
@@ -83,30 +84,30 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     prediction_region = "germany"
 
 
-    days_into_future = 5
-    data = load_daily_data(disease, prediction_region, counties, pad=days_into_future)
+#    days_into_future = 5
+    data = load_daily_data(disease+"_old", prediction_region, counties) #, pad=days_into_future)
     first_day = data.index.min()
     last_day = data.index.max()
 
     _, target, _, _ = split_data(
         data,
         train_start=first_day,
-        test_start=last_day - pd.Timedelta(days=days_into_future-1),
+#        test_start=last_day - pd.Timedelta(days=days_into_future-1),
+        test_start=last_day - pd.Timedelta(days=1),
         post_test=last_day + pd.Timedelta(days=1))
 
     county_ids = target.columns
 
     # Load our prediction samples
-    res = load_pred(disease, use_interactions, use_report_delay)
-    n_days = (last_day  - first_day).days
-    print(n_days)
+    res = load_pred_by_i("train_" + disease, model_i)
+    n_days = (last_day  - first_day).days - 1
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
 
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day-timedelta(1))])
-    print(ext_index)
+
     prediction_mean = pd.DataFrame(
         data=np.mean(
             prediction_samples,
@@ -212,15 +213,11 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             va='center', rotation='vertical', fontsize=22)
     
     if save_plot:
-        plt.savefig("../figures/curves_{}_appendix_{}_{}.pdf".format(disease, use_interactions, use_report_delay))
+        plt.savefig("../figures/curves_{}_appendix_{}.pdf".format(disease, model_i))
 
-    return plt
+    return fig
 
 if __name__ == "__main__":
 
-    #combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
-    # plot only for TRUE TRUE
-    combinations_ia_report=[(True,True)]
-    for i in range(1):
-        _ = curves_appendix(combinations_ia_report[i][0], combinations_ia_report[i][1],save_plot=True)
+    _ = curves_appendix(15, save_plot=True)
 
