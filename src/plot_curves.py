@@ -7,7 +7,8 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 
-def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
+# def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
+def curves(model_i, prediction_day=30, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
@@ -34,7 +35,7 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
     fig = plt.figure(figsize=(12, 14))
     grid = plt.GridSpec(
         3,
-        len(diseases),
+        1,
         top=0.9,
         bottom=0.1,
         left=0.07,
@@ -51,7 +52,7 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
     disease = "covid19"
     prediction_region = "germany"
 
-    data = load_daily_data(disease, prediction_region, county_info)
+    data = load_daily_data(disease + "_old", prediction_region, counties)
     first_day = data.index.min()
     last_day = data.index.max()
 
@@ -64,7 +65,7 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
     county_ids = target.columns
 
     # Load our prediction samples
-    res = load_pred(disease, use_interactions, use_report_delay)
+    res = load_pred_by_i("train_" + disease, model_i)
     n_days = (last_day - first_day).days - 1 #offset test data
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
@@ -95,13 +96,6 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
         index=target.index,
         columns=target.columns)
 
-    # Load hhh4 predictions for reference
-    # hhh4_predictions = pd.read_csv("../data/diseases/{}_hhh4.csv".format(
-    #     "borreliosis_notrend" if disease == "borreliosis" else disease))
-    # weeks = hhh4_predictions.pop("weeks")
-    # hhh4_predictions.index = parse_yearweek(weeks)
-
-    # create axes grid
     map_ax = fig.add_subplot(grid[2, i])
     map_ax.set_position(grid[2, i].get_position(fig).translated(0, -0.05))
     map_ax.set_xlabel(
@@ -231,14 +225,12 @@ def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save
             va='center', rotation='vertical', fontsize=22)
 
     if save_plot:
-        plt.savefig("../figures/curves_{}_{}.pdf".format(use_interactions, use_report_delay))
+        plt.savefig("../figures/curves_{}.pdf".format(model_i))
 
     return fig
 
 
 if __name__ == "__main__": 
 
-    combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
-    for i in range(4):
-        _ = curves(combinations_ia_report[i][0], combinations_ia_report[i][1],save_plot=True)
+    _ = curves(15 ,save_plot=True)
 

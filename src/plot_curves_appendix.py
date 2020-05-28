@@ -104,7 +104,8 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], n_days, -1)) 
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
 
-    ext_index = pd.DatetimeIndex([d for d in target.index] + [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day-timedelta(1))])
+    ext_index = pd.DatetimeIndex([d for d in target.index] + \
+            [d for d in pd.date_range(target.index[-1]+timedelta(1), last_day-timedelta(1))])
     print(ext_index)
     prediction_mean = pd.DataFrame(
         data=np.mean(

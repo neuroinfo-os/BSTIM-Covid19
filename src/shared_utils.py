@@ -83,7 +83,6 @@ def load_daily_data(disease, prediction_region, counties, seperator=",", pad=Non
     data.index = [pd.Timestamp(date) for date in data.index]
     return data
 
-
 def split_data(
     data,
     train_start=parse_yearweek("2011-KW01"),

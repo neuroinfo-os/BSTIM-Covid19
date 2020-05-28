@@ -18,7 +18,7 @@ num_cores = num_chains
 SAMPLE_PARAMS = False
 
 # whether to sample predictions on training, test or both
-SAMPLE_PREDS = "test" # can be "train", "test" or "both"
+SAMPLE_PREDS = "train" # can be "train", "test" or "both"
 
 disease = "covid19"
 prediction_region = "germany"
@@ -28,7 +28,7 @@ use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combin
 # use_interactions, use_report_delay = combinations_ia_report[model_complexity]
 
 filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease, i)
-filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disease, i)
+filename_pred = "../data/mcmc_samples_backup/predictions_train_{}_{}.pkl".format(disease, i)
 filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, i)
 
 # Load data
@@ -37,7 +37,7 @@ with open('../data/counties/counties.pkl', "rb") as f:
 
 # pad = days to look into the future
 # days_into_future = 5
-data = load_daily_data(disease, prediction_region, county_info) #, pad=days_into_future)
+data = load_daily_data(disease+"_old", prediction_region, county_info) #, pad=days_into_future)
 
 first_day = data.index.min()
 last_day = data.index.max()
@@ -46,7 +46,7 @@ data_train, target_train, data_test, target_test = split_data(
     data,
     train_start=first_day,
 #     test_start=last_day - pd.Timedelta(days=days_into_future-1),
-    test_start=last_day - pd.Timedelta(1),
+    test_start=last_day - pd.Timedelta(days=1), # NOTE: for future runs w/ deviance this should be last_day!
     post_test=last_day + pd.Timedelta(days=1)
 )
 
@@ -86,7 +86,7 @@ else:
     print("Load parameters.")
     trace = load_trace_by_i(disease, i)
 
-print("Sampling predictions on the training and test set.")
+# print("Sampling predictions on the training and test set.")
 
 if SAMPLE_PREDS == "both":
     pred = model.sample_predictions(target_train.index, target_train.columns, trace, target_test.index)
