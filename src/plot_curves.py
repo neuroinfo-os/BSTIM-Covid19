@@ -250,7 +250,8 @@ def curves(model_i=0, prediction_day=30, save_plot=False):
     if save_plot:
         plt.savefig("../figures/curves_{}.pdf".format(model_i))
 
-    #eturn fig
+    plt.close()
+    return fig
 
 
 #if __name__ == "__main__": 
