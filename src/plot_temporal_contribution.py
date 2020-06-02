@@ -17,7 +17,7 @@ from config import * # <-- to select the right model
 # from pandas import register_matplotlib_converters
 # register_matplotlib_converters() # the fk python
 
-def temporal_contribution(i, combinations, save_plot=False):
+def temporal_contribution(i=0, combinations=0, save_plot=False):
 
     #use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
     use_report_delay=False
@@ -47,7 +47,7 @@ def temporal_contribution(i, combinations, save_plot=False):
 
 
     data = load_daily_data(disease, prediction_region, county_info)
-    first_day = pd.Timestamp('2020-03-01')
+    first_day = pd.Timestamp('2020-04-01')
     last_day = data.index.max()
 
     _, target_train, _, _ = split_data(
@@ -209,7 +209,7 @@ def temporal_contribution(i, combinations, save_plot=False):
     if save_plot:
         fig.savefig("../figures/temporal_contribution_{}.pdf".format(i))
 
-    return fig
+    #return fig
 
 if __name__ == "__main__":
 

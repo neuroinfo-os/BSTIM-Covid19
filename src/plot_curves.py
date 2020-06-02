@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
-def curves(model_i, prediction_day=30, save_plot=False):
+def curves(model_i=0, prediction_day=30, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
@@ -238,7 +238,7 @@ def curves(model_i, prediction_day=30, save_plot=False):
                     fontsize=12, loc="upper right")
         fig.text(0,
                 1 + 0.025,
-                r"$\textbf{" + str(i + 1) + "ABC"[j] + r"}$",
+                r"$\textbf{" + str(i + 1) + "ABC"[j] + " " + plot_county_names["covid19"][j]+ r"}$",
                 fontsize=22,
                 transform=ax.transAxes)
     fig.text(0, 0.95, r"$\textbf{" + str(i + 1) + r"C}$",
@@ -250,7 +250,7 @@ def curves(model_i, prediction_day=30, save_plot=False):
     if save_plot:
         plt.savefig("../figures/curves_{}.pdf".format(model_i))
 
-    return fig
+    #eturn fig
 
 
 #if __name__ == "__main__": 
