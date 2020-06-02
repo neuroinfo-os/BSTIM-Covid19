@@ -284,3 +284,13 @@ def load_final_pred(no_rd=False):
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res
+
+
+def load_final_nowcast_pred(no_rd=False):
+    if no_rd:
+        filename_pred = "../data/mcmc_samples_backup/predictions_nowcast_covid19_final_no_rd.pkl"
+    else:
+        filename_pred = "../data/mcmc_samples_backup/predictions_nowcast_covid19_final.pkl"
+    with open(filename_pred, "rb") as f:
+        res = pkl.load(f)
+    return res
