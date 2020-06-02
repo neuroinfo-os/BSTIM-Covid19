@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('TkAgg')
 import pymc3 as pm
 import pandas as pd
 import matplotlib
@@ -17,7 +19,9 @@ from config import * # <-- to select the right model
 
 def temporal_contribution(i, combinations, save_plot=False):
 
-    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
+    #use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
+    use_report_delay=False
+    use_ia = True
 
     plt.style.use('ggplot')
 
@@ -29,11 +33,11 @@ def temporal_contribution(i, combinations, save_plot=False):
     C3 = C2  # "#808080"
 
     if use_report_delay:
-        fig = plt.figure(figsize=(16, 6))
+        fig = plt.figure(figsize=(25, 10))
         grid = plt.GridSpec(4, 1, top=0.93, bottom=0.12,
                             left=0.11, right=0.97, hspace=0.28, wspace=0.30)
     else:
-        fig = plt.figure(figsize=(12, 6))
+        fig = plt.figure(figsize=(16, 10))
         grid = plt.GridSpec(3, 1, top=0.93, bottom=0.12,
                             left=0.11, right=0.97, hspace=0.28, wspace=0.30)
 
@@ -43,7 +47,7 @@ def temporal_contribution(i, combinations, save_plot=False):
 
 
     data = load_daily_data(disease, prediction_region, county_info)
-    first_day = data.index.min()
+    first_day = pd.Timestamp('2020-03-01')
     last_day = data.index.max()
 
     _, target_train, _, _ = split_data(
@@ -61,9 +65,9 @@ def temporal_contribution(i, combinations, save_plot=False):
                                                                     i) for i in range(100)],
                       include_ia=use_ia,
                       include_report_delay=use_report_delay,
-                      include_demographics=use_demographics,
-                      trend_poly_order=trend_order,
-                      periodic_poly_order=periodic_order)
+                      include_demographics=True,
+                      trend_poly_order=4,
+                      periodic_poly_order=4)
 
 
     features = model.evaluate_features(
@@ -73,7 +77,7 @@ def temporal_contribution(i, combinations, save_plot=False):
     periodic_features = features["temporal_seasonal"].swaplevel(0, 1).loc["09162"]
     #t_all = t_all_b if disease == "borreliosis" else t_all_cr
 
-    trace = load_trace(disease, use_interactions, use_report_delay)
+    trace = load_final_trace()
     trend_params = pm.trace_to_dataframe(trace, varnames=["W_t_t"])
     periodic_params = pm.trace_to_dataframe(trace, varnames=["W_t_s"])
 
@@ -93,50 +97,18 @@ def temporal_contribution(i, combinations, save_plot=False):
 
     TT_quantiles = quantiles(TT, (25, 75))
     TP_quantiles = quantiles(TP, (25, 75))
-    TTP_quantiles = quantiles(TTP, (25, 75))
+    TTP_quantiles = quantiles(TTP, (2.5,25, 75,97.5))
 
     dates = [pd.Timestamp(day) for day in target_train.index.values]
     days = [ (day - min(dates)).days for day in dates]
 
-
-    # Temporal periodic effect
-    ax_p = fig.add_subplot(grid[0, 0])
-
-    ax_p.fill_between(days, np.exp(TP_quantiles[25]), np.exp(
-        TP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-    ax_p.plot(days, np.exp(TP.mean(axis=0)),
-                "-", color=C1, lw=2, zorder=5)
-    ax_p.plot(days, np.exp(
-        TP_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-    ax_p.plot(days, np.exp(
-        TP_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-    ax_p.plot(days, np.exp(TP[:25, :].T),
-                "--", color=C3, lw=1, alpha=0.5, zorder=2)
-
-    ax_p.tick_params(axis="x", rotation=45)
-
-    # Temporal trend effect
-    ax_t = fig.add_subplot(grid[1, 0], sharex=ax_p)
-
-    ax_t.fill_between(days, np.exp(TT_quantiles[25]), np.exp(
-        TT_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-    ax_t.plot(days, np.exp(TT.mean(axis=0)),
-                "-", color=C1, lw=2, zorder=5)
-    ax_t.plot(days, np.exp(
-        TT_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-    ax_t.plot(days, np.exp(
-        TT_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-    ax_t.plot(days, np.exp(TT[:25, :].T),
-                "--", color=C3, lw=1, alpha=0.5, zorder=2)
-
-    ax_t.tick_params(axis="x", rotation=45)
 
 
     # Temporal trend+periodic effect
     if use_report_delay:
         ax_tp = fig.add_subplot(grid[3, 0], sharex=ax_p)
     else:
-        ax_tp = fig.add_subplot(grid[2, 0], sharex=ax_p)
+        ax_tp = fig.add_subplot(grid[0, 0])
 
     ax_tp.fill_between(days, np.exp(TTP_quantiles[25]), np.exp(
         TTP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
@@ -146,10 +118,59 @@ def temporal_contribution(i, combinations, save_plot=False):
         TTP_quantiles[25]), "-", color=C2, lw=2, zorder=3)
     ax_tp.plot(days, np.exp(
         TTP_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-    ax_tp.plot(days, np.exp(TTP[:25, :].T),
-                    "--", color=C3, lw=1, alpha=0.5, zorder=2)
+    ax_tp.plot(days, np.exp(
+        TTP_quantiles[2.5]), "--", color=C2, lw=2, zorder=3)
+    ax_tp.plot(days, np.exp(
+        TTP_quantiles[97.5]), "--", color=C2, lw=2, zorder=3)
+    #ax_tp.plot(days, np.exp(TTP[:25, :].T),
+    #                "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
     ax_tp.tick_params(axis="x", rotation=45)
+
+    # Temporal trend effect
+    ax_t = fig.add_subplot(grid[1, 0], sharex=ax_tp)
+
+    #ax_t.fill_between(days, np.exp(TT_quantiles[25]), np.exp(
+    #    TT_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
+    ax_t.plot(days, np.exp(TT.mean(axis=0)),
+                "-", color=C1, lw=2, zorder=5)
+    #ax_t.plot(days, np.exp(
+    #    TT_quantiles[25]), "-", color=C2, lw=2, zorder=3)
+    #ax_t.plot(days, np.exp(
+    #    TT_quantiles[75]), "-", color=C2, lw=2, zorder=3)
+    #ax_t.plot(days, np.exp(TT[:25, :].T),
+    #            "--", color=C3, lw=1, alpha=0.5, zorder=2)
+    
+
+    ax_t.tick_params(axis="x", rotation=45)
+    ax_t.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+
+    # Temporal periodic effect
+    ax_p = fig.add_subplot(grid[2, 0], sharex=ax_tp)
+
+    #ax_p.fill_between(days, np.exp(TP_quantiles[25]), np.exp(
+     #   TP_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
+    ax_p.plot(days, np.exp(TP.mean(axis=0)),
+                "-", color=C1, lw=2, zorder=5)
+    ax_p.set_ylim([-0.0001,0.001])
+    #ax_p.plot(days, np.exp(
+      #  TP_quantiles[25]), "-", color=C2, lw=2, zorder=3)
+    #ax_p.plot(days, np.exp(
+      #  TP_quantiles[75]), "-", color=C2, lw=2, zorder=3)
+    #ax_p.plot(days, np.exp(TP[:25, :].T),
+      #          "--", color=C3, lw=1, alpha=0.5, zorder=2)
+
+    ax_p.tick_params(axis="x", rotation=45)
+    ax_p.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+
+    ticks = ['2020-03-02','2020-03-12','2020-03-22','2020-04-01','2020-04-11','2020-04-21','2020-05-1','2020-05-11','2020-05-21']
+    labels = ['02.03.2020','12.03.2020','22.03.2020','01.04.2020','11.04.2020','21.04.2020','01.05.2020','11.05.2020','21.05.2020']
+    
+
+    
+
+
+    
 
     if use_report_delay:
         ax_td = fig.add_subplot(grid[2, 0], sharex=ax_p)
@@ -167,9 +188,9 @@ def temporal_contribution(i, combinations, save_plot=False):
 
         ax_td.tick_params(axis="x", rotation=45)
 
-    ax_p.set_title("campylob." if disease ==
-                "campylobacter" else disease, fontsize=22)
-    ax_tp.set_xlabel("time [days]", fontsize=22)
+    #ax_tp.set_title("campylob." if disease ==
+    #            "campylobacter" else disease, fontsize=22)
+    ax_p.set_xlabel("time [days]", fontsize=22)
 
     ax_p.set_ylabel("periodic\ncontribution", fontsize=22)
     ax_t.set_ylabel("trend\ncontribution", fontsize=22)
@@ -180,8 +201,10 @@ def temporal_contribution(i, combinations, save_plot=False):
 
     ax_t.set_xlim(days[0], days[-1])
     ax_t.tick_params(labelbottom=False, labelleft=True, labelsize=18, length=6)
-    ax_p.tick_params(labelbottom=False, labelleft=True, labelsize=18, length=6)
-    ax_tp.tick_params(labelbottom=True, labelleft=True, labelsize=18, length=6)
+    ax_p.tick_params(labelbottom=True, labelleft=True, labelsize=18, length=6)
+    ax_tp.tick_params(labelbottom=False, labelleft=True, labelsize=18, length=6)
+
+    #ax_p.set_xticks(ticks)#,labels)
 
     if save_plot:
         fig.savefig("../figures/temporal_contribution_{}.pdf".format(i))
@@ -190,5 +213,4 @@ def temporal_contribution(i, combinations, save_plot=False):
 
 if __name__ == "__main__":
 
-    for i in range(4):
-        _ = temporal_contribution(i, combinations,save_plot=True)
+    temporal_contribution(15, combinations,save_plot=True)

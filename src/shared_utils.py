@@ -219,6 +219,16 @@ def load_model_by_i(disease, i):
         model = pkl.load(f)
     return model
 
+def load_final_model(no_rd=False):
+    if no_rd:
+        filename_model = "../data/mcmc_samples_backup/model_covid19_final_no_rd.pkl"
+    else:
+        filename_model = "../data/mcmc_samples_backup/model_covid19_final.pkl"
+
+    with open(filename_model, "rb") as f:
+        model = pkl.load(f)
+    return model    
+
 
 def load_trace(disease, use_age, use_eastwest):
     filename_params = "../data/mcmc_samples_backup/parameters_{}_{}_{}".format(
@@ -240,6 +250,18 @@ def load_trace_by_i(disease, i):
     del model
     return trace
 
+
+def load_final_trace(no_rd=False):
+    if no_rd:
+        filename_params = "../data/mcmc_samples_backup/parameters_covid19_final_no_rd"
+    else:
+        filename_params = "../data/mcmc_samples_backup/parameters_covid19_final"
+    model = load_final_model(no_rd=no_rd)
+    with model:
+        trace = pm.load_trace(filename_params)
+    del model
+    return trace
+
 def load_pred(disease, use_age, use_eastwest):
     # Load our prediction samples
     filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}_{}.pkl".format(
@@ -254,3 +276,11 @@ def load_pred_by_i(disease, i):
         res = pkl.load(f)
     return res
 
+def load_final_pred(no_rd=False):
+    if no_rd:
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_no_rd.pkl"
+    else:
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final.pkl"
+    with open(filename_pred, "rb") as f:
+        res = pkl.load(f)
+    return res
