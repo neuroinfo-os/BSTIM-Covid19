@@ -23,8 +23,8 @@ def curves(model_i=0, prediction_day=30, save_plot=False):
     ylim = (47, 56) # <- 10 weeks
 
     countyByName = OrderedDict(
-        [('Dortmund', '05913'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
-    plot_county_names = {"covid19": ["Dortmund", "Leipzig"]}
+        [('Düsseldorf', '05111'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
+    plot_county_names = {"covid19": ["Düsseldorf", "Leipzig"]}
 
     # colors for curves
     C1 = "#D55E00"
@@ -113,10 +113,10 @@ def curves(model_i=0, prediction_day=30, save_plot=False):
     map_ax = fig.add_subplot(grid[2, i])
     map_ax.set_position(grid[2, i].get_position(fig).translated(0, -0.05))
     map_ax.set_xlabel(
-        "{}/{}/{}".format(
-            prediction_mean.index[-5].year,
+        "{}.{}.{}".format(
+            prediction_mean.index[-5].day,
             prediction_mean.index[-5].month,
-            prediction_mean.index[-5].day),
+            prediction_mean.index[-5].year),
         fontsize=22)
 
     # plot the chloropleth map

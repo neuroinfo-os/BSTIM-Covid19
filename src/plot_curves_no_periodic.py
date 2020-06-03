@@ -23,8 +23,8 @@ def curves_no_periodic(model_i=0, prediction_day=30, save_plot=False):
     ylim = (47, 56) # <- 10 weeks
 
     countyByName = OrderedDict(
-        [('Dortmund', '05913'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
-    plot_county_names = {"covid19": ["Dortmund", "Leipzig"]}
+        [('Düsseldorf', '05111'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
+    plot_county_names = {"covid19": ["Düsseldorf", "Leipzig"]}
 
     # colors for curves
     C1 = "#D55E00"
@@ -56,7 +56,7 @@ def curves_no_periodic(model_i=0, prediction_day=30, save_plot=False):
 
     data = load_daily_data(disease, prediction_region, counties)
 
-    start_day = pd.Timestamp('2020-03-01')
+    start_day = pd.Timestamp('2020-04-10')
     i_start_day = (start_day - data.index.min()).days
     day_0 = pd.Timestamp('2020-05-21')
     day_m5 = day_0 - pd.Timedelta(days=5)
@@ -113,10 +113,10 @@ def curves_no_periodic(model_i=0, prediction_day=30, save_plot=False):
     map_ax = fig.add_subplot(grid[2, i])
     map_ax.set_position(grid[2, i].get_position(fig).translated(0, -0.05))
     map_ax.set_xlabel(
-        "{}/{}/{}".format(
-            prediction_mean.index[-5].year,
+        "{}.{}.{}".format(
+            prediction_mean.index[-5].day,
             prediction_mean.index[-5].month,
-            prediction_mean.index[-5].day),
+            prediction_mean.index[-5].year),
         fontsize=22)
 
     # plot the chloropleth map
