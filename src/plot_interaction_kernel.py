@@ -12,7 +12,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 theano.config.compute_test_value = 'off'
 
-def interaction_kernel(model_i, save_plot=False):
+def interaction_kernel(model_i=15, save_plot=False):
     theano.config.compute_test_value = 'off'
     ii=15
 

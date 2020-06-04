@@ -17,7 +17,7 @@ from config import * # <-- to select the right model
 # from pandas import register_matplotlib_converters
 # register_matplotlib_converters() # the fk python
 
-def temporal_contribution(model_i=0, combinations=0, save_plot=False):
+def temporal_contribution(model_i=15, combinations=combinations, save_plot=False):
 
     use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
 
@@ -84,13 +84,13 @@ def temporal_contribution(model_i=0, combinations=0, save_plot=False):
     TTP = TT + TP
 
     # add report delay if used
-    if use_report_delay:
-        delay_features = features["temporal_report_delay"].swaplevel(0,1).loc["09162"]
-        delay_params = pm.trace_to_dataframe(trace,varnames=["W_t_d"])
-        TD =delay_params.values.dot(delay_features.values.T)
+    #if use_report_delay:
+    #    delay_features = features["temporal_report_delay"].swaplevel(0,1).loc["09162"]
+    #    delay_params = pm.trace_to_dataframe(trace,varnames=["W_t_d"])
+    #    TD =delay_params.values.dot(delay_features.values.T)
 
-        TTP += TD
-        TD_quantiles = quantiles(TD, (25, 75))
+     #   TTP += TD
+     #   TD_quantiles = quantiles(TD, (25, 75))
 
 
     TT_quantiles = quantiles(TT, (25, 75))
@@ -104,7 +104,7 @@ def temporal_contribution(model_i=0, combinations=0, save_plot=False):
 
     # Temporal trend+periodic effect
     if use_report_delay:
-        ax_tp = fig.add_subplot(grid[3, 0], sharex=ax_p)
+        ax_tp = fig.add_subplot(grid[0, 0])
     else:
         ax_tp = fig.add_subplot(grid[0, 0])
 
@@ -170,21 +170,21 @@ def temporal_contribution(model_i=0, combinations=0, save_plot=False):
 
     
 
-    if use_report_delay:
-        ax_td = fig.add_subplot(grid[2, 0], sharex=ax_p)
+    #if use_report_delay:
+    #    ax_td = fig.add_subplot(grid[2, 0], sharex=ax_p)
+#
+#        ax_td.fill_between(days, np.exp(TD_quantiles[25]), np.exp(
+#            TD_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
+#        ax_td.plot(days, np.exp(TD.mean(axis=0)),
+#                    "-", color=C1, lw=2, zorder=5)
+#        ax_td.plot(days, np.exp(
+#            TD_quantiles[25]), "-", color=C2, lw=2, zorder=3)
+#        ax_td.plot(days, np.exp(
+#            TD_quantiles[75]), "-", color=C2, lw=2, zorder=3)
+#        ax_td.plot(days, np.exp(TD[:25, :].T),
+#                    "--", color=C3, lw=1, alpha=0.5, zorder=2)
 
-        ax_td.fill_between(days, np.exp(TD_quantiles[25]), np.exp(
-            TD_quantiles[75]), alpha=0.5, zorder=1, facecolor=C1)
-        ax_td.plot(days, np.exp(TD.mean(axis=0)),
-                    "-", color=C1, lw=2, zorder=5)
-        ax_td.plot(days, np.exp(
-            TD_quantiles[25]), "-", color=C2, lw=2, zorder=3)
-        ax_td.plot(days, np.exp(
-            TD_quantiles[75]), "-", color=C2, lw=2, zorder=3)
-        ax_td.plot(days, np.exp(TD[:25, :].T),
-                    "--", color=C3, lw=1, alpha=0.5, zorder=2)
-
-        ax_td.tick_params(axis="x", rotation=45)
+#        ax_td.tick_params(axis="x", rotation=45)
 
     #ax_tp.set_title("campylob." if disease ==
     #            "campylobacter" else disease, fontsize=22)
@@ -194,8 +194,8 @@ def temporal_contribution(model_i=0, combinations=0, save_plot=False):
     ax_t.set_ylabel("trend\ncontribution", fontsize=22)
     ax_tp.set_ylabel("combined\ncontribution", fontsize=22)
 
-    if use_report_delay:
-        ax_td.set_ylabel("r.delay\ncontribution", fontsize=22)
+    #if use_report_delay:
+    #    ax_td.set_ylabel("r.delay\ncontribution", fontsize=22)
 
     ax_t.set_xlim(days[0], days[-1])
     ax_t.tick_params(labelbottom=False, labelleft=True, labelsize=18, length=6)

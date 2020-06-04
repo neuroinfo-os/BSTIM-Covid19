@@ -10,7 +10,7 @@ import numpy as np
 from collections import OrderedDict
 from pymc3.stats import quantiles
 
-def curves_appendix(model_i, save_plot=False):
+def curves_appendix(model_i=15, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
@@ -123,28 +123,28 @@ def curves_appendix(model_i, save_plot=False):
         data=np.mean(
             prediction_samples,
             axis=0),
-        #index=ext_index,
-        index=target.index,
+        index=ext_index,
+        #index=target.index,
         columns=target.columns)
     prediction_q25 = pd.DataFrame(
         data=prediction_quantiles[25],
-        #index=ext_index,
-        index=target.index,
+        index=ext_index,
+        #index=target.index,
         columns=target.columns)
     prediction_q75 = pd.DataFrame(
         data=prediction_quantiles[75],
-        #index=ext_index,
-        index=target.index,
+        index=ext_index,
+        #index=target.index,
         columns=target.columns)
     prediction_q5 = pd.DataFrame(
         data=prediction_quantiles[5],
-        #index=ext_index,
-        index=target.index,
+        index=ext_index,
+        #index=target.index,
         columns=target.columns)
     prediction_q95 = pd.DataFrame(
         data=prediction_quantiles[95],
-        #index=ext_index,
-        index=target.index,
+        index=ext_index,
+        #index=target.index,
         columns=target.columns)
 
     fig = plt.figure(figsize=(12, 12))

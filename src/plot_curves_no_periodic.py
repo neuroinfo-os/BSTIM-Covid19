@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
-def curves_no_periodic(model_i=0, prediction_day=30, save_plot=False):
+def curves_no_periodic(model_i=15, prediction_day=30, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
