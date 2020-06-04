@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
-def curves(model_i=0, prediction_day=30, save_plot=False):
+def curves_no_periodic(model_i=15, prediction_day=30, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
@@ -56,7 +56,7 @@ def curves(model_i=0, prediction_day=30, save_plot=False):
 
     data = load_daily_data(disease, prediction_region, counties)
 
-    start_day = pd.Timestamp('2020-03-01')
+    start_day = pd.Timestamp('2020-04-10')
     i_start_day = (start_day - data.index.min()).days
     day_0 = pd.Timestamp('2020-05-21')
     day_m5 = day_0 - pd.Timedelta(days=5)
@@ -71,7 +71,7 @@ def curves(model_i=0, prediction_day=30, save_plot=False):
     county_ids = target.columns
 
     # Load our prediction samples
-    res = load_final_pred()
+    res = load_final_nowcast_pred()
     #res_test = load_pred_by_i(disease, model_i)
    # print(res_train['y'].shape)
     #print(res_test['y'].shape)
@@ -238,10 +238,10 @@ def curves(model_i=0, prediction_day=30, save_plot=False):
                     fontsize=12, loc="upper right")
         fig.text(0,
                 1 + 0.025,
-                r"$\textbf{" + str(i + 1) + "ABC"[j] + " " + plot_county_names["covid19"][j]+ r"}$",
+                r"$\textbf{" + str(i + 2) + "ABC"[j] + " " + plot_county_names["covid19"][j]+ r"}$",
                 fontsize=22,
                 transform=ax.transAxes)
-    fig.text(0, 0.95, r"$\textbf{" + str(i + 1) + r"C}$",
+    fig.text(0, 0.95, r"$\textbf{" + str(i + 2) + r"C}$",
             fontsize=22, transform=map_ax.transAxes)
 
     fig.text(0.01, 0.66, "Reported/predicted infections",
@@ -250,8 +250,7 @@ def curves(model_i=0, prediction_day=30, save_plot=False):
     if save_plot:
         plt.savefig("../figures/curves_{}.pdf".format(model_i))
 
-    plt.close()
-    return fig
+    #return fig
 
 
 #if __name__ == "__main__": 

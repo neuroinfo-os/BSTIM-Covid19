@@ -12,15 +12,11 @@ import matplotlib
 from matplotlib import pyplot as plt
 theano.config.compute_test_value = 'off'
 
-def interaction_kernel(model_i=15, save_plot=False):
+def interaction_kernel_app(use_report_delay=True, save_plot=False):
     theano.config.compute_test_value = 'off'
     ii=15
 
-    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
-
-    if not use_ia:
-        raise ValueError("Model nr. {} does not include an interaction kernel".format(model_i))
-
+    use_interactions = True
     plt.style.use("ggplot")
     matplotlib.rcParams['text.usetex'] = True
     matplotlib.rcParams['text.latex.unicode'] = True
@@ -33,19 +29,21 @@ def interaction_kernel(model_i=15, save_plot=False):
     C2 = "#E69F00"
     C3 = C2  # "#808080"
 
+    N_SAMPLES = 6
+
     disease = 'covid19'
     diseases = ['covid19']
-    fig = plt.figure(figsize=(13, 8))
+    fig = plt.figure(figsize=(12, 9))
     #fig.suptitle("Learned interaction kernels and temporal contributions", fontsize=20)
     grid = plt.GridSpec(
-        1,
+        N_SAMPLES,
         2 * len(diseases),
         top=0.92,
         bottom=0.1,
         left=0.09,
         right=0.97,
         hspace=0.28,
-        wspace=0.1,
+        wspace=0.15,
         width_ratios=[
             10,
             1])
@@ -80,44 +78,41 @@ def interaction_kernel(model_i=15, save_plot=False):
 
     #trace = load_trace_by_i(disease, ii)
     trace = load_final_trace()
-
     kernel_samples = res.dot(trace["W_ia"].T)
 
-    K_mean = kernel_samples.mean(axis=2)
-    K_samp1 = kernel_samples[:, :, np.random.randint(kernel_samples.shape[-1])]
-    K_samp2 = kernel_samples[:, :, np.random.randint(kernel_samples.shape[-1])]
+    K_samps = []
+    # abfangen dass nie zweimal der gleiche kernel gezeigt wird?
+    for j in range(N_SAMPLES):
+        K_samps.append(kernel_samples[:, :, np.random.randint(kernel_samples.shape[-1])])
+    
 
-    vmax = np.max([K_mean.max(), -K_mean.max(),])
+    vmax = max(np.max([K_samps[jj].max() for jj in range(N_SAMPLES)]), np.max([-K_samps[jj].max() for jj in range(N_SAMPLES)]))
     
     cNorm = matplotlib.colors.Normalize(vmin=-vmax, vmax=vmax)
     scalarMap = matplotlib.cm.ScalarMappable(norm=cNorm, cmap="RdBu_r")
     scalarMap.set_array([])
 
-    ax_mean = fig.add_subplot(grid[0, i * 2])
-    ax_mean.contourf(ts / (3600 * 24),
-                    (locs - loc0)[:,
-                                1] * 111,
-                    K_mean,
-                    50,
-                    cmap="RdBu_r",
-                    vmin=-vmax,
-                    vmax=vmax)
+    ax_samples = []
 
-    #ax_sample1 = fig.add_subplot(grid[1, i * 2], sharex=ax_mean)
-    #ax_sample1.contourf(ts /
-    #                    (3600 *
-    #                    24), (locs -
-    #                        loc0)[:, 1] *
-    #                    111, K_samp1, 50, cmap="RdBu_r", vmin=-
-    #                    vmax, vmax=vmax)
+    ax_samples.append(fig.add_subplot(grid[0, i * 2],))
+    ax_samples[0].contourf(ts /
+                    (3600 *
+                    24), (locs -
+                        loc0)[:, 1] *
+                    111, K_samps[0], 50, cmap="RdBu_r", vmin=-
+                    vmax, vmax=vmax)
 
-    #ax_sample2 = fig.add_subplot(grid[2, i * 2], sharex=ax_mean)
-    #ax_sample2.contourf(ts /
-    #                    (3600 *
-    #                    24), (locs -
-    #                        loc0)[:, 1] *
-    #                    111, K_samp2, 50, cmap="RdBu_r", vmin=-
-    #                    vmax, vmax=vmax)
+    for j in range(1,N_SAMPLES):
+
+        ax_samples.append(fig.add_subplot(grid[j, i * 2], sharex=ax_samples[0]))
+        ax_samples[j].contourf(ts /
+                            (3600 *
+                            24), (locs -
+                                loc0)[:, 1] *
+                            111, K_samps[j], 50, cmap="RdBu_r", vmin=-
+                            vmax, vmax=vmax)
+
+    
 
     ax_c = fig.add_subplot(grid[:, i * 2 + 1])
     # shift colorbar by 2% to the left
@@ -126,34 +121,31 @@ def interaction_kernel(model_i=15, save_plot=False):
     ax_c.tick_params(labelsize=18, length=6)
     plt.colorbar(mappable=scalarMap, cax=ax_c)
 
-    ax_mean.set_aspect("auto")
+    ax_samples[0].set_aspect("auto")
 
-    #ax_mean.set_title("campylob." if disease ==
-    #               "campylobacter" else disease, fontsize=22)
-    ax_mean.set_xlabel("time [days]", fontsize=22)
+    #ax_samples[0].set_title("campylob." if disease ==
+    #                "campylobacter" else disease, fontsize=22)
+    ax_samples[-1].set_xlabel("time [days]", fontsize=22)
+
+    ax_samples[N_SAMPLES//2].set_ylabel("sampled kernel [km]", fontsize=22)
 
 
-    if i == 0:
-        ax_mean.set_ylabel("mean kernel [km]", fontsize=22)
-        #ax_sample1.set_ylabel("sampled kernel [km]", fontsize=22)
-        #ax_sample2.set_ylabel("sampled kernel [km]", fontsize=22)
-
-    ax_mean.tick_params(labelbottom=True, labelleft=(
+    for j in range(N_SAMPLES-1):
+        ax_samples[j].tick_params(labelbottom=False, labelleft=(
+            i == 0), labelsize=18, length=6)
+    
+    ax_samples[-1].tick_params(labelbottom=True, labelleft=(
         i == 0), labelsize=18, length=6)
-    #ax_sample1.tick_params(labelbottom=False, labelleft=(
-       # i == 0), labelsize=18, length=6)
-    #ax_sample2.tick_params(labelbottom=True, labelleft=(
-       # i == 0), labelsize=18, length=6)
 
     #fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"A}$",
     #        fontsize=22, transform=ax_mean.transAxes)
     #fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"B}$",
     #        fontsize=22, transform=ax_sample1.transAxes)
     #fig.text(0, 1 + 0.025, r"$\textbf{" + str(i + 1) + r"C}$",
-    #x        fontsize=22, transform=ax_sample2.transAxes)
+    #        fontsize=22, transform=ax_sample2.transAxes)
 
     if save_plot:
-        fig.savefig("../figures/interaction_kernels_{}.pdf".format(ii))
+        fig.savefig("../figures/interaction_kernels_appendix_{}.pdf".format(ii))
 
     #return fig
 
