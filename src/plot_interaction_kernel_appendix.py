@@ -76,8 +76,8 @@ def interaction_kernel_app(use_report_delay=True, save_plot=False):
     i = 0
     
 
-    trace = load_trace_by_i(disease, ii)
-
+    #trace = load_trace_by_i(disease, ii)
+    trace = load_final_trace()
     kernel_samples = res.dot(trace["W_ia"].T)
 
     K_samps = []

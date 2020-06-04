@@ -12,11 +12,15 @@ import matplotlib
 from matplotlib import pyplot as plt
 theano.config.compute_test_value = 'off'
 
-def interaction_kernel(use_report_delay=True, save_plot=False):
+def interaction_kernel(model_i, save_plot=False):
     theano.config.compute_test_value = 'off'
     ii=15
 
-    use_interactions = True
+    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
+
+    if not use_ia:
+        raise ValueError("Model nr. {} does not include an interaction kernel".format(model_i))
+
     plt.style.use("ggplot")
     matplotlib.rcParams['text.usetex'] = True
     matplotlib.rcParams['text.latex.unicode'] = True
@@ -74,7 +78,8 @@ def interaction_kernel(use_report_delay=True, save_plot=False):
     i = 0
     
 
-    trace = load_trace_by_i(disease, ii)
+    #trace = load_trace_by_i(disease, ii)
+    trace = load_final_trace()
 
     kernel_samples = res.dot(trace["W_ia"].T)
 

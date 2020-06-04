@@ -10,7 +10,8 @@ import numpy as np
 from collections import OrderedDict
 from pymc3.stats import quantiles
 
-def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=False):
+def curves_appendix(model_i, save_plot=False):
+
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
 
@@ -84,6 +85,7 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
 
     data = load_daily_data(disease, prediction_region, counties)
 
+
     start_day = pd.Timestamp('2020-03-01')
     i_start_day = (start_day - data.index.min()).days
     day_0 = pd.Timestamp('2020-05-21')
@@ -96,14 +98,18 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
         test_start=day_0,
         post_test=day_p5)
 
+ 
+
     county_ids = target.columns
 
     # Load our prediction samples
+
     res = load_final_pred()
     n_days = (day_p5 - start_day).days
     
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
     
+
 
     prediction_samples = prediction_samples[:,i_start_day:i_start_day+n_days,:]
     prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
@@ -112,27 +118,33 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
    #print(ext_index)
    # print(prediction_samples.shape)
  
+
     prediction_mean = pd.DataFrame(
         data=np.mean(
             prediction_samples,
             axis=0),
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q25 = pd.DataFrame(
         data=prediction_quantiles[25],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q75 = pd.DataFrame(
         data=prediction_quantiles[75],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q5 = pd.DataFrame(
         data=prediction_quantiles[5],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
     prediction_q95 = pd.DataFrame(
         data=prediction_quantiles[95],
-        index=ext_index,
+        #index=ext_index,
+        index=target.index,
         columns=target.columns)
 
     fig = plt.figure(figsize=(12, 12))
@@ -146,8 +158,10 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             grid[np.unravel_index(list(range(25))[j], (5, 5))])
 
         county_id = countyByName[name]
+
         dates = [pd.Timestamp(day) for day in ext_index]
         days = [ (day - min(dates)).days + 1 for day in dates]
+
 
         # plot our predictions w/ quartiles
         p_pred = ax.plot(
@@ -179,8 +193,9 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
             linewidth=2.0,
             zorder=3)
 
-        # plot ground truth
+
         p_real = ax.plot(dates[:-5], target[county_id], "k.")
+
 
         ax.set_title(name, fontsize=18)
         #days = [i+1 for i in range(len(dates))]
@@ -222,17 +237,13 @@ def curves_appendix(use_interactions=True, use_report_delay=True, save_plot=Fals
     fig.text(0.5, 0.02, "Time [days since Mar. 01]", ha='center', fontsize=22)
     fig.text(0.01, 0.46, "Reported/predicted infections",
             va='center', rotation='vertical', fontsize=22)
-    
+
     if save_plot:
-        plt.savefig("../figures/curves_{}_appendix_{}_{}.pdf".format(disease, use_interactions, use_report_delay))
+        plt.savefig("../figures/curves_{}_appendix_{}.pdf".format(disease, model_i))
 
     #return plt
 
 if __name__ == "__main__":
 
-    #combinations_ia_report = [(False,False), (False,True), (True,False), (True,True)]
-    # plot only for TRUE TRUE
-    combinations_ia_report=[(True,True)]
-    for i in range(1):
-        _ = curves_appendix(combinations_ia_report[i][0], combinations_ia_report[i][1],save_plot=True)
+    _ = curves_appendix(15, save_plot=True)
 

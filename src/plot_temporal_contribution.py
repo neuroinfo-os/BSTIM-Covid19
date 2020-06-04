@@ -17,11 +17,9 @@ from config import * # <-- to select the right model
 # from pandas import register_matplotlib_converters
 # register_matplotlib_converters() # the fk python
 
-def temporal_contribution(i=0, combinations=0, save_plot=False):
+def temporal_contribution(model_i=0, combinations=0, save_plot=False):
 
-    #use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[i]
-    use_report_delay=False
-    use_ia = True
+    use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
 
     plt.style.use('ggplot')
 
@@ -207,10 +205,10 @@ def temporal_contribution(i=0, combinations=0, save_plot=False):
     #ax_p.set_xticks(ticks)#,labels)
 
     if save_plot:
-        fig.savefig("../figures/temporal_contribution_{}.pdf".format(i))
+        fig.savefig("../figures/temporal_contribution_{}.pdf".format(model_i))
 
     #return fig
 
 if __name__ == "__main__":
 
-    temporal_contribution(15, combinations,save_plot=True)
+    _ = temporal_contribution(15, combinations,save_plot=True)

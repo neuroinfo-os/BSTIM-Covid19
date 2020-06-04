@@ -90,7 +90,7 @@ for (i,_) in enumerate(combinations):
               res["α"].astype(np.float32).reshape((-1, 1))).mean(axis=0).reshape(target.shape),
               index=target.index, columns=target.columns)
 
-        measure_data[i + "_" + measure] = measure_df
+        measure_data[str(i) + "_" + measure] = measure_df
 
         summary[measure + " mean"].append(np.mean(measure_df.mean()))
         summary[measure + " sd"].append(np.std(measure_df.mean()))
