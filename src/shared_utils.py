@@ -83,6 +83,27 @@ def load_daily_data(disease, prediction_region, counties, seperator=",", pad=Non
     data.index = [pd.Timestamp(date) for date in data.index]
     return data
 
+def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties, seperator=",", pad=None):
+    data = pd.read_csv("../data/diseases/{}.csv".format(disease),
+                       sep=seperator, encoding='iso-8859-1', index_col=0)
+
+    if "99999" in data.columns:
+        data.drop("99999", inplace=True, axis=1)
+
+    data = data.loc[i:i+7*n_weeks, list(
+        filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
+
+    if pad is not None:
+        # get last date
+        last_date = pd.Timestamp(data.iloc[:, -1].index[-1])
+        extra_range = pd.date_range(
+            last_date+timedelta(1), last_date+timedelta(pad))
+        for x in extra_range:
+            data = data.append(pd.Series(name=str(x)[:11]))
+
+    data.index = [pd.Timestamp(date) for date in data.index]
+    return data
+
 def split_data(
     data,
     train_start=parse_yearweek("2011-KW01"),
