@@ -8,8 +8,8 @@ from shared_utils import *
 import sys 
 import pandas as pd
 
-start = sys.argv[1]
-number_of_weeks = sys.argv[2]
+start =int(sys.argv[1])
+number_of_weeks = int(sys.argv[2])
 start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start)
 
 disease = "covid19"
@@ -17,10 +17,10 @@ nums_sample = range(100)
 GID = int(os.environ["SGE_TASK_ID"])
 num_sample = nums_sample[GID - 1]
 
-filename = "../data/ia_effect_samples/start{}_weeks{}/{}_{}.pkl".format(start, number_of_weeks,disease, num_sample)
+filename = "../data/ia_effect_samples/start{}_weeks{}_{}_{}.pkl".format(start, number_of_weeks,disease, num_sample)
 
 print("Running task {} - disease: {} - sample: {} - startdate: {} - number of weeks: {} y\nWill create file {}".\
-                                            format(GID,disease, num_sample, filename,start_date, number_of_weeks ))
+                                            format(GID,disease, num_sample, start_date, number_of_weeks, filename ))
 
 with open('../data/counties/counties.pkl', "rb") as f:
     counties = pkl.load(f)

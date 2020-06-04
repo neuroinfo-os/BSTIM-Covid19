@@ -90,7 +90,8 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
     if "99999" in data.columns:
         data.drop("99999", inplace=True, axis=1)
 
-    data = data.loc[i:i+7*n_weeks, list(
+    data = data.iloc[start:start+7*n_weeks,:]
+    data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
 
     if pad is not None:
