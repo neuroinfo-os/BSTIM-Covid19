@@ -37,7 +37,7 @@ print(periodic_order)
 
 # use_interactions, use_report_delay = combinations_ia_report[model_complexity]
 
-filename_params = "../data/mcmc_samples_backup/parameters_{}_final_{}_{}weeks.pkl".format(disease, start, number_of_weeks)
+filename_params = "../data/mcmc_samples_backup/parameters_{}_final_{}_{}weeks".format(disease, start, number_of_weeks)
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_final_{}_{}weeks.pkl".format(disease, start, number_of_weeks)
 filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_final_{}_{}weeks.pkl".format(disease, start, number_of_weeks)
 filename_model = "../data/mcmc_samples_backup/model_{}_final_{}_{}weeks.pkl".format(disease, start, number_of_weeks)

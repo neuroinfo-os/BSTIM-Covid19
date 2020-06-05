@@ -17,4 +17,4 @@ combinations = list(it.product(opt_ia,
                                opt_trend_order,
                                opt_periodic_order))
 
-print(combinations)
+

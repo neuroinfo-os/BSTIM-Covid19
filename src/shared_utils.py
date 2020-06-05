@@ -91,6 +91,7 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
         data.drop("99999", inplace=True, axis=1)
 
     data = data.iloc[start:start+7*n_weeks+5,:]
+    print(data.index)
     data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
 
@@ -303,6 +304,15 @@ def load_final_pred(no_rd=False):
         filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_no_rd.pkl"
     else:
         filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final.pkl"
+    with open(filename_pred, "rb") as f:
+        res = pkl.load(f)
+    return res
+
+def load_final_pred_weeks(start, n_weeks,no_rd=False):
+    if no_rd:
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_no_rd.pkl"
+    else:
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_{}_{}weeks.pkl".format(start, n_weeks)
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res
