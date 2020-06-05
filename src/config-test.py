@@ -18,4 +18,5 @@ combinations = list(it.product(opt_ia,
                                opt_periodic_order))
 
 
-
+for i in range(len(combinations)):
+    print(i,combinations[i])
