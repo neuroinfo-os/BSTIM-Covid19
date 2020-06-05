@@ -90,7 +90,7 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
     if "99999" in data.columns:
         data.drop("99999", inplace=True, axis=1)
 
-    data = data.iloc[start:start+7*n_weeks,:]
+    data = data.iloc[start:start+7*n_weeks+5,:]
     data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
 

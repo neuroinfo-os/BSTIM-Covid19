@@ -5,7 +5,7 @@ import pymc3 as pm
 import pickle as pkl
 import pandas as pd
 import os
-
+import sys
 
 start =int(sys.argv[1])
 number_of_weeks = int(sys.argv[2])
@@ -26,9 +26,14 @@ disease = "covid19"
 prediction_region = "germany"
 
 # model 15 selected by WAICS
-use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[15]
-print("report delay")
+# model 35 ohne report delay und mit trend order 1
+use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[35]
+print("alles")
+print(use_ia)
 print(use_report_delay)
+print(use_demographics)
+print(trend_order)
+print(periodic_order)
 
 # use_interactions, use_report_delay = combinations_ia_report[model_complexity]
 
@@ -68,8 +73,8 @@ print("training for {} in {} with final model from {} to {}\nWill create files {
 
 model = BaseModel(tspan,
                   county_info,
-                  ["../data/ia_effect_samples/start{}_weeks{}_{}_{}.pkl".format(
-                        start, number_of_weeks,disease, i) for i in range(100)],
+                  ["../data/ia_effect_samples/{}_{}.pkl".format(
+                        disease, i) for i in range(100)],
                   include_ia=use_ia,
                   include_report_delay=use_report_delay,
                   include_demographics=use_demographics,
