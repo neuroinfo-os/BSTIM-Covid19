@@ -28,7 +28,7 @@ prediction_region = "germany"
 # model 15 selected by WAICS
 # model 35 ohne report delay und mit trend order 1
 # model 47 mit trend 4
-use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[47]
+use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[35]
 print("alles")
 print(use_ia)
 print(use_report_delay)
