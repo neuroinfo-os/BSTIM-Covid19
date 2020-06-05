@@ -27,7 +27,8 @@ prediction_region = "germany"
 
 # model 15 selected by WAICS
 # model 35 ohne report delay und mit trend order 1
-use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[35]
+# model 47 mit trend 4
+use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[47]
 print("alles")
 print(use_ia)
 print(use_report_delay)
@@ -37,10 +38,10 @@ print(periodic_order)
 
 # use_interactions, use_report_delay = combinations_ia_report[model_complexity]
 
-filename_params = "../data/mcmc_samples_backup/parameters_{}_final_{}_{}weeks".format(disease, start, number_of_weeks)
-filename_pred = "../data/mcmc_samples_backup/predictions_{}_final_{}_{}weeks.pkl".format(disease, start, number_of_weeks)
-filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_final_{}_{}weeks.pkl".format(disease, start, number_of_weeks)
-filename_model = "../data/mcmc_samples_backup/model_{}_final_{}_{}weeks.pkl".format(disease, start, number_of_weeks)
+filename_params = "../data/mcmc_samples_backup/parameters_{}_final_{}_{}weeks_trend{}".format(disease, start, number_of_weeks, trend_order)
+filename_pred = "../data/mcmc_samples_backup/predictions_{}_final_{}_{}weeks_trend{}.pkl".format(disease, start, number_of_weeks,trend_order)
+filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_final_{}_{}weeks_trend{}.pkl".format(disease, start, number_of_weeks,trend_order)
+filename_model = "../data/mcmc_samples_backup/model_{}_final_{}_{}weeks_trend{}.pkl".format(disease, start, number_of_weeks,trend_order)
 
 # Load data
 with open('../data/counties/counties.pkl', "rb") as f:

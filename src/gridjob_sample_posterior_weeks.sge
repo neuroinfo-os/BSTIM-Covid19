@@ -17,4 +17,4 @@ mkdir "/tmp/${JOB_ID}_${SGE_TASK_ID}"
 source /net/store/ni/users/leffenberger/BSTIM-Covid19/.venv/bin/activate
 #THEANO_FLAGS="base_compiledir=/tmp/${JOB_ID}_${SGE_TASK_ID}/,floatX=float32,device=cpu,openmp=True,mode=FAST_RUN,warn_float64=warn" OMP_NUM_THREADS=4 python3 sample_posterior.py
 
-THEANO_FLAGS="base_compiledir=/tmp/${JOB_ID}_${SGE_TASK_ID}/,floatX=float32,device=cpu,mode=FAST_RUN,warn_float64=warn" python3 sample_final_model_weeks.py 30 3
+THEANO_FLAGS="base_compiledir=/tmp/${JOB_ID}_${SGE_TASK_ID}/,floatX=float32,device=cpu,mode=FAST_RUN,warn_float64=warn" python3 sample_final_model_weeks.py 50 3

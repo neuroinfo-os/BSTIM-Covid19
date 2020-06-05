@@ -18,3 +18,4 @@ combinations = list(it.product(opt_ia,
                                opt_periodic_order))
 
 
+print(combinations)
