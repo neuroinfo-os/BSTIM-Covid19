@@ -312,7 +312,7 @@ def load_final_pred_weeks(start, n_weeks,no_rd=False):
     if no_rd:
         filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_no_rd.pkl"
     else:
-        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_{}_{}weeks.pkl".format(start, n_weeks)
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_{}_{}weeks_trend1.pkl".format(start, n_weeks)
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res
