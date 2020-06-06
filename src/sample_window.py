@@ -33,7 +33,8 @@ prediction_region = "germany"
 use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
 # Print Model Eigenschaften
 print("Model {} - IA: {} - RD: {} - DEMO: {} - Trend: {} - Per: {}".format(
-    use_ia, use_report_delay, use_demographics, trend_order, periodic_order
+    model_i, use_ia, use_report_delay, use_demographics, trend_order, periodic_order
+
 ))
 
 # use_interactions, use_report_delay = combinations_ia_report[model_complexity]
