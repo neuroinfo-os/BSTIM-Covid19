@@ -11,11 +11,14 @@ from pymc3.stats import quantiles
 
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
 # Load only one county
-def curves(start, n_weeks, county, save_plot=False):
+def curves(model_i, start, n_weeks, county, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
 
+    start = int(start)
+    n_weeks = int(n_weeks)
+    model_i = int(model_i)
     # with open('../data/comparison.pkl', "rb") as f:
     #     best_model = pkl.load(f)
 
@@ -72,7 +75,7 @@ def curves(start, n_weeks, county, save_plot=False):
     county_ids = target.columns
 
     # Load our prediction samples
-    res = load_final_pred_weeks(start, n_weeks)
+    res = load_pred_model_window(model_i, start, n_weeks)
     #res_test = load_pred_by_i(disease, model_i)
    # print(res_train['y'].shape)
     #print(res_test['y'].shape)
@@ -257,5 +260,12 @@ def curves(start, n_weeks, county, save_plot=False):
 
 if __name__ == "__main__": 
 
-    _ = curves(50, 3, "Düsseldorf" ,save_plot=True)
+    import sys
+
+    model_i = sys.argv[2]
+    start = sys.argv[4]
+    weeks = sys.argv[6]
+
+
+    _ = curves(model_i,start, weeks, "Düsseldorf" ,save_plot=True)
 

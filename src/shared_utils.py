@@ -308,11 +308,11 @@ def load_final_pred(no_rd=False):
         res = pkl.load(f)
     return res
 
-def load_final_pred_weeks(start, n_weeks,no_rd=False):
+def load_pred_model_window(model_i,start, n_weeks,no_rd=False):
     if no_rd:
         filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_no_rd.pkl"
     else:
-        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_{}_{}weeks_trend1.pkl".format(start, n_weeks)
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_model_{}_window_{}_{}.pkl".format(model_i,start, n_weeks)
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res
