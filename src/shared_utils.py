@@ -242,6 +242,12 @@ def load_model_by_i(disease, i):
         model = pkl.load(f)
     return model
 
+def load_model_window(disease, model_i, start, n_weeks):
+    filename_model = "../data/mcmc_samples_backup/model__{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, n_weeks)
+    with open(filename_model, "rb") as f:
+        model = pkl.load(f)
+    return model
+
 def load_final_model(no_rd=False):
     if no_rd:
         filename_model = "../data/mcmc_samples_backup/model_covid19_final_no_rd.pkl"
@@ -268,6 +274,14 @@ def load_trace_by_i(disease, i):
     filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease, i)
 
     model = load_model_by_i(disease, i)
+    with model:
+        trace = pm.load_trace(filename_params)
+    del model
+    return trace
+
+def load_trace_window(disease, model_i, start, n_weeks):
+    filename_params = "../data/mcmc_samples_backup/parameters_{}_model_{}_window_{}_{}".format(disease, model_i, start, n_weeks)
+    model = load_model_window(disease, model_i, start, n_weeks)
     with model:
         trace = pm.load_trace(filename_params)
     del model

@@ -330,7 +330,8 @@ class BaseModel(object):
                 # reshape feature
                 expanded_TT = np.reshape(T_T, newshape=(21,412,2))
 
-                result_TT = ((expanded_TT*expanded_Wtt).CAReduce('add', axis=-1)).reshape(shape=(-1))
+                result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
+
 
 
                 # calculate mean rates
@@ -468,6 +469,8 @@ class BaseModel(object):
         W_t_d = parameters["W_t_d"]
         W_ts = parameters["W_ts"]
 
+
+
         if self.include_ia:
             W_ia = parameters["W_ia"]
             ia_l = IAEffectLoader(None, self.ia_effect_filenames,
@@ -485,7 +488,18 @@ class BaseModel(object):
         # for i in range(num_parameter_samples):
         #     mean_delay += np.dot(T_D, W_t_d[i])
 
-        # NOTE: the delay polynomial is left out here!
+        print(W_t_t.shape)
+        print(T_T.shape)
+        #tt.printing.Print('vector',attrs=['shape'])(W_t_t)
+        # possibly four weeks instead of three
+        expanded_Wtt = np.tile(np.reshape(W_t_t, newshape=(-1,1,412,2)), reps=(1,31, 1, 1))
+        # reshape feature
+        expanded_TT = np.reshape(T_T, newshape=(1,31,412,2))
+        result_TT = np.reshape(np.sum(expanded_TT*expanded_Wtt,axis=-1), newshape=(-1, 31*412))
+        print(result_TT.shape)
+        #tt.printing.Print('vector', attrs=['shape'])(result_TT)
+ 
+       # NOTE: the delay polynomial is left out here!
         # mean_delay /= num_parameter_samples
         if self.include_ia:
             for i in range(num_parameter_samples):
@@ -494,7 +508,7 @@ class BaseModel(object):
                 # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
                 μ[i, :] = np.exp(IA_ef +
                                  np.dot(T_S, W_t_s[i]) +
-                                 np.dot(T_T, W_t_t[i]) +
+                                 result_TT[i] + 
                                  np.dot(TS, W_ts[i]) +
                                  log_exposure)
                 y[i, :] = pm.NegativeBinomial.dist(

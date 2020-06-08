@@ -19,7 +19,7 @@ num_chains = 4
 num_cores = num_chains
 
 # whether to sample the parameters or load them 
-SAMPLE_PARAMS = True
+SAMPLE_PARAMS = False
 
 # whether to sample predictions on training, test or both
 # SAMPLE_PREDS = "both" # can be "train", "test" or "both"
@@ -101,7 +101,7 @@ if SAMPLE_PARAMS:
         pm.save_trace(trace, filename_params, overwrite=True)
 else:
     print("Load parameters.")
-    trace = load_trace_by_i(disease, i)
+    trace = load_trace_window(disease,model_i, start, number_of_weeks ) 
 
 print("Sampling predictions on the training and test set.")
 
