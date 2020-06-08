@@ -67,6 +67,7 @@ class TemporalFourierFeature(SpatioTemporalFeature):
     def call(self, t, x):
         return self.fun((t - self.t0) / self.scale * self.τ)
 
+
 class TemporalPeriodicPolynomialFeature(SpatioTemporalFeature):
     def __init__(self, t0, period, order):
         self.t0 = t0
@@ -89,6 +90,7 @@ class TemporalSigmoidFeature(SpatioTemporalFeature):
         t_delta = (t - self.t0) / self.scale
         return sp.special.expit(t_delta.days + (t_delta.seconds / (3600 * 24)))
 
+
 class TemporalPolynomialFeature(SpatioTemporalFeature):
     def __init__(self, t0, tmax, order):
         self.t0 = t0
@@ -100,16 +102,18 @@ class TemporalPolynomialFeature(SpatioTemporalFeature):
         t_delta = (t - self.t0).days / self.scale
         return t_delta ** self.order
 
+
 class ReportDelayPolynomialFeature(SpatioTemporalFeature):
     def __init__(self, t0, t_max, order):
         self.t0 = t0
         self.order = order
         self.scale = (t_max - t0).days
         super().__init__()
-    
+
     def call(self, t, x):
         _t = 0 if t <= self.t0 else (t - self.t0).days / self.scale
         return _t ** self.order
+
 
 class IAEffectLoader(object):
     generates_stats = False
@@ -136,14 +140,14 @@ class IAEffectLoader(object):
                 # Simulate linear IA effects if predicting the future
                 if predict_for is not None:
                     d1 = [ds.index(d) for d in days]
-                    d2 = list(range(d1[-1],d1[-1]+len(predict_for)))
+                    d2 = list(range(d1[-1], d1[-1]+len(predict_for)))
                     n_days_pred = len(d2)
                     # Repeat ia_effects for last day.
-                    last = m[-1,:,:]
-                    last = np.tile(last,(n_days_pred,1,1))
-                    m = np.concatenate((m,last), axis=0)
+                    last = m[-1, :, :]
+                    last = np.tile(last, (n_days_pred, 1, 1))
+                    m = np.concatenate((m, last), axis=0)
                     # Update d_idx.
-                    d_idx = np.array(d1 + d2).reshape(-1,1)
+                    d_idx = np.array(d1 + d2).reshape(-1, 1)
 
                 self.samples.append(np.moveaxis(
                     m[d_idx, c_idx, :], -1, 0).reshape((m.shape[-1], -1)).T)
@@ -208,17 +212,17 @@ class BaseModel(object):
         self.trend_poly_order = trend_poly_order
         self.include_periodic = include_periodic
         self.periodic_poly_order = periodic_poly_order
-        self.trange = trange # 0 -> 28th of Jan; 1-> Last
+        self.trange = trange  # 0 -> 28th of Jan; 1-> Last
 
         self.features = {
             "temporal_trend": {
                 "temporal_polynomial_{}".format(i): TemporalPolynomialFeature(
                     trange[0], trange[1], i)
-                    for i in range(self.trend_poly_order+1)} if self.include_temporal else {},
+                for i in range(self.trend_poly_order+1)} if self.include_temporal else {},
             "temporal_seasonal": {
                 "temporal_periodic_polynomial_{}".format(i): TemporalPeriodicPolynomialFeature(
                     trange[0], 7, i)
-                    for i in range(self.periodic_poly_order+1)} if self.include_periodic else {},
+                for i in range(self.periodic_poly_order+1)} if self.include_periodic else {},
             "spatiotemporal": {
                 "demographic_{}".format(group): SpatioTemporalYearlyDemographicsFeature(
                     self.county_info,
@@ -226,15 +230,15 @@ class BaseModel(object):
                         "[0-5)",
                         "[5-20)",
                         "[20-65)"]} if self.include_demographics else {},
-            "temporal_report_delay" : {
-                 "report_delay": ReportDelayPolynomialFeature(
-                     trange[1] - pd.Timedelta(days=5), trange[1], self.report_delay_order)}
-                     if self.include_report_delay else {},
+            "temporal_report_delay": {
+                "report_delay": ReportDelayPolynomialFeature(
+                    trange[1] - pd.Timedelta(days=5), trange[1], self.report_delay_order)}
+            if self.include_report_delay else {},
             "exposure": {
-                        "exposure": SpatioTemporalYearlyDemographicsFeature(
-                            self.county_info,
-                            "total",
-                            1.0 / 100000)}}
+                "exposure": SpatioTemporalYearlyDemographicsFeature(
+                    self.county_info,
+                    "total",
+                    1.0 / 100000)}}
 
         # self.Q = np.eye(self.num_ia, dtype=np.float32)
         # if orthogonalize:
@@ -262,6 +266,7 @@ class BaseModel(object):
         # extract features
         features = self.evaluate_features(days, counties)
         Y_obs = target.stack().values.astype(np.float32)
+        print("YY", Y_obs.shape)
         T_S = features["temporal_seasonal"].values.astype(np.float32)
         T_T = features["temporal_trend"].values.astype(np.float32)
         T_D = features["temporal_report_delay"].values.astype(np.float32)
@@ -284,7 +289,7 @@ class BaseModel(object):
             with pm.Model() as self.model:
                 # interaction effects are generated externally -> flat prior
                 IA = pm.Flat("IA", testval=np.ones(
-                      (num_obs, self.num_ia)), shape=(num_obs, self.num_ia))
+                    (num_obs, self.num_ia)), shape=(num_obs, self.num_ia))
 
                 # priors
                 # NOTE: Vary parameters over time -> W_ia dependent on time
@@ -292,39 +297,45 @@ class BaseModel(object):
                 δ = pm.HalfCauchy("δ", 10, testval=1.0)
                 α = pm.Deterministic("α", np.float32(1.0) / δ)
                 W_ia = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(
-                     self.num_ia), shape=self.num_ia)
+                    self.num_ia), shape=self.num_ia)
                 W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
                                   testval=np.zeros(num_t_s), shape=num_t_s)
                 W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
-                                  testval=np.zeros(num_t_t, num_counties), shape=(num_t_t, num_counties))
+                                  testval=np.zeros((num_t_t, num_counties)), shape=(num_t_t, num_counties))
                 W_t_d = pm.Normal("W_t_d", mu=0, sd=10,
                                   testval=np.zeros(num_t_d), shape=num_t_d)
                 W_ts = pm.Normal("W_ts", mu=0, sd=10,
                                  testval=np.zeros(num_ts), shape=num_ts)
-                self.param_names = ["δ", "W_ia", "W_t_s", "W_t_t", "W_t_d", "W_ts"]
+                self.param_names = ["δ", "W_ia",
+                                    "W_t_s", "W_t_t", "W_t_d", "W_ts"]
                 self.params = [δ, W_ia, W_t_s, W_t_t, W_t_d, W_ts]
 
-                # calculate interaction effect 
+                # calculate interaction effect
                 IA_ef = tt.dot(IA, W_ia)
 
-                print(T_S.shape, W_t_s.shape, "t_s")
-                print(T_T.shape, W_t_t.shape, "t_t")
-                print(T_D.shape, W_t_d.shape, "t_d")
-                print(TS.shape, W_ts.shape, "ts")
-                print(log_exposure.shape, "log")
-
+                #print(T_S.shape, W_t_s.shape, "t_s")
+                #print(T_T.shape, W_t_t.shape, "t_t")
+                #print(T_D.shape, W_t_d.shape, "t_d")
+                #print#(TS.shape, W_ts.shape, "ts")
+                #print(log_exposure.shape, "log")
+                #print("testtheno")
+                #testtheno = tt.dot(T_S, W_t_s)
+                #tt.printing.Print('vector', attrs=['shape'])(testtheno)
+                
+                #testtheno = tt.tile(testtheno.reshape(shape=(-1,1)), reps=(1, 412))
+                #tt.printing.Print('vector', attrs=['shape'])(testtheno)
 
                 # calculate mean rates
                 μ = pm.Deterministic(
                     "μ",
                     tt.exp(
-                        IA_ef +
-                        tt.dot(T_S, W_t_s) + 
+                        tt.tile(IA_ef.reshape(shape=(-1,1)), reps=(1,412)) +
+                        tt.tile(tt.dot(T_S, W_t_s).reshape(shape=(-1,1)), reps=(1,412)) +
                         tt.dot(T_T, W_t_t) +
-                        tt.dot(T_D, W_t_d) +
-                        tt.dot(TS, W_ts) +
-                        log_exposure))
-
+                        tt.tile(tt.dot(T_D, W_t_d).reshape(shape=(-1,1)), reps=(1,412)) +
+                        tt.tile(tt.dot(TS, W_ts).reshape(shape=(-1,1)), reps=(1,412)) +
+                        np.tile(np.reshape(log_exposure, newshape=(-1,1)),reps=(1,412)))
+                      )
                 # constrain to observations
                 pm.NegativeBinomial("Y", mu=μ, alpha=α, observed=Y_obs)
 
@@ -350,7 +361,7 @@ class BaseModel(object):
                 μ = pm.Deterministic(
                     "μ",
                     tt.exp(
-                        tt.dot(T_S, W_t_s) + 
+                        tt.dot(T_S, W_t_s) +
                         tt.dot(T_T, W_t_t) +
                         tt.dot(T_D, W_t_d) +
                         tt.dot(TS, W_ts) +
@@ -423,11 +434,12 @@ class BaseModel(object):
             average_periodic_feature=True,
             init="auto"):
 
-        all_days = pd.DatetimeIndex([d for d in target_days] + [d for d in prediction_days])
+        all_days = pd.DatetimeIndex(
+            [d for d in target_days] + [d for d in prediction_days])
         # extract features
         features = self.evaluate_features(all_days, target_counties)
 
-        T_S = features["temporal_seasonal"].values       
+        T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values
         TS = features["spatiotemporal"].values
@@ -436,8 +448,8 @@ class BaseModel(object):
         # average per week instead?
         if average_periodic_feature:
             mean = np.mean(T_S, axis=0)
-            mean = np.reshape(mean, newshape=(1,-1))
-            T_S = np.ones((T_S.shape[0],1)) @ mean  
+            mean = np.reshape(mean, newshape=(1, -1))
+            T_S = np.ones((T_S.shape[0], 1)) @ mean
 
         # extract coefficient samples
         α = parameters["α"]
@@ -449,9 +461,10 @@ class BaseModel(object):
         if self.include_ia:
             W_ia = parameters["W_ia"]
             ia_l = IAEffectLoader(None, self.ia_effect_filenames,
-                                  target_days, target_counties,predict_for=prediction_days)
+                                  target_days, target_counties, predict_for=prediction_days)
 
-        num_predictions = len(target_days) * len(target_counties) + len(prediction_days) * len(target_counties)
+        num_predictions = len(target_days) * len(target_counties) + \
+            len(prediction_days) * len(target_counties)
         num_parameter_samples = α.size
         y = np.zeros((num_parameter_samples, num_predictions), dtype=int)
         μ = np.zeros((num_parameter_samples, num_predictions),
@@ -466,14 +479,16 @@ class BaseModel(object):
         # mean_delay /= num_parameter_samples
         if self.include_ia:
             for i in range(num_parameter_samples):
-                IA_ef = np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], W_ia[i])
-                    # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
+                IA_ef = np.dot(
+                    ia_l.samples[np.random.choice(len(ia_l.samples))], W_ia[i])
+                # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
                 μ[i, :] = np.exp(IA_ef +
                                  np.dot(T_S, W_t_s[i]) +
                                  np.dot(T_T, W_t_t[i]) +
                                  np.dot(TS, W_ts[i]) +
                                  log_exposure)
-                y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()
+                y[i, :] = pm.NegativeBinomial.dist(
+                    mu=μ[i, :], alpha=α[i]).random()
 
         else:
             for i in range(num_parameter_samples):
@@ -481,8 +496,7 @@ class BaseModel(object):
                                  np.dot(T_T, W_t_t[i]) +
                                  np.dot(TS, W_ts[i]) +
                                  log_exposure)
-                y[i, :] = pm.NegativeBinomial.dist(mu=μ[i, :], alpha=α[i]).random()
-
-
+                y[i, :] = pm.NegativeBinomial.dist(
+                    mu=μ[i, :], alpha=α[i]).random()
 
         return {"y": y, "μ": μ, "α": α}
