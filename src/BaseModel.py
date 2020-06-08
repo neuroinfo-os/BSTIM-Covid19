@@ -301,7 +301,7 @@ class BaseModel(object):
                 W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
                                   testval=np.zeros(num_t_s), shape=num_t_s)
                 W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
-                                  testval=np.zeros((num_t_t, num_counties)), shape=(num_t_t, num_counties))
+                                  testval=np.zeros((num_counties, num_t_t)), shape=(num_counties, num_t_t))
                 W_t_d = pm.Normal("W_t_d", mu=0, sd=10,
                                   testval=np.zeros(num_t_d), shape=num_t_d)
                 W_ts = pm.Normal("W_ts", mu=0, sd=10,
@@ -325,16 +325,26 @@ class BaseModel(object):
                 #testtheno = tt.tile(testtheno.reshape(shape=(-1,1)), reps=(1, 412))
                 #tt.printing.Print('vector', attrs=['shape'])(testtheno)
 
+                # possibly four weeks instead of three
+                expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
+                # reshape feature
+                expanded_TT = np.reshape(T_T, newshape=(21,412,2))
+
+                result_TT = ((expanded_TT*expanded_Wtt).CAReduce('add', axis=-1)).reshape(shape=(-1))
+
+
                 # calculate mean rates
                 μ = pm.Deterministic(
                     "μ",
                     tt.exp(
-                        tt.tile(IA_ef.reshape(shape=(-1,1)), reps=(1,412)) +
-                        tt.tile(tt.dot(T_S, W_t_s).reshape(shape=(-1,1)), reps=(1,412)) +
-                        tt.dot(T_T, W_t_t) +
-                        tt.tile(tt.dot(T_D, W_t_d).reshape(shape=(-1,1)), reps=(1,412)) +
-                        tt.tile(tt.dot(TS, W_ts).reshape(shape=(-1,1)), reps=(1,412)) +
-                        np.tile(np.reshape(log_exposure, newshape=(-1,1)),reps=(1,412)))
+                        IA_ef +
+                        tt.dot(T_S, W_t_s) +
+                        #tt.dot(T_T, W_t_t) +
+                        result_TT + 
+                        tt.dot(T_D, W_t_d) +
+                        tt.dot(TS, W_ts)+
+                        log_exposure
+                        )
                       )
                 # constrain to observations
                 pm.NegativeBinomial("Y", mu=μ, alpha=α, observed=Y_obs)
