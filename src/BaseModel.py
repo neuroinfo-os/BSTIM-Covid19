@@ -276,6 +276,8 @@ class BaseModel(object):
         num_t_t = T_T.shape[1]
         num_t_d = T_D.shape[1]
         num_ts = TS.shape[1]
+        num_counties = len(counties)
+        print(num_counties)
 
         if self.include_ia:
 
@@ -294,7 +296,7 @@ class BaseModel(object):
                 W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
                                   testval=np.zeros(num_t_s), shape=num_t_s)
                 W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
-                                  testval=np.zeros(num_t_t), shape=num_t_t)
+                                  testval=np.zeros(num_t_t, num_counties), shape=(num_t_t, num_counties))
                 W_t_d = pm.Normal("W_t_d", mu=0, sd=10,
                                   testval=np.zeros(num_t_d), shape=num_t_d)
                 W_ts = pm.Normal("W_ts", mu=0, sd=10,
@@ -304,6 +306,13 @@ class BaseModel(object):
 
                 # calculate interaction effect 
                 IA_ef = tt.dot(IA, W_ia)
+
+                print(T_S.shape, W_t_s.shape, "t_s")
+                print(T_T.shape, W_t_t.shape, "t_t")
+                print(T_D.shape, W_t_d.shape, "t_d")
+                print(TS.shape, W_ts.shape, "ts")
+                print(log_exposure.shape, "log")
+
 
                 # calculate mean rates
                 μ = pm.Deterministic(

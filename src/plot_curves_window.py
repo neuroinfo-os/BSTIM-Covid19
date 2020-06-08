@@ -39,20 +39,21 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
     # quantiles we want to plot
     qs = [0.25, 0.50, 0.75]
 
-    fig = plt.figure(figsize=(12, 14))
+    fig = plt.figure(figsize=(12, 6))
     grid = plt.GridSpec(
-        3,
+        1,
         1,
         top=0.9,
-        bottom=0.1,
+        bottom=0.2,
         left=0.07,
         right=0.97,
         hspace=0.25,
         wspace=0.15,
-        height_ratios=[
-            1,
-            1,
-            1.75])
+        #height_ratios=[
+        #    1,
+        #    1,
+        #    1.75]
+        )
 
     # for i, disease in enumerate(diseases):
     i = 0
@@ -114,6 +115,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         index=ext_index,
         columns=target.columns)
 
+    '''
     map_ax = fig.add_subplot(grid[2, i])
     map_ax.set_position(grid[2, i].get_position(fig).translated(0, -0.05))
     map_ax.set_xlabel(
@@ -122,7 +124,9 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
             prediction_mean.index[-5].month,
             prediction_mean.index[-5].year),
         fontsize=22)
+    
 
+    
     # plot the chloropleth map
     plot_counties(map_ax,
                 counties,
@@ -143,7 +147,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
                 lw=2)
 
     map_ax.set_rasterized(True)
-
+    '''
     for j, name in enumerate(plot_county_names[disease]):
         ax = fig.add_subplot(grid[j, i])
 
@@ -193,18 +197,22 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
 
         #ax.set_title(["campylobacteriosis" if disease == "campylobacter" else disease]
         #            [0] + "\n" + name if j == 0 else name, fontsize=22)
-        if j == 1:
-            ax.set_xlabel("Time", fontsize=20)
+     
+        #ax.set_xlabel("Time", fontsize=20)
         ax.tick_params(axis="both", direction='out',
                     size=6, labelsize=16, length=6
                     )
-        ticks = ['2020-03-02','2020-03-12','2020-03-22','2020-04-01','2020-04-11','2020-04-21','2020-05-1','2020-05-11','2020-05-21']
-        labels = ['02.03.2020','12.03.2020','22.03.2020','01.04.2020','11.04.2020','21.04.2020','01.05.2020','11.05.2020','21.05.2020']
+        ticks = [start_day+pd.Timedelta(days=i) for i in [0,5,10,15,20,25,30,35,40]]
+        labels = ["{}.{}.{}".format(str(d)[8:10], str(d)[5:7], str(d)[:4]) for d in ticks]
+        
+        # ticks = ['2020-03-02','2020-03-12','2020-03-22','2020-04-01','2020-04-11','2020-04-21','2020-05-1','2020-05-11','2020-05-21']
+        #labels = ['02.03.2020','12.03.2020','22.03.2020','01.04.2020','11.04.2020','21.04.2020','01.05.2020','11.05.2020','21.05.2020']
         plt.xticks(ticks,labels)
         #plt.xlabel(ticks)
-        plt.setp(ax.get_xticklabels(), visible=j > 0, rotation=45)
+        plt.setp(ax.get_xticklabels(), rotation=45)
         
 
+        '''
         cent = np.array(counties[county_id]["shape"].centroid.coords[0])
         txt = map_ax.annotate(
             name,
@@ -220,6 +228,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
             fontname="Arial")
         txt.set_path_effects(
             [PathEffects.withStroke(linewidth=2, foreground='black')])
+        '''
 
         ax.set_xlim([start_day,day_p5-pd.Timedelta(1)])
         ax.autoscale(False)
@@ -242,14 +251,14 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
                     fontsize=12, loc="upper right")
         fig.text(0,
                 1 + 0.025,
-                r"$\textbf{" + str(i + 1) + "ABC"[j] + " " + plot_county_names["covid19"][j]+ r"}$",
+                r"$\textbf{"  + plot_county_names["covid19"][j]+ r"}$",
                 fontsize=22,
                 transform=ax.transAxes)
-    fig.text(0, 0.95, r"$\textbf{" + str(i + 1) + r"C}$",
-            fontsize=22, transform=map_ax.transAxes)
+    #fig.text(0, 0.95, r"$\textbf{" + str(i + 1) + r"C}$",
+    #        fontsize=22, transform=map_ax.transAxes)
 
-    fig.text(0.01, 0.66, "Reported/predicted infections",
-            va='center', rotation='vertical', fontsize=22)
+    #fig.text(0.01, 1.6, "Reported/predicted infections",
+    #        va='center', rotation='vertical', fontsize=16)
 
     if save_plot:
         plt.savefig("../figures/curve_{}_{}_{}.pdf".format(county,start,n_weeks))
