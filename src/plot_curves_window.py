@@ -67,6 +67,8 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
     day_m5 = day_0 - pd.Timedelta(days=5)
     day_p5 = day_0 + pd.Timedelta(days=5)
 
+    
+
     _, target, _, _ = split_data(
         data,
         train_start=start_day,
@@ -84,7 +86,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
     n_days = (day_p5 - start_day).days
     #print(res['y'].shape)
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
-    prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, -412))
+    prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
     
     #print(prediction_samples.shape)
     #print(target.index)
@@ -178,13 +180,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
             linewidth=2.0,
             zorder=4)
         # plot our predictions w/ quartiles
-        p_pred_trend = ax.plot_date(
-            dates,
-            prediction_mean_trend[county_id],
-            "-",
-            color="green",
-            linewidth=2.0,
-            zorder=4)
+        
         p_quant = ax.fill_between(
             dates,
             prediction_q25[county_id],
@@ -229,6 +225,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         #labels = ['02.03.2020','12.03.2020','22.03.2020','01.04.2020','11.04.2020','21.04.2020','01.05.2020','11.05.2020','21.05.2020']
         plt.xticks(ticks,labels)
         #plt.xlabel(ticks)
+        ax.set_ylim([0,100])
         plt.setp(ax.get_xticklabels(), rotation=45)
         
 
@@ -264,6 +261,63 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         ax.plot_date(dates, prediction_q95[county_id], ":",
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
+
+        _, target, _, _ = split_data(
+            data,
+            train_start=start_day,
+            test_start=day_p5+pd.Timedelta(days=1),
+            post_test=day_p5+pd.Timedelta(days=2))
+
+        county_ids = target.columns
+        print("HEYYEYYEY")
+        print(target.index)
+        print(ext_index)
+        tspan = (target.index[0], target.index[-1])
+
+    
+
+        model = BaseModel(tspan,
+                        counties,
+                        ["../data/ia_effect_samples/{}_{}.pkl".format(disease,
+                                                                        i) for i in range(100)],
+                        include_ia=True,
+                        include_report_delay=False,
+                        include_demographics=True,
+                        trend_poly_order=1,
+                        periodic_poly_order=4)
+
+
+        features = model.evaluate_features(
+            ext_index, target.columns)
+
+        trend_features = features["temporal_trend"].swaplevel(0, 1).loc[county_id]
+
+        trace = load_trace_window(disease, model_i, start, n_weeks)
+        trend_params = pm.trace_to_dataframe(trace, varnames=["W_t_t"])
+        #trend_params = trend_params.swaplevel(0, 1).loc[county_id]
+
+        iii = list(target.columns).index(county_id)
+        #print(iii)
+        ##print(trend_params)
+        #print(trend_params.values.shape)
+        trend_params = trend_params.values[:,2*iii:2*iii+2]
+        #TT = trend_params.values.dot(trend_features.values.T)
+        print(trend_features.values.shape)
+
+        print(trend_params)
+        print(trend_features.values)
+        TT = np.dot(trend_params, trend_features.values.T)
+        p_pred_trend = ax.plot_date(
+                        dates,
+                        40*TT.mean(axis=0),
+                        "-",
+                        color="green",
+                        linewidth=2.0,
+                        zorder=4)
+
+
+
+
         if (i == 0) & (j == 0):
             ax.legend([p_real[0], p_pred[0], p_pred_trend[0], p_quant, p_quant2],
                     ["reported", "predicted", "trend", 
@@ -279,6 +333,11 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
 
     #fig.text(0.01, 1.6, "Reported/predicted infections",
     #        va='center', rotation='vertical', fontsize=16)
+    
+
+
+
+    
 
     if save_plot:
         plt.savefig("../figures/curve_{}_{}_{}.pdf".format(county,start,n_weeks))
@@ -294,6 +353,7 @@ if __name__ == "__main__":
     model_i = sys.argv[2]
     start = sys.argv[4]
     weeks = sys.argv[6]
+    county = sys.argv[8]
 
 
     _ = curves(model_i,start, weeks, "Nürnberg" ,save_plot=True)

@@ -458,6 +458,8 @@ class BaseModel(object):
         log_exposure = np.log(features["exposure"].values.ravel())
 
         # average per week instead?
+        print("eoekoeoe")
+        print(T_S.shape)
         if average_periodic_feature:
             mean = np.mean(T_S, axis=0)
             mean = np.reshape(mean, newshape=(1, -1))
