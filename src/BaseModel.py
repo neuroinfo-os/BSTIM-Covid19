@@ -442,8 +442,8 @@ class BaseModel(object):
             target_counties,
             parameters,
             prediction_days,
-            average_periodic_feature=True,
-            only_trend=False,
+            average_periodic_feature=False,
+            average_all=True
             init="auto"):
 
         all_days = pd.DatetimeIndex(
@@ -457,13 +457,28 @@ class BaseModel(object):
         TS = features["spatiotemporal"].values
         log_exposure = np.log(features["exposure"].values.ravel())
 
-        # average per week instead?
-        print("eoekoeoe")
-        print(T_S.shape)
+        
         if average_periodic_feature:
             mean = np.mean(T_S, axis=0)
             mean = np.reshape(mean, newshape=(1, -1))
             T_S = np.ones((T_S.shape[0], 1)) @ mean
+
+        if average_all:
+            mean = np.mean(T_S, axis=0)
+            mean = np.reshape(mean, newshape=(1, -1))
+            T_S = np.ones((T_S.shape[0], 1)) @ mean
+
+            mean = np.mean(TS, axis=0)
+            mean = np.reshape(mean, newshape=(1, -1))
+            TS = np.ones((TS.shape[0], 1)) @ mean
+
+            mean = np.mean(T_D, axis=0)
+            mean = np.reshape(mean, newshape=(1, -1))
+            T_D = np.ones((T_D.shape[0], 1)) @ mean
+
+            mean = np.mean(log_exposure, axis=0)
+            mean = np.reshape(mean, newshape=(1, -1))
+            log_exposure = np.ones((log_exposure.shape[0], 1)) @ mean
 
         # extract coefficient samples
         α = parameters["α"]

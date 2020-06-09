@@ -112,8 +112,8 @@ pred = model.sample_predictions(target_train.index,
                                 target_train.columns, 
                                 trace, 
                                 target_test.index, 
-                                average_periodic_feature=False)
-
+                                average_all=True)
+'''
 print("avergaing periodic")
 pred_nowcast = model.sample_predictions(target_train.index, 
                                         target_train.columns, 
@@ -128,12 +128,16 @@ pred_trend = model.sample_predictions(target_train.index,
                                         target_test.index,
                                         average_periodic_feature=False,
                                         only_trend=True)
+'''
 
 with open(filename_pred, 'wb') as f:
     pkl.dump(pred, f)
 
+
+'''
 with open(filename_pred_nowcast, "wb") as f:
     pkl.dump(pred_nowcast, f)
 
 with open(filename_pred_trend, "wb") as f:
     pkl.dump(pred_trend, f)
+'''

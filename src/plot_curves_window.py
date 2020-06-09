@@ -79,14 +79,14 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
 
     # Load our prediction samples
     res = load_pred_model_window(model_i, start, n_weeks)
-    res_trend = load_pred_model_window(model_i, start, n_weeks, nowcast=True)
+    res_trend = load_pred_model_window(model_i, start, n_weeks, trend=True)
     #res_test = load_pred_by_i(disease, model_i)
    # print(res_train['y'].shape)
     #print(res_test['y'].shape)
     n_days = (day_p5 - start_day).days
     #print(res['y'].shape)
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
-    prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
+    prediction_samples_trend = 20 * np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
     
     #print(prediction_samples.shape)
     #print(target.index)
@@ -225,7 +225,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         #labels = ['02.03.2020','12.03.2020','22.03.2020','01.04.2020','11.04.2020','21.04.2020','01.05.2020','11.05.2020','21.05.2020']
         plt.xticks(ticks,labels)
         #plt.xlabel(ticks)
-        ax.set_ylim([0,100])
+        ax.set_ylim([0,500])
         plt.setp(ax.get_xticklabels(), rotation=45)
         
 
@@ -261,6 +261,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         ax.plot_date(dates, prediction_q95[county_id], ":",
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
+        
 
         _, target, _, _ = split_data(
             data,
@@ -302,19 +303,29 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         #print(trend_params.values.shape)
         trend_params = trend_params.values[:,2*iii:2*iii+2]
         #TT = trend_params.values.dot(trend_features.values.T)
-        print(trend_features.values.shape)
+        #print(trend_features.values.shape)
 
-        print(trend_params)
-        print(trend_features.values)
-        TT = np.dot(trend_params, trend_features.values.T)
+        #print(trend_params)
+        #print(trend_features.values)
+        TT = np.exp(np.dot(trend_params, trend_features.values.T))
+        
         p_pred_trend = ax.plot_date(
                         dates,
-                        40*TT.mean(axis=0),
+                        TT.mean(axis=0),
                         "-",
                         color="green",
                         linewidth=2.0,
                         zorder=4)
-
+        '''
+        p_pred_trend = ax.plot_date(
+                        dates,
+                        prediction_mean_trend[county_id],
+                        "-",
+                        color="green",
+                        linewidth=2.0,
+                        zorder=4)
+        '''
+        
 
 
 
