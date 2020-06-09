@@ -443,7 +443,7 @@ class BaseModel(object):
             parameters,
             prediction_days,
             average_periodic_feature=False,
-            average_all=True
+            average_all=True,
             init="auto"):
 
         all_days = pd.DatetimeIndex(
@@ -476,9 +476,9 @@ class BaseModel(object):
             mean = np.reshape(mean, newshape=(1, -1))
             T_D = np.ones((T_D.shape[0], 1)) @ mean
 
-            mean = np.mean(log_exposure, axis=0)
-            mean = np.reshape(mean, newshape=(1, -1))
-            log_exposure = np.ones((log_exposure.shape[0], 1)) @ mean
+            #mean = np.mean(log_exposure, axis=0)
+            #mean = np.reshape(mean, newshape=(1, -1))
+            #log_exposure = np.ones((log_exposure.shape[0], 1)) @ mean
 
         # extract coefficient samples
         α = parameters["α"]
@@ -525,7 +525,7 @@ class BaseModel(object):
                     ia_l.samples[np.random.choice(len(ia_l.samples))], W_ia[i])
                 # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
 
-                if only_trend:
+                if False:
                     μ[i, :] = np.exp(result_TT[i])
                 else:
                     μ[i, :] = np.exp(IA_ef +
