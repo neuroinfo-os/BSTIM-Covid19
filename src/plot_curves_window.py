@@ -29,7 +29,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
     countyByName = OrderedDict(
         [('Düsseldorf', '05111'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
     # Hier dann das reinspeisen
-    plot_county_names = {"covid19": ["Düsseldorf"]}
+    plot_county_names = {"covid19": [county]}
 
     # colors for curves
     C1 = "#D55E00"
@@ -276,5 +276,5 @@ if __name__ == "__main__":
     weeks = sys.argv[6]
 
 
-    _ = curves(model_i,start, weeks, "Düsseldorf" ,save_plot=True)
+    _ = curves(model_i,start, weeks, "Nürnberg" ,save_plot=True)
 
