@@ -443,7 +443,7 @@ class BaseModel(object):
             parameters,
             prediction_days,
             average_periodic_feature=True,
-            only_trend=False
+            only_trend=False,
             init="auto"):
 
         all_days = pd.DatetimeIndex(
@@ -509,7 +509,7 @@ class BaseModel(object):
                 # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
 
                 if only_trend:
-                    μ[i, :] = np.exp(results_TT[i])
+                    μ[i, :] = np.exp(result_TT[i])
                 else:
                     μ[i, :] = np.exp(IA_ef +
                                     np.dot(T_S, W_t_s[i]) +

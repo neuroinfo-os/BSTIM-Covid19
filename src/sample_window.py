@@ -42,7 +42,10 @@ print("Model {} - IA: {} - RD: {} - DEMO: {} - Trend: {} - Per: {}".format(
 filename_params = "../data/mcmc_samples_backup/parameters_{}_model_{}_window_{}_{}".format(disease, model_i, start, number_of_weeks)
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
 filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
+filename_pred_trend = "../data/mcmc_samples_backup/predictions_trend_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
 filename_model = "../data/mcmc_samples_backup/model_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
+
+
 
 # Load data
 with open('../data/counties/counties.pkl', "rb") as f:
@@ -130,3 +133,6 @@ with open(filename_pred, 'wb') as f:
 
 with open(filename_pred_nowcast, "wb") as f:
     pkl.dump(pred_nowcast, f)
+
+with open(filename_pred_trend, "wb") as f:
+    pkl.dump(pred_trend, f)
