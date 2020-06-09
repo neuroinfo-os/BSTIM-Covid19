@@ -114,13 +114,14 @@ pred = model.sample_predictions(target_train.index,
                                 target_test.index, 
                                 average_periodic_feature=False)
 
+print("avergaing periodic")
 pred_nowcast = model.sample_predictions(target_train.index, 
                                         target_train.columns, 
                                         trace, 
                                         target_test.index,
                                         average_periodic_feature=True)
 
-
+print("only trend")
 pred_trend = model.sample_predictions(target_train.index, 
                                         target_train.columns, 
                                         trace, 
