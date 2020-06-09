@@ -77,15 +77,19 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
 
     # Load our prediction samples
     res = load_pred_model_window(model_i, start, n_weeks)
+    res_trend = load_pred_model_window(model_i, start, n_weeks, nowcast=True)
     #res_test = load_pred_by_i(disease, model_i)
    # print(res_train['y'].shape)
     #print(res_test['y'].shape)
     n_days = (day_p5 - start_day).days
     #print(res['y'].shape)
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
+    prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, -412))
+    
     #print(prediction_samples.shape)
     #print(target.index)
     prediction_samples = prediction_samples[:,i_start_day:i_start_day+n_days,:]
+    prediction_samples_trend = prediction_samples_trend[:,i_start_day:i_start_day+n_days,:]
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
 
@@ -112,6 +116,14 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         columns=target.columns)
     prediction_q95 = pd.DataFrame(
         data=prediction_quantiles[95],
+        index=ext_index,
+        columns=target.columns)
+
+
+    prediction_mean_trend = pd.DataFrame(
+        data=np.mean(
+            prediction_samples_trend,
+            axis=0),
         index=ext_index,
         columns=target.columns)
 
@@ -163,6 +175,14 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
             prediction_mean[county_id],
             "-",
             color=C1,
+            linewidth=2.0,
+            zorder=4)
+        # plot our predictions w/ quartiles
+        p_pred_trend = ax.plot_date(
+            dates,
+            prediction_mean_trend[county_id],
+            "-",
+            color="green",
             linewidth=2.0,
             zorder=4)
         p_quant = ax.fill_between(
@@ -245,8 +265,8 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
         if (i == 0) & (j == 0):
-            ax.legend([p_real[0], p_pred[0], p_quant, p_quant2],
-                    ["reported", "predicted", 
+            ax.legend([p_real[0], p_pred[0], p_pred_trend[0], p_quant, p_quant2],
+                    ["reported", "predicted", "trend", 
                         "25\%-75\% quantile", "5\%-95\% quantile"],
                     fontsize=12, loc="upper right")
         fig.text(0,
