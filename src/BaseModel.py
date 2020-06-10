@@ -530,8 +530,11 @@ class BaseModel(object):
                             result_TT[i] + 
                             np.dot(TS, W_ts[i]) +
                             log_exposure)
-                y[i, :] = pm.NegativeBinomial.dist(
-                    mu=μ[i, :], alpha=α[i]).random()
+                if average_all:
+                    y[i,:] = μ[i, :]
+                else:
+                    y[i, :] = pm.NegativeBinomial.dist(
+                        mu=μ[i, :], alpha=α[i]).random()
 
         else:
             for i in range(num_parameter_samples):
