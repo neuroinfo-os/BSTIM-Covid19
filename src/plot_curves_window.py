@@ -225,7 +225,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         #labels = ['02.03.2020','12.03.2020','22.03.2020','01.04.2020','11.04.2020','21.04.2020','01.05.2020','11.05.2020','21.05.2020']
         plt.xticks(ticks,labels)
         #plt.xlabel(ticks)
-        ax.set_ylim([0,500])
+        #ax.set_ylim([0,500])
         plt.setp(ax.get_xticklabels(), rotation=45)
         
 
@@ -248,7 +248,8 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         '''
 
         ax.set_xlim([start_day,day_p5-pd.Timedelta(1)])
-        ax.autoscale(False)
+        #ax.set_ylim()
+        ax.autoscale(True)
         p_quant2 = ax.fill_between(
             dates,
             prediction_q5[county_id],
@@ -367,5 +368,5 @@ if __name__ == "__main__":
     county = sys.argv[8]
 
 
-    _ = curves(model_i,start, weeks, "Nürnberg" ,save_plot=True)
+    _ = curves(model_i,start, weeks, "Leipzig" ,save_plot=True)
 
