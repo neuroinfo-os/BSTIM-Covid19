@@ -496,10 +496,13 @@ class BaseModel(object):
         # for i in range(num_parameter_samples):
         #     mean_delay += np.dot(T_D, W_t_d[i])
 
+
+
+        # NOT CLEAR WHETHER countiesxdays or daysxcounties
         # possibly four weeks instead of three
-        expanded_Wtt = np.tile(np.reshape(W_t_t, newshape=(-1,1,412,2)), reps=(1,31, 1, 1))
+        expanded_Wtt = np.tile(np.reshape(W_t_t, newshape=(-1,412,1,2)), reps=(1,1, 31, 1))
         # reshape feature
-        expanded_TT = np.reshape(T_T, newshape=(1,31,412,2))
+        expanded_TT = np.reshape(T_T, newshape=(1,412,31,2))
         result_TT = np.reshape(np.sum(expanded_TT*expanded_Wtt,axis=-1), newshape=(-1, 31*412))
  
        # NOTE: the delay polynomial is left out here!
