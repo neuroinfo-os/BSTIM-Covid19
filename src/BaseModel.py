@@ -453,22 +453,28 @@ class BaseModel(object):
             print("T_S",T_S.shape) # 12772, 5
             T_S = np.reshape(T_S, newshape=(31,412,-1))
             mean = np.mean(T_S, axis=0, keepdims=True)
-            T_S = np.tile(mean, reps=(31,1,1)) 
-            
-            print("TS",TS.shape) # 12772, 3
+            T_S = np.reshape(np.tile(mean, reps=(31,1,1)), (-1,5))          
+            print("T_S",T_S.shape) # 12772, 5
+ 
+            print("TS", TS.shape) 
             TS = np.reshape(TS, newshape=(31,412,-1))
             mean = np.mean(TS, axis=0, keepdims=True)
-            TS = np.tile(mean, reps=(31,1,1)) 
+            TS = np.reshape(np.tile(mean, reps=(31,1,1)),(-1,3)) 
+            print("TS", TS.shape) 
 
             print("T_D",T_D.shape) #12772, 0
+            print(T_D)
             T_D = np.reshape(T_D, newshape=(31,412,-1))
             mean = np.mean(T_D, axis=0, keepdims=True)
-            T_D = np.tile(mean, reps=(31,1,1)) 
+            T_D = np.reshape(np.tile(mean, reps=(31,1,1)), (-1)) 
+            print("T_D",T_D.shape) #12772, 0
 
             print(log_exposure.shape) # 12272
             log_exposure = np.reshape(log_exposure, newshape=(31,412))
-            mean = np.mean(T_D, axis=0, keepdims=True)
-            log_exposure = np.tile(mean, reps(31,1))
+            mean = np.mean(log_exposure, axis=0, keepdims=True)
+            log_exposure = np.reshape(np.tile(mean, reps=(31,1)), (-1))
+            print(log_exposure.shape) # 12272
+          
             #mean = np.mean(log_exposure, axis=0)
             #mean = np.reshape(mean, newshape=(1, -1))
             #log_exposure = np.ones((log_exposure.shape[0], 1)) @ mean
