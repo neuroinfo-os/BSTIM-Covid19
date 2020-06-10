@@ -368,5 +368,5 @@ if __name__ == "__main__":
     county = sys.argv[8]
 
 
-    _ = curves(model_i,start, weeks, "Düsseldorf" ,save_plot=True)
+    _ = curves(model_i,start, weeks, "Nürnberg" ,save_plot=True)
 

@@ -429,7 +429,7 @@ class BaseModel(object):
             parameters,
             prediction_days,
             average_periodic_feature=False,
-            average_all=True,
+            average_all=False
             init="auto"):
 
         all_days = pd.DatetimeIndex(
@@ -445,9 +445,11 @@ class BaseModel(object):
 
         
         if average_periodic_feature:
-            mean = np.mean(T_S, axis=0)
-            mean = np.reshape(mean, newshape=(1, -1))
-            T_S = np.ones((T_S.shape[0], 1)) @ mean
+            print("T_S",T_S.shape) # 12772, 5
+            T_S = np.reshape(T_S, newshape=(-1,412,5))
+            mean = np.mean(T_S, axis=0, keepdims=True)
+            T_S = np.reshape(np.tile(mean, reps=(T_S.shape[0],1,1)), (-1,5))          
+            print("T_S",T_S.shape) # 12772, 5
 
         if average_all:
             print("T_S",T_S.shape) # 12772, 5
