@@ -300,6 +300,7 @@ class BaseModel(object):
                     self.num_ia), shape=self.num_ia)
                 W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
                                   testval=np.zeros(num_t_s), shape=num_t_s)
+                # initialize W_t_t to have dimension (412,2)
                 W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
                                   testval=np.zeros((num_counties, num_t_t)), shape=(num_counties, num_t_t))
                 W_t_d = pm.Normal("W_t_d", mu=0, sd=10,
@@ -313,26 +314,12 @@ class BaseModel(object):
                 # calculate interaction effect
                 IA_ef = tt.dot(IA, W_ia)
 
-                #print(T_S.shape, W_t_s.shape, "t_s")
-                #print(T_T.shape, W_t_t.shape, "t_t")
-                #print(T_D.shape, W_t_d.shape, "t_d")
-                #print#(TS.shape, W_ts.shape, "ts")
-                #print(log_exposure.shape, "log")
-                #print("testtheno")
-                #testtheno = tt.dot(T_S, W_t_s)
-                #tt.printing.Print('vector', attrs=['shape'])(testtheno)
-                
-                #testtheno = tt.tile(testtheno.reshape(shape=(-1,1)), reps=(1, 412))
-                #tt.printing.Print('vector', attrs=['shape'])(testtheno)
-
+                # Separately calculate the temporal trend contribution.
                 # possibly four weeks instead of three
                 expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
                 # reshape feature
                 expanded_TT = np.reshape(T_T, newshape=(21,412,2))
-
                 result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
-
-
 
                 # calculate mean rates
                 μ = pm.Deterministic(
@@ -340,7 +327,6 @@ class BaseModel(object):
                     tt.exp(
                         IA_ef +
                         tt.dot(T_S, W_t_s) +
-                        #tt.dot(T_T, W_t_t) +
                         result_TT + 
                         tt.dot(T_D, W_t_d) +
                         tt.dot(TS, W_ts)+
@@ -464,18 +450,22 @@ class BaseModel(object):
             T_S = np.ones((T_S.shape[0], 1)) @ mean
 
         if average_all:
+            print("T_S",T_S.shape)
             mean = np.mean(T_S, axis=0)
             mean = np.reshape(mean, newshape=(1, -1))
             T_S = np.ones((T_S.shape[0], 1)) @ mean
 
+            print("TS",TS.shape)
             mean = np.mean(TS, axis=0)
             mean = np.reshape(mean, newshape=(1, -1))
             TS = np.ones((TS.shape[0], 1)) @ mean
 
+            print("T_D",T_D.shape)
             mean = np.mean(T_D, axis=0)
             mean = np.reshape(mean, newshape=(1, -1))
             T_D = np.ones((T_D.shape[0], 1)) @ mean
 
+            print(log_exposure.shape)
             #mean = np.mean(log_exposure, axis=0)
             #mean = np.reshape(mean, newshape=(1, -1))
             #log_exposure = np.ones((log_exposure.shape[0], 1)) @ mean
@@ -506,16 +496,11 @@ class BaseModel(object):
         # for i in range(num_parameter_samples):
         #     mean_delay += np.dot(T_D, W_t_d[i])
 
-        print(W_t_t.shape)
-        print(T_T.shape)
-        #tt.printing.Print('vector',attrs=['shape'])(W_t_t)
         # possibly four weeks instead of three
         expanded_Wtt = np.tile(np.reshape(W_t_t, newshape=(-1,1,412,2)), reps=(1,31, 1, 1))
         # reshape feature
         expanded_TT = np.reshape(T_T, newshape=(1,31,412,2))
         result_TT = np.reshape(np.sum(expanded_TT*expanded_Wtt,axis=-1), newshape=(-1, 31*412))
-        print(result_TT.shape)
-        #tt.printing.Print('vector', attrs=['shape'])(result_TT)
  
        # NOTE: the delay polynomial is left out here!
         # mean_delay /= num_parameter_samples
@@ -525,14 +510,12 @@ class BaseModel(object):
                     ia_l.samples[np.random.choice(len(ia_l.samples))], W_ia[i])
                 # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
 
-                if False:
-                    μ[i, :] = np.exp(result_TT[i])
-                else:
-                    μ[i, :] = np.exp(IA_ef +
-                                    np.dot(T_S, W_t_s[i]) +
-                                    result_TT[i] + 
-                                    np.dot(TS, W_ts[i]) +
-                                    log_exposure)
+         
+                μ[i, :] = np.exp(IA_ef +
+                            np.dot(T_S, W_t_s[i]) +
+                            result_TT[i] + 
+                            np.dot(TS, W_ts[i]) +
+                            log_exposure)
                 y[i, :] = pm.NegativeBinomial.dist(
                     mu=μ[i, :], alpha=α[i]).random()
 

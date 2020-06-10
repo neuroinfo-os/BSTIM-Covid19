@@ -262,7 +262,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
         
-
+        '''
         _, target, _, _ = split_data(
             data,
             train_start=start_day,
@@ -324,7 +324,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
                         color="green",
                         linewidth=2.0,
                         zorder=4)
-        '''
+        
         
 
 
