@@ -95,7 +95,8 @@ if SAMPLE_PARAMS:
         target_accept=0.95,
         max_treedepth=15,
         chains=num_chains,
-        cores=num_cores)
+        cores=num_cores,
+        window=window)
 
     with open(filename_model, "wb") as f:
     	pkl.dump(model.model, f)

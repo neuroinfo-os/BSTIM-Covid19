@@ -260,7 +260,7 @@ class BaseModel(object):
                 [days, counties]), columns=[]) if len(group_features) == 0 else pd.DataFrame(group_features)
         return all_features
 
-    def init_model(self, target):
+    def init_model(self, target, window=False):
         days, counties = target.index, target.columns
 
         # extract features
@@ -300,9 +300,13 @@ class BaseModel(object):
                     self.num_ia), shape=self.num_ia)
                 W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
                                   testval=np.zeros(num_t_s), shape=num_t_s)
-                # initialize W_t_t to have dimension (412,2)
-                W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
-                                  testval=np.zeros((num_counties, num_t_t)), shape=(num_counties, num_t_t))
+                if window:
+                    # initialize W_t_t to have dimension (412,2)
+                    W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
+                                      testval=np.zeros((num_counties, num_t_t)), shape=(num_counties, num_t_t))
+                else:
+                    W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
+                                        testval=np.zeros(num_t_t), shape=num_t_t)
                 W_t_d = pm.Normal("W_t_d", mu=0, sd=10,
                                   testval=np.zeros(num_t_d), shape=num_t_d)
                 W_ts = pm.Normal("W_ts", mu=0, sd=10,
@@ -314,13 +318,15 @@ class BaseModel(object):
                 # calculate interaction effect
                 IA_ef = tt.dot(IA, W_ia)
 
-                # Separately calculate the temporal trend contribution.
-                # possibly four weeks instead of three
-                expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
-                # reshape feature
-                expanded_TT = np.reshape(T_T, newshape=(21,412,2))
-                result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
-
+                if window:
+                    # Separately calculate the temporal trend contribution.
+                    # possibly four weeks instead of three
+                    expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
+                    # reshape feature
+                    expanded_TT = np.reshape(T_T, newshape=(21,412,2))
+                    result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
+                else:
+                    result_TT = tt.dot(T_T, W_t_t)
                 # calculate mean rates
                 μ = pm.Deterministic(
                     "μ",
@@ -381,6 +387,7 @@ class BaseModel(object):
             init="advi",
             target_accept=0.8,
             max_treedepth=10,
+            window=False,
             **kwargs):
         """
             sample_parameters(target, samples=1000, cores=8, init="auto", **kwargs)
@@ -391,7 +398,7 @@ class BaseModel(object):
         """
         # model = self.model(target)
 
-        self.init_model(target)
+        self.init_model(target,window=window)
 
         if chains is None:
             chains = max(2, cores)
@@ -429,7 +436,7 @@ class BaseModel(object):
             parameters,
             prediction_days,
             average_periodic_feature=False,
-            average_all=False
+            average_all=False,
             init="auto"):
 
         all_days = pd.DatetimeIndex(
