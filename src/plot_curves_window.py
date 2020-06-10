@@ -320,7 +320,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         '''
         p_pred_trend = ax.plot_date(
                         dates,
-                        prediction_mean_trend[county_id],
+                        prediction_mean_trend[county_id]/31.0,
                         "-",
                         color="green",
                         linewidth=2.0,

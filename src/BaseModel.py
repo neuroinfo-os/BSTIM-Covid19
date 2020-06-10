@@ -521,7 +521,7 @@ class BaseModel(object):
                 IA_ef = np.dot(
                     ia_l.samples[np.random.choice(len(ia_l.samples))], W_ia[i])
                 # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
-
+                print("IASHAPE",IA_ef.shape)
          
                 μ[i, :] = np.exp(IA_ef +
                             np.dot(T_S, W_t_s[i]) +
