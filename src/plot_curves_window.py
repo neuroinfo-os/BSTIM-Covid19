@@ -86,7 +86,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
     n_days = (day_p5 - start_day).days
     #print(res['y'].shape)
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
-    prediction_samples_trend = 20 * np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
+    prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
     
     #print(prediction_samples.shape)
     #print(target.index)
@@ -320,7 +320,7 @@ def curves(model_i, start, n_weeks, county, save_plot=False):
         '''
         p_pred_trend = ax.plot_date(
                         dates,
-                        prediction_mean_trend[county_id]/31.0,
+                        prediction_mean_trend[county_id],
                         "-",
                         color="green",
                         linewidth=2.0,
@@ -368,5 +368,5 @@ if __name__ == "__main__":
     county = sys.argv[8]
 
 
-    _ = curves(model_i,start, weeks, "Leipzig" ,save_plot=True)
+    _ = curves(model_i,start, weeks, "München" ,save_plot=True)
 
