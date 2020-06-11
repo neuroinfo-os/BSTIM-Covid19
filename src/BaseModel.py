@@ -518,10 +518,15 @@ class BaseModel(object):
 
         # NOT CLEAR WHETHER countiesxdays or daysxcounties
         # possibly four weeks instead of three
-        expanded_Wtt = np.tile(np.reshape(W_t_t, newshape=(-1,1,412,2)), reps=(1,31, 1, 1))
-        # reshape feature
-        expanded_TT = np.reshape(T_T, newshape=(1,31,412,2))
-        result_TT = np.reshape(np.sum(expanded_TT*expanded_Wtt,axis=-1), newshape=(-1, 31*412))
+       if window:
+            # Separately calculate the temporal trend contribution.
+            # possibly four weeks instead of three
+            expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(31, 1, 1))
+            # reshape feature
+            expanded_TT = np.reshape(T_T, newshape=(31,412,2))
+            result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
+        else:
+            result_TT = tt.dot(T_T, W_t_t)
  
        # NOTE: the delay polynomial is left out here!
         # mean_delay /= num_parameter_samples
@@ -539,10 +544,7 @@ class BaseModel(object):
                             result_TT[i] + 
                             np.dot(TS, W_ts[i]) +
                             log_exposure)
-                if average_all:
-                    y[i,:] = μ[i, :]
-                else:
-                    y[i, :] = pm.NegativeBinomial.dist(
+                y[i, :] = pm.NegativeBinomial.dist(
                         mu=μ[i, :], alpha=α[i]).random()
 
         else:
