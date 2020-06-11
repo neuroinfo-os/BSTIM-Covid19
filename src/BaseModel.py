@@ -437,13 +437,14 @@ class BaseModel(object):
             prediction_days,
             average_periodic_feature=False,
             average_all=False,
+            window=False,
             init="auto"):
 
         all_days = pd.DatetimeIndex(
             [d for d in target_days] + [d for d in prediction_days])
         # extract features
         features = self.evaluate_features(all_days, target_counties)
-
+        num_counties = 412 #hardcoded
         T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values
@@ -518,13 +519,13 @@ class BaseModel(object):
 
         # NOT CLEAR WHETHER countiesxdays or daysxcounties
         # possibly four weeks instead of three
-       if window:
+        if window:
             # Separately calculate the temporal trend contribution.
             # possibly four weeks instead of three
-            expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(31, 1, 1))
+            expanded_Wtt = np.tile(np.reshape(W_t_t, newshape=(-1,1,412,2)), reps=(1,31, 1, 1))
             # reshape feature
-            expanded_TT = np.reshape(T_T, newshape=(31,412,2))
-            result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
+            expanded_TT = np.reshape(T_T, newshape=(1,31,412,2))
+            result_TT = np.reshape(np.sum(expanded_TT*expanded_Wtt,axis=-1), newshape=(-1,31*412))
         else:
             result_TT = tt.dot(T_T, W_t_t)
  
