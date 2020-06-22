@@ -26,6 +26,21 @@ from datetime import timedelta
 yearweek_regex = re.compile(r"([0-9]+)-KW([0-9]+)")
 
 
+
+def make_county_dict():
+    with open('../data/counties/counties.pkl', "rb") as f:
+        counties = pkl.load(f)
+
+    county_list = []
+    for key, _ in counties.items():
+        county_list.append((counties[key]['name'], key))
+
+    return OrderedDict(county_list)
+      
+
+
+
+
 def _parse_yearweek(yearweek):
     """Utility function to convert internal string representations of calender weeks into datetime objects. Uses strings of format `<year>-KW<week>`. Weeks are 1-based."""
     year, week = yearweek_regex.search(yearweek).groups()
@@ -91,7 +106,7 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
         data.drop("99999", inplace=True, axis=1)
 
     data = data.iloc[start:start+7*n_weeks+5,:]
-    print(data.index)
+
     data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
 

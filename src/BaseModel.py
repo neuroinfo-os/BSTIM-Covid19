@@ -266,7 +266,6 @@ class BaseModel(object):
         # extract features
         features = self.evaluate_features(days, counties)
         Y_obs = target.stack().values.astype(np.float32)
-        print("YY", Y_obs.shape)
         T_S = features["temporal_seasonal"].values.astype(np.float32)
         T_T = features["temporal_trend"].values.astype(np.float32)
         T_D = features["temporal_report_delay"].values.astype(np.float32)
@@ -282,7 +281,7 @@ class BaseModel(object):
         num_t_d = T_D.shape[1]
         num_ts = TS.shape[1]
         num_counties = len(counties)
-        print(num_counties)
+        
 
         if self.include_ia:
 
@@ -319,14 +318,13 @@ class BaseModel(object):
                 IA_ef = tt.dot(IA, W_ia)
 
                 if window:
-                    # Separately calculate the temporal trend contribution.
                     # possibly four weeks instead of three
                     expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
-                    # reshape feature
                     expanded_TT = np.reshape(T_T, newshape=(21,412,2))
                     result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
                 else:
                     result_TT = tt.dot(T_T, W_t_t)
+
                 # calculate mean rates
                 μ = pm.Deterministic(
                     "μ",
@@ -343,7 +341,7 @@ class BaseModel(object):
                 pm.NegativeBinomial("Y", mu=μ, alpha=α, observed=Y_obs)
 
         else:
-
+            # here the 3 week window prediction is not modeled yet
             with pm.Model() as self.model:
                 # priors
                 # δ = 1/√α
@@ -453,41 +451,26 @@ class BaseModel(object):
 
         
         if average_periodic_feature:
-            print("T_S",T_S.shape) # 12772, 5
             T_S = np.reshape(T_S, newshape=(-1,412,5))
             mean = np.mean(T_S, axis=0, keepdims=True)
             T_S = np.reshape(np.tile(mean, reps=(T_S.shape[0],1,1)), (-1,5))          
-            print("T_S",T_S.shape) # 12772, 5
-
+        
         if average_all:
-            print("T_S",T_S.shape) # 12772, 5
             T_S = np.reshape(T_S, newshape=(31,412,-1))
             mean = np.mean(T_S, axis=0, keepdims=True)
             T_S = np.reshape(np.tile(mean, reps=(31,1,1)), (-1,5))          
-            print("T_S",T_S.shape) # 12772, 5
  
-            print("TS", TS.shape) 
             TS = np.reshape(TS, newshape=(31,412,-1))
             mean = np.mean(TS, axis=0, keepdims=True)
             TS = np.reshape(np.tile(mean, reps=(31,1,1)),(-1,3)) 
-            print("TS", TS.shape) 
 
-            print("T_D",T_D.shape) #12772, 0
-            print(T_D)
             T_D = np.reshape(T_D, newshape=(31,412,-1))
             mean = np.mean(T_D, axis=0, keepdims=True)
             T_D = np.reshape(np.tile(mean, reps=(31,1,1)), (-1)) 
-            print("T_D",T_D.shape) #12772, 0
 
-            print(log_exposure.shape) # 12272
             log_exposure = np.reshape(log_exposure, newshape=(31,412))
             mean = np.mean(log_exposure, axis=0, keepdims=True)
             log_exposure = np.reshape(np.tile(mean, reps=(31,1)), (-1))
-            print(log_exposure.shape) # 12272
-          
-            #mean = np.mean(log_exposure, axis=0)
-            #mean = np.reshape(mean, newshape=(1, -1))
-            #log_exposure = np.ones((log_exposure.shape[0], 1)) @ mean
 
         # extract coefficient samples
         α = parameters["α"]
@@ -495,8 +478,6 @@ class BaseModel(object):
         W_t_t = parameters["W_t_t"]
         W_t_d = parameters["W_t_d"]
         W_ts = parameters["W_ts"]
-
-
 
         if self.include_ia:
             W_ia = parameters["W_ia"]
@@ -515,20 +496,15 @@ class BaseModel(object):
         # for i in range(num_parameter_samples):
         #     mean_delay += np.dot(T_D, W_t_d[i])
 
-
-
-        # NOT CLEAR WHETHER countiesxdays or daysxcounties
-        # possibly four weeks instead of three
+     
         if window:
-            # Separately calculate the temporal trend contribution.
             # possibly four weeks instead of three
             expanded_Wtt = np.tile(np.reshape(W_t_t, newshape=(-1,1,412,2)), reps=(1,31, 1, 1))
-            # reshape feature
             expanded_TT = np.reshape(T_T, newshape=(1,31,412,2))
             result_TT = np.reshape(np.sum(expanded_TT*expanded_Wtt,axis=-1), newshape=(-1,31*412))
         else:
             result_TT = tt.dot(T_T, W_t_t)
- 
+      
        # NOTE: the delay polynomial is left out here!
         # mean_delay /= num_parameter_samples
         if self.include_ia:
@@ -547,7 +523,7 @@ class BaseModel(object):
                             log_exposure)
                 y[i, :] = pm.NegativeBinomial.dist(
                         mu=μ[i, :], alpha=α[i]).random()
-
+        # again not modeled
         else:
             for i in range(num_parameter_samples):
                 μ[i, :] = np.exp(np.dot(T_S, W_t_s[i]) +

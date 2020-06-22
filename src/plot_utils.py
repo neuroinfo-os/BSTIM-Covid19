@@ -64,6 +64,9 @@ def plot_counties(
     pc = PatchCollection([PolygonPatch(p, lw=lw)
                           for p in polygons], cmap=matplotlib.cm.magma, alpha=1.0)
 
+
+    
+
     
 
     if values is not None:
@@ -76,7 +79,7 @@ def plot_counties(
         else:
             assert np.size(values) == len(counties), "Number of values ({}) doesn't match number of counties ({})!".format(
                 np.size(values), len(counties))
-        pc.set_clim(0, 0.0006/7)
+        pc.set_clim(0, 60)
         nans = np.isnan(values)
         values[nans] = 0
 
@@ -101,7 +104,11 @@ def plot_counties(
         surround.set_facecolor("none")
         ax.add_patch(surround)
 
+    cb = plt.colorbar(pc, shrink=0.6)
+    cb.set_ticks([0,30,60])
+    #cb.set_yticks([0.00004])
     ax.add_collection(pc)
+    
 
     if contourcolor is not None:
         contour.set_edgecolor(contourcolor)
@@ -129,6 +136,7 @@ def plot_counties(
     ax.tick_params(axis="y", which="both", left=yticks, labelleft=yticks)
 
     #plt.colorbar()
+    
 
     return pc, contour, surround
 

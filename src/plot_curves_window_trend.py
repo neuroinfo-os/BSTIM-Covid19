@@ -8,14 +8,14 @@ import numpy as np
 from collections import OrderedDict
 from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
-import os
 
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
-# Load only one county
+# Load only one county 
 def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
+
 
     start = int(start)
     n_weeks = int(n_weeks)
@@ -28,19 +28,19 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     ylim = (47, 56) # <- 10 weeks
 
     #countyByName = OrderedDict(
-    #    [('Düsseldorf', '05111'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
+     #   [('Düsseldorf', '05111'), ('Leipzig', '14713'), ('Nürnberg', '09564'), ('München', '09162')])
     countyByName = make_county_dict()
     # Hier dann das reinspeisen
     plot_county_names = {"covid19": [county]}
 
-   # colors for curves
+    # colors for curves
     #red
-    C1 = "#D55E00"
-    C2 = "#E69F00"
+    C4 = "#D55E00"
+    C5 = "#E69F00"
     #C3 = "#0073CF"
     #green
-    C4 = "#188500"
-    C5 = "#29c706"
+    C1 = "#188500"
+    C2 = "#a7c466"
     #C6 = "#0073CF"
 
     # quantiles we want to plot
@@ -56,6 +56,10 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         right=0.97,
         hspace=0.25,
         wspace=0.15,
+        #height_ratios=[
+        #    1,
+        #    1,
+        #    1.75]
         )
 
     # for i, disease in enumerate(diseases):
@@ -83,18 +87,21 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     res_trend = load_pred_model_window(model_i, start, n_weeks, trend=True)
     n_days = (day_p5 - start_day).days
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
-    prediction_samples_trend = np.reshape(res_trend['μ'], (res_trend['μ'].shape[0],  -1, 412))
+    prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
+    prediction_samples_trend_exp = np.reshape(res_trend['μ'], (res_trend['μ'].shape[0],  -1, 412))
     prediction_samples = prediction_samples[:,i_start_day:i_start_day+n_days,:]
     prediction_samples_trend = prediction_samples_trend[:,i_start_day:i_start_day+n_days,:]
+    prediction_samples_trend_exp = prediction_samples_trend_exp[:,i_start_day:i_start_day+n_days,:]
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
 
     # TODO: figure out where quantiles comes from and if its pymc3, how to replace it
-    prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95)) 
+    prediction_quantiles = quantiles(prediction_samples_trend, (5, 25, 75, 95)) 
 
+    # Cheeky switch of samples and trend for this second kind of plot.
     prediction_mean = pd.DataFrame(
         data=np.mean(
-            prediction_samples,
+            prediction_samples_trend_exp,
             axis=0),
         index=ext_index,
         columns=target.columns)
@@ -115,21 +122,22 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         index=ext_index,
         columns=target.columns)
 
-
     prediction_mean_trend = pd.DataFrame(
         data=np.mean(
-            prediction_samples_trend,
+            prediction_samples,
             axis=0),
         index=ext_index,
         columns=target.columns)
 
-    # Unnecessary for-loop
+
+    # Once again an unnecessary for loop.
     for j, name in enumerate(plot_county_names[disease]):
         ax = fig.add_subplot(grid[j, i])
 
         county_id = countyByName[name]
         dates = [pd.Timestamp(day) for day in ext_index]
         days = [ (day - min(dates)).days for day in dates]
+
 
         # plot our predictions w/ quartiles
         p_pred = ax.plot_date(
@@ -171,17 +179,18 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         ax.axvline(dates[-5],ls='-', lw=2, c='cornflowerblue')
         ax.axvline(dates[-10],ls='--', lw=2, c='cornflowerblue')
 
-     
-        #ax.set_xlabel("Time", fontsize=20)
+  
         ax.tick_params(axis="both", direction='out',
                     size=6, labelsize=16, length=6
                     )
         ticks = [start_day+pd.Timedelta(days=i) for i in [0,5,10,15,20,25,30,35,40]]
         labels = ["{}.{}.{}".format(str(d)[8:10], str(d)[5:7], str(d)[:4]) for d in ticks]
         
-        plt.xticks(ticks,labels)        
+        plt.xticks(ticks,labels)
         plt.setp(ax.get_xticklabels(), rotation=45)
         
+        ax.set_xlim([start_day,day_p5-pd.Timedelta(1)])
+        #ax.set_ylim()
         ax.autoscale(True)
         p_quant2 = ax.fill_between(
             dates,
@@ -195,49 +204,46 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         ax.plot_date(dates, prediction_q95[county_id], ":",
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
-        # Plot the trend.
+        
         p_pred_trend = ax.plot_date(
                         dates,
                         prediction_mean_trend[county_id],
                         "-",
-                        color="green",
+                        color=C4,
                         linewidth=2.0,
                         zorder=4)
         
-        # Compute probability of increase/decreas
+        ylimmax = 3*(target[county_id]).max()
+        ax.set_ylim([-(1/30)*ylimmax,ylimmax])
+        ax.set_xlim([start_day,day_p5-pd.Timedelta(days=1)])
+
+        # Compute the probability of an increase in case numbers.
         i_county =  county_ids.get_loc(county_id)
         trace = load_trace_window(disease, model_i, start, n_weeks)
         trend_params = pm.trace_to_dataframe(trace, varnames=["W_t_t"]).values
         trend_w2 = np.reshape(trend_params, newshape=(1000,412,2))[:,i_county,1]
         prob2 = np.mean(trend_w2>0)
-        
-        # Set axis limits.
-        ylimmax = 3*(target[county_id]).max()
-        ax.set_ylim([-(1/30)*ylimmax,ylimmax])
-        ax.set_xlim([start_day,day_p5-pd.Timedelta(days=1)])
 
         if (i == 0) & (j == 0):
-            ax.legend([p_real[0], p_pred[0], p_pred_trend[0], p_quant, p_quant2],
+            ax.legend([p_real[0],  p_pred_trend[0],p_pred[0], p_quant, p_quant2],
                     ["Fallzahlen", "Vorhersage", "Vorhersage (bereinigt)", 
                         "25\%-75\%-Quantil", "5\%-95\%-Quantil"],
                     fontsize=12, loc="upper left")
 
-        # Not perfectly positioned.
         fig.text(0.67,0.86,"Nowcast",fontsize= 14,bbox=dict(facecolor='cornflowerblue'))
         fig.text(0.828,0.86,"Forecast",fontsize=14,bbox=dict(facecolor='cornflowerblue'))
-    
+
+        if prob2 >=0:
+            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100) ,bbox=dict(facecolor='white'))
+        else:
+            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(1-prob2*100) ,bbox=dict(facecolor='white'))
+
         fig.text(0,
                 1 + 0.025,
                 r"$\textbf{"  + plot_county_names["covid19"][j]+ r"}$",
                 fontsize=22,
                 transform=ax.transAxes)
-
-        if prob2 >=0.5:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100) ,bbox=dict(facecolor='white'))
-        else:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(100-prob2*100) ,bbox=dict(facecolor='white'))
-        
-  
+     
 
     if save_plot:
         year = str(start_day)[:4]
@@ -247,7 +253,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         if not os.path.isdir(day_folder_path):
             os.mkdir(day_folder_path)
       
-        plt.savefig("../figures/{}_{}_{}/curve_{}.pdf".format(year, month, day,county))
+        plt.savefig("../figures/{}_{}_{}/curve_trend_{}.pdf".format(year, month, day,county))
 
     plt.close()
     return fig
