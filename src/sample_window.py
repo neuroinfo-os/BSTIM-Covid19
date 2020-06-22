@@ -14,7 +14,7 @@ model_i = int(sys.argv[6])
 start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start)
 
 #NOTE: for jureca, extend to the number of available cores (chains and cores!)
-num_samples = 250
+num_samples = 1000
 num_chains = 4
 num_cores = num_chains
 
@@ -57,8 +57,6 @@ with open('../data/counties/counties.pkl', "rb") as f:
 
 days_into_future = 5
 data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region, county_info, pad=days_into_future)
-print("DaysTest")
-print(data.index)
 
 first_day = data.index.min()
 last_day = data.index.max()
