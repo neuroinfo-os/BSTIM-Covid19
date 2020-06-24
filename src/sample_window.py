@@ -19,7 +19,7 @@ num_chains = 4
 num_cores = num_chains
 
 # whether to sample the parameters or load them 
-SAMPLE_PARAMS = False
+SAMPLE_PARAMS = True
 
 # whether to sample predictions on training, test or both
 # SAMPLE_PREDS = "both" # can be "train", "test" or "both"
