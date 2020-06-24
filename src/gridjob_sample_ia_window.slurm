@@ -2,7 +2,7 @@
 #SBATCH --job-name=RKI_IA
 #SBATCH --account=covid19dynstat
 #SBATCH --partition=batch
-#SBATCH --array=100:4
+#SBATCH --array=9500:4
 #SBATCH --ntasks-per-node=4
 #SBATCH --nodes=1
 #SBATCH --output=/p/project/covid19dynstat/%u/runs/%A_o.txt
