@@ -9,9 +9,9 @@ import sys
 import pandas as pd
 from config_window import combinations
 
-CID = int(os.environ["SGE_TASK_ID"])
-start = CID[1]
-num_sample = CID[0]
+CID = int(os.environ["SGE_TASK_ID"])-1
+start = combinations[CID][1]
+num_sample = combinations[CID][0]
 number_of_weeks = 3
 start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start)
 
@@ -23,7 +23,7 @@ nums_sample = range(100)
 filename = "../data/ia_effect_samples/start{}_weeks{}_{}_{}.pkl".format(start, number_of_weeks,disease, num_sample)
 
 print("Running task {} - disease: {} - sample: {} - startdate: {} - number of weeks: {} y\nWill create file {}".\
-                                            format(GID,disease, num_sample, start_date, number_of_weeks, filename ))
+                                            format(CID,disease, num_sample, start_date, number_of_weeks, filename ))
 
 with open('../data/counties/counties.pkl', "rb") as f:
     counties = pkl.load(f)
