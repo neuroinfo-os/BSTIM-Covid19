@@ -77,7 +77,7 @@ print("training for {} in {} with final model from {} to {}\nWill create files {
 
 model = BaseModel(tspan,
                   county_info,
-                  ["../data/ia_effect_samples/start{}_weeks{}_{}_{}.pkl".format(start, number_of_weeks,disease, i) for i in range(100)],
+                  ["../data/ia_effect_samples/{}_{}.pkl".format(disease, i) for i in range(100)],
                   include_ia=use_ia,
                   include_report_delay=use_report_delay,
                   include_demographics=use_demographics,
