@@ -19,4 +19,4 @@
 jutil env activate -p covid19dynstat
 
 # run tasks
-srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_ia.slurm.sh
+srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_ia_window.slurm.sh
