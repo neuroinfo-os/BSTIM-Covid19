@@ -6,10 +6,11 @@ import pickle as pkl
 import pandas as pd
 import os
 import sys
+from config_window import start as startixs
 
-start = int(sys.argv[2])
-number_of_weeks = int(sys.argv[4])
-model_i = int(sys.argv[6])
+start = startixs[int(os.environ["SGE_TASK_ID"])-1]
+number_of_weeks = 3# int(sys.argv[4])
+model_i = 35
 
 start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start)
 
@@ -39,11 +40,11 @@ print("Model {} - IA: {} - RD: {} - DEMO: {} - Trend: {} - Per: {}".format(
 
 # use_interactions, use_report_delay = combinations_ia_report[model_complexity]
 
-filename_params = "../data/mcmc_samples_backup/parameters_{}_model_{}_window_{}_{}".format(disease, model_i, start, number_of_weeks)
-filename_pred = "../data/mcmc_samples_backup/predictions_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
+filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease,start)
+filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disease, start)
 #filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
-filename_pred_trend = "../data/mcmc_samples_backup/predictions_trend_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
-filename_model = "../data/mcmc_samples_backup/model_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
+filename_pred_trend = "../data/mcmc_samples_backup/predictions_trend_{}_{}.pkl".format(disease, start )
+filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, start)
 
 
 
