@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 from config import *
 from plot_utils import *
 from shared_utils import *
@@ -247,7 +247,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         if not os.path.isdir(day_folder_path):
             os.mkdir(day_folder_path)
       
-        plt.savefig("../figures/{}_{}_{}/curve_{}.pdf".format(year, month, day,county))
+        plt.savefig("../figures/{}_{}_{}/curve_{}.png".format(year, month, day,countyByName[county]))
 
     plt.close()
     return fig

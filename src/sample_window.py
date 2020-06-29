@@ -15,7 +15,7 @@ model_i = 35
 start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start)
 
 #NOTE: for jureca, extend to the number of available cores (chains and cores!)
-num_samples = 1000
+num_samples = 250
 num_chains = 4
 num_cores = num_chains
 

@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 from sampling_utils import *
 import numpy as np
 import pickle as pkl
@@ -161,7 +161,7 @@ def interaction_kernel(start, n_weeks=3,model_i=35, save_plot=False):
         if not os.path.isdir(day_folder_path):
             os.mkdir(day_folder_path)
 
-        plt.savefig("../figures/{}_{}_{}/interaction_kernel.pdf".format(year, month, day))
+        plt.savefig("../figures/{}_{}_{}/interaction_kernel.png".format(year, month, day))
 
 
     #return fig

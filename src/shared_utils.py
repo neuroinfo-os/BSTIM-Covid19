@@ -258,7 +258,7 @@ def load_model_by_i(disease, i):
     return model
 
 def load_model_window(disease, model_i, start, n_weeks):
-    filename_model = "../data/mcmc_samples_backup/model__{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, n_weeks)
+    filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, start)
     with open(filename_model, "rb") as f:
         model = pkl.load(f)
     return model
@@ -295,7 +295,7 @@ def load_trace_by_i(disease, i):
     return trace
 
 def load_trace_window(disease, model_i, start, n_weeks):
-    filename_params = "../data/mcmc_samples_backup/parameters_{}_model_{}_window_{}_{}".format(disease, model_i, start, n_weeks)
+    filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease, start)
     model = load_model_window(disease, model_i, start, n_weeks)
     with model:
         trace = pm.load_trace(filename_params)
@@ -341,9 +341,9 @@ def load_pred_model_window(model_i,start, n_weeks,nowcast=False,trend=False):
     if nowcast:
         filename_pred = "../data/mcmc_samples_backup/predictions_nowcast_covid19_model_{}_window_{}_{}.pkl".format(model_i,start, n_weeks)
     else:
-        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_model_{}_window_{}_{}.pkl".format(model_i,start, n_weeks)
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_{}.pkl".format(start)
     if trend:
-        filename_pred = "../data/mcmc_samples_backup/predictions_trend_covid19_model_{}_window_{}_{}.pkl".format(model_i,start, n_weeks)
+        filename_pred = "../data/mcmc_samples_backup/predictions_trend_covid19_{}.pkl".format(start)
 
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
