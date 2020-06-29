@@ -4,7 +4,7 @@ from plot_window_germany import curves as germany_map
 from plot_interaction_kernel_window import interaction_kernel
 from shared_utils import make_county_dict
 
-start = 90 
+start = 89 
 county_dict = make_county_dict()
 
 for c in county_dict.keys():

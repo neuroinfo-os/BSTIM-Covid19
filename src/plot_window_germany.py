@@ -171,7 +171,7 @@ def curves(start, n_weeks=3, model_i=35,save_plot=False):
         if not os.path.isdir(day_folder_path):
             os.mkdir(day_folder_path)
 
-        plt.savefig("../figures/{}_{}_{}/map.png".format(year, month, day))
+        plt.savefig("../figures/{}_{}_{}/map.png".format(year, month, day), dpi=600)
 
     plt.close()
     return fig
