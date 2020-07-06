@@ -2,7 +2,7 @@
 #SBATCH --job-name=RKI_POSTERIOR
 #SBATCH --account=covid19dynstat
 #SBATCH --partition=batch
-#SBATCH --array=1-120
+#SBATCH --array=65
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
 #SBATCH --output=/p/project/covid19dynstat/%u/runs/%A_o.txt
@@ -18,4 +18,4 @@ jutil env activate -p covid19dynstat
 # mkdir -p ${PROJECT}/${USER}/runs/
 
 # run tasks
-srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_window_posterior.slurm.sh
+srun --exclusive -n ${SLURM_NTASKS} gridjob_produce_plots.slurm.sh

@@ -46,7 +46,9 @@ filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disea
 filename_pred_trend = "../data/mcmc_samples_backup/predictions_trend_{}_{}.pkl".format(disease, start )
 filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, start)
 
-
+import os
+print(os.getcwd())
+print('../data/counties/counties.pkl')
 
 # Load data
 with open('../data/counties/counties.pkl', "rb") as f:
@@ -75,9 +77,17 @@ tspan = (target_train.index[0], target_train.index[-1])
 print("training for {} in {} with final model from {} to {}\nWill create files {}, {} and {}".format(
     disease, prediction_region, *tspan, filename_params, filename_pred, filename_model))
 
+print(os.getcwd())
+print('../data/iaeffect')
+
+year = str(start_date)[:4]
+month = str(start_date)[5:7]
+day = str(start_date)[8:10]
+
+
 model = BaseModel(tspan,
                   county_info,
-                  ["../data/ia_effect_samples/{}_{}.pkl".format(disease, i) for i in range(100)],
+                  ["../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".format(year, month, day,disease, i) for i in range(100)],
                   include_ia=use_ia,
                   include_report_delay=use_report_delay,
                   include_demographics=use_demographics,

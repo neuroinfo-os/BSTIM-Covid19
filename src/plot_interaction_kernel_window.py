@@ -131,11 +131,12 @@ def interaction_kernel(start, n_weeks=3,model_i=35, save_plot=False):
 
     #ax_mean.set_title("campylob." if disease ==
     #               "campylobacter" else disease, fontsize=22)
-    ax_mean.set_xlabel("Zeit [Tage]", fontsize=22)
+    fontsize_axes = 26
+    ax_mean.set_xlabel("Zeit [Tage]", fontsize=fontsize_axes)
 
 
     if i == 0:
-        ax_mean.set_ylabel("Distanz [km]", fontsize=22)
+        ax_mean.set_ylabel("Distanz [km]", fontsize=fontsize_axes)
         #ax_sample1.set_ylabel("sampled kernel [km]", fontsize=22)
         #ax_sample2.set_ylabel("sampled kernel [km]", fontsize=22)
 
@@ -161,7 +162,7 @@ def interaction_kernel(start, n_weeks=3,model_i=35, save_plot=False):
         if not os.path.isdir(day_folder_path):
             os.mkdir(day_folder_path)
 
-        plt.savefig("../figures/{}_{}_{}/interaction_kernel.png".format(year, month, day), dpi=600)
+        plt.savefig("../figures/{}_{}_{}/interaction_kernel.png".format(year, month, day), dpi=300)
 
 
     #return fig

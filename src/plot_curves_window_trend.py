@@ -8,11 +8,12 @@ import numpy as np
 from collections import OrderedDict
 from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
-
+import os
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
 # Load only one county 
 def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
-
+   
+     
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
 
@@ -32,7 +33,12 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     countyByName = make_county_dict()
     # Hier dann das reinspeisen
     plot_county_names = {"covid19": [county]}
-
+    start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
+    year = str(start_day)[:4]
+    month = str(start_day)[5:7]
+    day = str(start_day)[8:10]
+    if os.path.exists("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county])):
+        return
     # colors for curves
     #red
     C4 = "#D55E00"
@@ -191,7 +197,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         
         ax.set_xlim([start_day,day_p5-pd.Timedelta(1)])
         #ax.set_ylim()
-        ax.autoscale(True)
+        #ax.autoscale(True)
         p_quant2 = ax.fill_between(
             dates,
             prediction_q5[county_id],
@@ -204,7 +210,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         ax.plot_date(dates, prediction_q95[county_id], ":",
                     color=C2, alpha=0.5, linewidth=2.0, zorder=1)
 
-        
+        '''
         p_pred_trend = ax.plot_date(
                         dates,
                         prediction_mean_trend[county_id],
@@ -212,8 +218,8 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
                         color=C4,
                         linewidth=2.0,
                         zorder=4)
-        
-        ylimmax = 3*(target[county_id]).max()
+        '''
+        ylimmax = max(3*(target[county_id]).max(),10)
         ax.set_ylim([-(1/30)*ylimmax,ylimmax])
         ax.set_xlim([start_day,day_p5-pd.Timedelta(days=1)])
 
@@ -225,18 +231,18 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         prob2 = np.mean(trend_w2>0)
 
         if (i == 0) & (j == 0):
-            ax.legend([p_real[0],  p_pred_trend[0],p_pred[0], p_quant, p_quant2],
-                    ["Fallzahlen", "Vorhersage", "Vorhersage (bereinigt)", 
+            ax.legend([p_real[0] ,p_pred[0], p_quant, p_quant2],
+                    ["Fallzahlen", "Vorhersage (geglaettet)", 
                         "25\%-75\%-Quantil", "5\%-95\%-Quantil"],
-                    fontsize=12, loc="upper left")
-
-        fig.text(0.67,0.86,"Nowcast",fontsize= 14,bbox=dict(facecolor='cornflowerblue'))
-        fig.text(0.828,0.86,"Forecast",fontsize=14,bbox=dict(facecolor='cornflowerblue'))
-
+                    fontsize=16, loc="upper left")
+        fontsize_bluebox = 18
+        fig.text(0.67,0.86,"Nowcast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
+        fig.text(0.828,0.86,"Forecast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
+        fontsize_probs = 14
         if prob2 >=0:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100) ,bbox=dict(facecolor='white'))
+            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100), fontsize=fontsize_probs ,bbox=dict(facecolor='white'))
         else:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(1-prob2*100) ,bbox=dict(facecolor='white'))
+            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(1-prob2*100), fontsize_probs ,bbox=dict(facecolor='white'))
 
         fig.text(0,
                 1 + 0.025,
@@ -253,7 +259,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         if not os.path.isdir(day_folder_path):
             os.mkdir(day_folder_path)
       
-        plt.savefig("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county]), dpi=600)
+        plt.savefig("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county]), dpi=200)
 
     plt.close()
     return fig

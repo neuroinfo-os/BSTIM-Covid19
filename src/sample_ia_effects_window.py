@@ -10,8 +10,8 @@ import pandas as pd
 from config_window import combinations
 
 CID = int(os.environ["SGE_TASK_ID"])-1
-start = combinations[CID][1]
-num_sample = combinations[CID][0]
+start = 30#combinations[CID][1]
+num_sample = CID#combinations[CID][0]
 number_of_weeks = 3
 start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start)
 
@@ -19,8 +19,15 @@ disease = "covid19"
 nums_sample = range(100)
 #GID = int(os.environ["SGE_TASK_ID"])
 
+year = str(start_date)[:4]
+month = str(start_date)[5:7]
+day = str(start_date)[8:10]
+day_folder_path = "../data/ia_effect_samples/{}_{}_{}".format(year, month, day)
+if not os.path.isdir(day_folder_path):
+    os.mkdir(day_folder_path)
 
-filename = "../data/ia_effect_samples/start{}_weeks{}_{}_{}.pkl".format(start, number_of_weeks,disease, num_sample)
+
+filename = "../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".format(year, month, day, disease, num_sample)
 
 print("Running task {} - disease: {} - sample: {} - startdate: {} - number of weeks: {} y\nWill create file {}".\
                                             format(CID,disease, num_sample, start_date, number_of_weeks, filename ))

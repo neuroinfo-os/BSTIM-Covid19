@@ -32,9 +32,14 @@ def make_county_dict():
         counties = pkl.load(f)
 
     county_list = []
+    #print(counties)
     for key, _ in counties.items():
-        county_list.append((counties[key]['name'], key))
-
+        county_name = counties[key]['name']
+        encoded_name = counties[key]['name'].encode('utf-8')
+        if b'\xc2\x96' in encoded_name:
+            ix = encoded_name.index(b'\xc2\x96')
+            county_name = counties[key]['name'][:ix]+'-'+counties[key]['name'][ix+1:]
+        county_list.append((county_name, key))
     return OrderedDict(county_list)
       
 

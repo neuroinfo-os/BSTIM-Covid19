@@ -121,6 +121,7 @@ class IAEffectLoader(object):
     def __init__(self, var, filenames, days, counties, predict_for=None):
         self.vars = [var]
         self.samples = []
+        i = 0
         for filename in filenames:
             try:
                 with open(filename, "rb") as f:
@@ -135,6 +136,15 @@ class IAEffectLoader(object):
                 ds = list(tmp["predicted day"])
                 cs = list(tmp["predicted county"])
                 d_idx = np.array([ds.index(d) for d in days]).reshape((-1, 1))
+                print(i)
+                i = i+1
+                print("Days")
+                print(days)
+                print("ds")
+                print(ds)
+                for d in days:
+                    print(d)
+                    print(ds.index(d))
                 c_idx = np.array([cs.index(c) for c in counties])
 
                 # Simulate linear IA effects if predicting the future
