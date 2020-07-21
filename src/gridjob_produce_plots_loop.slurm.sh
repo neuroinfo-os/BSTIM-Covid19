@@ -14,5 +14,5 @@ source ${PROJECT}/.local/share/venvs/covid19dynstat_v01/bin/activate
 
 # run code
 export SGE_TASK_ID=${TASK_ID} # needed for later python scriptsi
-export SGE_DATE_ID=${DAT_ID}
+export SGE_DATE_ID=${TASK_ID}
 THEANO_FLAGS="base_compiledir=${TASK_DIR}/,floatX=float32,device=cpu,openmp=True,mode=FAST_RUN,warn_float64=warn" python3 produce_plots.py > ${TASK_DIR}/log.txt

@@ -12,7 +12,7 @@ start = int(os.environ["SGE_DATE_ID"])
 number_of_weeks = 3# int(sys.argv[4])
 model_i = 35
 
-start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(days=start)
+start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start)
 
 #NOTE: for jureca, extend to the number of available cores (chains and cores!)
 num_samples = 250
@@ -60,7 +60,7 @@ with open('../data/counties/counties.pkl', "rb") as f:
 
 days_into_future = 5
 data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region, county_info, pad=days_into_future)
-print(data)
+
 first_day = data.index.min()
 last_day = data.index.max()
 
@@ -71,12 +71,9 @@ data_train, target_train, data_test, target_test = split_data(
     post_test=last_day + pd.Timedelta(days=1)
 )
 
+
 tspan = (target_train.index[0], target_train.index[-1])
-print("CHECK")
-print(start)
-print(start_date)
-print(first_day)
-print(target_train)
+
 print("training for {} in {} with final model from {} to {}\nWill create files {}, {} and {}".format(
     disease, prediction_region, *tspan, filename_params, filename_pred, filename_model))
 
@@ -90,7 +87,7 @@ day = str(start_date)[8:10]
 
 model = BaseModel(tspan,
                   county_info,
-                  ["../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".format(year, month, day,disease, i) for i in range(100)],
+                  ["../data/ia_effect_samples/{}_{}.pkl".format(disease, i) for i in range(100)],
                   include_ia=use_ia,
                   include_report_delay=use_report_delay,
                   include_demographics=use_demographics,

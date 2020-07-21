@@ -85,9 +85,9 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     county_id = countyByName[county]
 
     ### SELECTION CRITERION ###
-    if np.count_non_zero(target[county_id]) < 7: #???
-        stdd = 10
-        gaussian = lambda x: np.exp( (-(x-mu)**2) / (2* stdd**2) )
+    #if np.count_non_zero(target[county_id]) < 7: #???
+    #    stdd = 10
+    #    gaussian = lambda x: np.exp( (-(x)**2) / (2* stdd**2) )
         
 
 
@@ -241,13 +241,13 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         fontsize_bluebox = 18
         fig.text(0.67,0.86,"Nowcast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
         fig.text(0.828,0.86,"Forecast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
-    
+        ''' 
         fig.text(0,
                 1 + 0.025,
                 r"$\textbf{"  + plot_county_names["covid19"][j]+ r"}$",
                 fontsize=22,
                 transform=ax.transAxes)
-        
+        '''
         fontsize_probtext = 14
         if prob2 >=0.5:
             fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100), fontsize=fontsize_probtext,bbox=dict(facecolor='white'))

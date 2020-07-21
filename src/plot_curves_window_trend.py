@@ -37,8 +37,8 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     year = str(start_day)[:4]
     month = str(start_day)[5:7]
     day = str(start_day)[8:10]
-    if os.path.exists("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county])):
-        return
+    #if os.path.exists("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county])):
+    #    return
     # colors for curves
     #red
     C4 = "#D55E00"
@@ -239,17 +239,17 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         fig.text(0.67,0.86,"Nowcast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
         fig.text(0.828,0.86,"Forecast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
         fontsize_probs = 14
-        if prob2 >=0:
+        if prob2 >=0.5:
             fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100), fontsize=fontsize_probs ,bbox=dict(facecolor='white'))
         else:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(1-prob2*100), fontsize_probs ,bbox=dict(facecolor='white'))
-
+            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(100-prob2*100), fontsize=fontsize_probs ,bbox=dict(facecolor='white'))
+        '''
         fig.text(0,
                 1 + 0.025,
                 r"$\textbf{"  + plot_county_names["covid19"][j]+ r"}$",
                 fontsize=22,
                 transform=ax.transAxes)
-     
+         '''
 
     if save_plot:
         year = str(start_day)[:4]
