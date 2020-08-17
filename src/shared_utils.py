@@ -103,7 +103,7 @@ def load_daily_data(disease, prediction_region, counties, seperator=",", pad=Non
     data.index = [pd.Timestamp(date) for date in data.index]
     return data
 
-def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties, seperator=",", pad=None):
+def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties, seperator=",", pad=None, permute=False):
     data = pd.read_csv("../data/diseases/{}.csv".format(disease),
                        sep=seperator, encoding='iso-8859-1', index_col=0)
 
@@ -114,7 +114,15 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
 
     data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
-
+    print("kwbcuf")
+    if permute:
+        print(data.head())
+        data_stored = data.to_numpy()
+        print(data_stored[:5,:])
+        np.random.shuffle(data_stored.T)
+        data_new = pd.DataFrame(data_stored, index=data.index, columns=data.columns)
+        print(data_new.head())
+    
     if pad is not None:
         # get last date
         last_date = pd.Timestamp(data.iloc[:, -1].index[-1])
@@ -125,6 +133,8 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
 
     data.index = [pd.Timestamp(date) for date in data.index]
     return data
+
+
 
 def split_data(
     data,

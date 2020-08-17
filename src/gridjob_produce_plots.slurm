@@ -1,5 +1,5 @@
 #!/bin/bash -x
-#SBATCH --job-name=134_PLOT_ROUT
+#SBATCH --job-name=176_PLOT_ROUT
 #SBATCH --account=covid19dynstat
 #SBATCH --partition=batch
 #SBATCH --array=1
@@ -10,7 +10,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=leffenberger@uos.de
-#SBATCH --dependency=afterany:8409343
+#SBATCH --dependency=afterany:8470034
 
 # select project
 jutil env activate -p covid19dynstat
@@ -19,4 +19,4 @@ jutil env activate -p covid19dynstat
 # mkdir -p ${PROJECT}/${USER}/runs/
 
 # run tasks
-srun --exclusive -n ${SLURM_NTASKS} gridjob_produce_plots_134.slurm.sh
+srun --exclusive -n ${SLURM_NTASKS} gridjob_produce_plots_176.slurm.sh

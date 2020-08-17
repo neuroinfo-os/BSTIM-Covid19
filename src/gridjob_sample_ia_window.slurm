@@ -1,5 +1,5 @@
 #!/bin/bash -x
-#SBATCH --job-name=134_IA_ROUT
+#SBATCH --job-name=176_IA_ROUT
 #SBATCH --account=covid19dynstat
 #SBATCH --partition=batch
 #SBATCH --array=1-100:4
@@ -16,4 +16,4 @@ DATE_ID=62
 jutil env activate -p covid19dynstat
 
 # run tasks
-srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_ia_window_134.slurm.sh
+srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_ia_window_176.slurm.sh

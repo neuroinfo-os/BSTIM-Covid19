@@ -9,6 +9,7 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 import os
+import pandas as pd
 
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
 # Load only one county
@@ -16,7 +17,6 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
-
     start = int(start)
     n_weeks = int(n_weeks)
     model_i = int(model_i)
@@ -36,8 +36,25 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     year = str(start_day)[:4]
     month = str(start_day)[5:7]
     day = str(start_day)[8:10]
-    if os.path.exists("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county])):
-        return
+   # if os.path.exists("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county])):
+    #    return
+
+    day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
+    if not os.path.isdir(day_folder_path):
+        os.mkdir(day_folder_path)
+
+
+    # check for metadata file:
+    if True:#not os.path.isfile("../figures/{}_{}_{}/metadata.csv".format(year, month, day)):
+        ids = []
+        for key in counties:
+            ids.append(int(key))
+        df = pd.DataFrame(data=ids, columns=["countyID"])
+        df["probText"] = ""
+        df.to_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day)) 
+
+
+
    # colors for curves
     #red
     C1 = "#D55E00"
@@ -179,13 +196,13 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
 
         # plot ground truth
         p_real = ax.plot_date(dates[:-5], target[county_id], "k.")
-
+        print(dates[-5]-pd.Timedelta(12, unit='h'))
         # plot 30week marker
-        ax.axvline(dates[-5],ls='-', lw=2, c='cornflowerblue')
-        ax.axvline(dates[-10],ls='--', lw=2, c='cornflowerblue')
+        ax.axvline(dates[-5]-pd.Timedelta(12,unit='h'),ls='-', lw=2, c='dodgerblue')
+        ax.axvline(dates[-10]-pd.Timedelta(12,unit='h'),ls='--', lw=2, c='lightskyblue')
 
      
-        #ax.set_xlabel("Time", fontsize=20)
+        ax.set_ylabel("Fallzahlen/Tag nach Meldedatum", fontsize=16)
         ax.tick_params(axis="both", direction='out',
                     size=6, labelsize=16, length=6
                     )
@@ -193,6 +210,8 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         labels = ["{}.{}.{}".format(str(d)[8:10], str(d)[5:7], str(d)[:4]) for d in ticks]
         
         plt.xticks(ticks,labels)        
+        #new_ticks = plt.get_xtickslabels()
+        plt.setp(ax.get_xticklabels()[-4], color="red")
         plt.setp(ax.get_xticklabels(), rotation=45)
         
         ax.autoscale(True)
@@ -232,15 +251,22 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
 
         if (i == 0) & (j == 0):
             ax.legend([p_real[0], p_pred[0], p_quant, p_quant2],
-                    ["Fallzahlen", "Vorhersage",  
+                    ["Daten RKI", "Modell",  
                         "25\%-75\%-Quantil", "5\%-95\%-Quantil"],
                     fontsize=16, loc="upper left")
 
         # Not perfectly positioned.
-
+        print("uheufbhwio")
+        print(ax.get_xticks()[-5])
+        print(ax.get_ylim()[1])
+        pos1 = tuple(ax.transData.transform((ax.get_xticks()[-3], ax.get_ylim()[1])))
+        pos1 = (ax.get_xticks()[-5], ax.get_ylim()[1]) 
+        print(pos1)
         fontsize_bluebox = 18
-        fig.text(0.67,0.86,"Nowcast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
-        fig.text(0.828,0.86,"Forecast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
+        fig.text(ax.get_xticks()[-5]+0.65, ax.get_ylim()[1],"Nowcast",ha="left",va="top",fontsize=fontsize_bluebox,bbox=dict(facecolor='lightskyblue', boxstyle='rarrow'), transform=ax.transData)
+        # fig.text(pos1[0]/1200, pos1[1]/600,"Nowcast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
+        fig.text(ax.get_xticks()[-4]+0.65, ax.get_ylim()[1],"Forecast",ha="left", va="top",fontsize=fontsize_bluebox,bbox=dict(facecolor='dodgerblue', boxstyle='rarrow'), transform=ax.transData)
+
         ''' 
         fig.text(0,
                 1 + 0.025,
@@ -248,14 +274,23 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
                 fontsize=22,
                 transform=ax.transAxes)
         '''
-        fontsize_probtext = 14
+       
+        #plt.yticks(ax.get_yticks()[:-1], ax.get_yticklabels()[:-1]) 
+        # Store text in csv.
+        #fontsize_probtext = 14
         if prob2 >=0.5:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100), fontsize=fontsize_probtext,bbox=dict(facecolor='white'))
+            #fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100), fontsize=fontsize_probtext,bbox=dict(facecolor='white'))
+            probText = "Die Fallzahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% steigen.".format(prob2*100)
         else:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(100-prob2*100), fontsize=fontsize_probtext ,bbox=dict(facecolor='white'))
+            probText = "Die Fallzahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% fallen.".format(100-prob2*100)
+            #fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(100-prob2*100), fontsize=fontsize_probtext ,bbox=dict(facecolor='white'))
         
+        df = pd.read_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day), index_col=0)
+        county_ix = df["countyID"][df["countyID"]==int(county_id)].index[0]
+        df.iloc[county_ix, 1] = probText
+        df.to_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day))
   
-
+        plt.tight_layout()
     if save_plot:
         year = str(start_day)[:4]
         month = str(start_day)[5:7]

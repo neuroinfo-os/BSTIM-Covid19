@@ -22,6 +22,8 @@ num_cores = num_chains
 # whether to sample the parameters or load them 
 SAMPLE_PARAMS = True
 
+PERMUTATION_STUDY=False
+
 # whether to sample predictions on training, test or both
 # SAMPLE_PREDS = "both" # can be "train", "test" or "both"
 
@@ -45,6 +47,13 @@ filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disea
 #filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
 filename_pred_trend = "../data/mcmc_samples_backup/predictions_trend_{}_{}.pkl".format(disease, start )
 filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, start)
+if PERMUTATION_STUDY:
+    filename_params = "../data/mcmc_samples_backup/permutation_studies/parameters_{}_{}".format(disease,start)
+    filename_pred = "../data/mcmc_samples_backup/permutation_studies/predictions_{}_{}.pkl".format(disease, start)
+    #filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
+    filename_pred_trend = "../data/mcmc_samples_backup/permutation_studies/predictions_trend_{}_{}.pkl".format(disease, start )
+    filename_model = "../data/mcmc_samples_backup/permutation_studies/model_{}_{}.pkl".format(disease, start)
+
 
 import os
 print(os.getcwd())
@@ -59,7 +68,7 @@ with open('../data/counties/counties.pkl', "rb") as f:
 #data = load_daily_data(disease, prediction_region, county_info, pad=days_into_future)
 
 days_into_future = 5
-data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region, county_info, pad=days_into_future)
+data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region, county_info, pad=days_into_future, permute=PERMUTATION_STUDY)
 print(data)
 first_day = data.index.min()
 last_day = data.index.max()
@@ -96,6 +105,16 @@ model = BaseModel(tspan,
                   include_demographics=use_demographics,
                   trend_poly_order=trend_order,
                   periodic_poly_order=periodic_order)
+if PERMUTATION_STUDY:
+    model = BaseModel(tspan,
+                  county_info,
+                  ["../data/ia_effect_samples/permutation_studies/{}_{}_{}/{}_{}.pkl".format(year, month, day,disease, i) for i in range(100)],
+                  include_ia=use_ia,
+                  include_report_delay=use_report_delay,
+                  include_demographics=use_demographics,
+                  trend_poly_order=trend_order,
+                  periodic_poly_order=periodic_order)
+
 
 if SAMPLE_PARAMS:
     print("Sampling parameters on the training set.")

@@ -15,6 +15,8 @@ num_sample = int(os.environ["SGE_TASK_ID"])-1
 number_of_weeks = 3
 start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start, unit='d')
 
+PERMUTATION_STUDY = False
+
 disease = "covid19"
 nums_sample = range(100)
 #GID = int(os.environ["SGE_TASK_ID"])
@@ -26,8 +28,13 @@ day_folder_path = "../data/ia_effect_samples/{}_{}_{}".format(year, month, day)
 if not os.path.isdir(day_folder_path):
     os.mkdir(day_folder_path)
 
-
 filename = "../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".format(year, month, day, disease, num_sample)
+
+if PERMUTATION_STUDY:
+    day_folder_path = "../data/ia_effect_samples/permutation_studies/{}_{}_{}".format(year, month, day)
+    if not os.path.isdir(day_folder_path):
+        os.mkdir(day_folder_path)
+    filename = "../data/ia_effect_samples/permutation_studies/{}_{}_{}/{}_{}.pkl".format(year, month, day, disease, num_sample)
 
 print("Running task {} - disease: {} - sample: {} - startdate: {} - number of weeks: {} y\nWill create file {}".\
                                             format(num_sample,disease, num_sample, start_date, number_of_weeks, filename ))
@@ -40,7 +47,7 @@ prediction_region = "germany"
 parameters = OrderedDict()
 
 # Load data
-data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region, counties)
+data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region, counties, permute=PERMUTATION_STUDY)
 print("DaysTest")
 print(data.index)
 # samples random times --> check the data conversion carefully

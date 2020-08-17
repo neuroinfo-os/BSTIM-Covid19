@@ -83,12 +83,11 @@ def interaction_kernel(start, n_weeks=3,model_i=35, save_plot=False):
     trace = load_trace_window(disease, model_i, start, n_weeks)
 
     kernel_samples = res.dot(trace["W_ia"].T)
-
     K_mean = kernel_samples.mean(axis=2)
     K_samp1 = kernel_samples[:, :, np.random.randint(kernel_samples.shape[-1])]
     K_samp2 = kernel_samples[:, :, np.random.randint(kernel_samples.shape[-1])]
-
-    vmax = np.max([K_mean.max(), -K_mean.max(),])
+    vmax = 0.2
+   # vmax = np.max([K_mean.max(), -K_mean.min(),])+0.1
     
     cNorm = matplotlib.colors.Normalize(vmin=-vmax, vmax=vmax)
     scalarMap = matplotlib.cm.ScalarMappable(norm=cNorm, cmap="RdBu_r")

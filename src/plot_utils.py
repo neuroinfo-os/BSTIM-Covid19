@@ -79,7 +79,7 @@ def plot_counties(
         else:
             assert np.size(values) == len(counties), "Number of values ({}) doesn't match number of counties ({})!".format(
                 np.size(values), len(counties))
-        pc.set_clim(0, 60)
+        pc.set_clim(0, 10)
         nans = np.isnan(values)
         values[nans] = 0
 
@@ -105,7 +105,7 @@ def plot_counties(
         ax.add_patch(surround)
 
     cb = plt.colorbar(pc, shrink=0.6)
-    cb.set_ticks([0,30,60])
+    cb.set_ticks([0,5,10])
     #cb.set_yticks([0.00004])
     ax.add_collection(pc)
     

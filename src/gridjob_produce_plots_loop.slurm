@@ -2,12 +2,12 @@
 #SBATCH --job-name=PLOT_ROUT
 #SBATCH --account=covid19dynstat
 #SBATCH --partition=batch
-#SBATCH --array=1-150
+#SBATCH --array=50
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
 #SBATCH --output=/p/project/covid19dynstat/%u/runs/%A_o.txt
 #SBATCH --error=/p/project/covid19dynstat/%u/runs/%A_e.txt
-#SBATCH --time=3:00:00
+#SBATCH --time=2:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=leffenberger@uos.de
 

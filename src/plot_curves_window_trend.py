@@ -37,6 +37,21 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     year = str(start_day)[:4]
     month = str(start_day)[5:7]
     day = str(start_day)[8:10]
+
+    day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
+    if not os.path.isdir(day_folder_path):
+        os.mkdir(day_folder_path)
+
+    '''
+    # check for metadata file:
+    if not os.path.isfile("../figures/{}_{}_{}/metadata.csv".format(year, month, day)):
+        ids = []
+        for key in counties:
+            ids.append(key)
+        df = pd.DataFrame(data=ids, columns=["countyIDs"])
+        df["probText"] = ""
+        df.to_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day)) 
+    '''
     #if os.path.exists("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county])):
     #    return
     # colors for curves
@@ -182,9 +197,10 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         p_real = ax.plot_date(dates[:-5], target[county_id], "k.")
 
         # plot 30week marker
-        ax.axvline(dates[-5],ls='-', lw=2, c='cornflowerblue')
-        ax.axvline(dates[-10],ls='--', lw=2, c='cornflowerblue')
+        ax.axvline(dates[-5]-pd.Timedelta(12,unit='h'),ls='-', lw=2, c='dodgerblue')
+        ax.axvline(dates[-10]-pd.Timedelta(12,unit='h'),ls='--', lw=2, c='lightskyblue')
 
+        ax.set_ylabel("Fallzahlen/Tag nach Meldedatum", fontsize=16)
   
         ax.tick_params(axis="both", direction='out',
                     size=6, labelsize=16, length=6
@@ -194,7 +210,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         
         plt.xticks(ticks,labels)
         plt.setp(ax.get_xticklabels(), rotation=45)
-        
+        plt.setp(ax.get_xticklabels()[-4], color="red") 
         ax.set_xlim([start_day,day_p5-pd.Timedelta(1)])
         #ax.set_ylim()
         #ax.autoscale(True)
@@ -232,17 +248,27 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
 
         if (i == 0) & (j == 0):
             ax.legend([p_real[0] ,p_pred[0], p_quant, p_quant2],
-                    ["Fallzahlen", "Vorhersage (geglaettet)", 
+                    ["Daten RKI", "Modell", 
                         "25\%-75\%-Quantil", "5\%-95\%-Quantil"],
                     fontsize=16, loc="upper left")
         fontsize_bluebox = 18
-        fig.text(0.67,0.86,"Nowcast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
-        fig.text(0.828,0.86,"Forecast",fontsize=fontsize_bluebox,bbox=dict(facecolor='cornflowerblue'))
-        fontsize_probs = 14
+        fig.text(ax.get_xticks()[-5]+0.65, ax.get_ylim()[1],"Nowcast",ha="left",va="top",fontsize=fontsize_bluebox,bbox=dict(facecolor='lightskyblue', boxstyle='rarrow'), transform=ax.transData)
+        fig.text(ax.get_xticks()[-4]+0.65, ax.get_ylim()[1],"Forecast",ha="left", va="top",fontsize=fontsize_bluebox,bbox=dict(facecolor='dodgerblue', boxstyle='rarrow'), transform=ax.transData)
+        '''
+        # Store text in csv.
+        #fontsize_probtext = 14
         if prob2 >=0.5:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100), fontsize=fontsize_probs ,bbox=dict(facecolor='white'))
+            #fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% steigen.".format(prob2*100), fontsize=fontsize_probtext,bbox=dict(facecolor='white'))
+            probText = "Die Fallzahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% steigen.".format(prob2*100)
         else:
-            fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(100-prob2*100), fontsize=fontsize_probs ,bbox=dict(facecolor='white'))
+            probText = "Die Fallszahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% fallen.".format(100-prob2*100)
+            #fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(100-prob2*100), fontsize=fontsize_probtext ,bbox=dict(facecolor='white'))
+
+        df = pd.read_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day))
+        county_ix = df["countyIDs"][df["countyIDs"]==int(county)].index[0]
+        df.iloc[county_ix, 1] = probText
+        df.to_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day))
+        '''
         '''
         fig.text(0,
                 1 + 0.025,
