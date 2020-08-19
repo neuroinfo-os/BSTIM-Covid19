@@ -38,8 +38,7 @@ for key in metadata_total_df["countyID"]:
 metadata_date_df_sorted["probText"] = probText_sorted
 metadata_date_df_sorted.to_csv(metadata_date_path)
 
-
-cwdir = r'/p/project/covid19dynstat/goebbert1'
+cwdir = r'.'
 import subprocess
 # crop the images
 crop_command = r"find {} -type f -name '*.png' -exec convert {} -trim {} \;".format(figures_path, "{}", "{}") 
@@ -47,6 +46,8 @@ rm_command = "rm -r {}".format(shared_path)
 # copy the images
 #copy_command = "cp {}*.png {}.".format(figures_path, shared_path)
 copy_command = "cp -r {} {}".format(figures_path, shared_path)
-subprocess.run(crop_command, check=False, shell=True, cwd=cwdir)
+returnval = subprocess.run(crop_command, check=False, shell=True, cwd=cwdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+print(returnval.stdout.decode("ascii"))
+print(returnval.stderr.decode("ascii"))
 shutil.rmtree(shared_path)
 shutil.copytree(figures_path, shared_path)

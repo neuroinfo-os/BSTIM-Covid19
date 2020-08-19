@@ -1,5 +1,5 @@
 #!/bin/bash -x
-#SBATCH --job-name=176_POST_ROUT
+#SBATCH --job-name=177_POST_ROUT
 #SBATCH --account=covid19dynstat
 #SBATCH --partition=batch
 #SBATCH --array=1
@@ -7,15 +7,15 @@
 #SBATCH --nodes=1
 #SBATCH --output=/p/project/covid19dynstat/autostart/runs/%A_o.txt
 #SBATCH --error=/p/project/covid19dynstat/autostart/runs/%A_e.txt
-#SBATCH --time=24:00:00
+#SBATCH --time=10:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=t.kreuzer@fz-juelich.de
-#SBATCH --dependency=afterany:8470038
+#SBATCH --dependency=afterany:8472078
 # select project
 jutil env activate -p covid19dynstat
 
 # ensure SLURM output/errors directory exists
-# mkdir -p ${PROJECT}/${USER}/runs/
+# mkdir -p ${PROJECT}/autostart/runs/
 
 # run tasks
-srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_window_posterior_176.slurm.sh
+srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_window_posterior_177.slurm.sh

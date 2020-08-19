@@ -1,11 +1,11 @@
 #!/bin/bash -x
-#SBATCH --job-name=176_IA_ROUT
+#SBATCH --job-name=177_IA_ROUT
 #SBATCH --account=covid19dynstat
 #SBATCH --partition=batch
 #SBATCH --array=1-100:4
 #SBATCH --ntasks-per-node=4
 #SBATCH --nodes=1
-DATE_ID=62
+#SBATCH --time=3:00:00
 #SBATCH --output=/p/project/covid19dynstat/autostart/runs/%A_o.txt
 #SBATCH --error=/p/project/covid19dynstat/autostart/runs/%A_e.txt
 # ATTENTION:
@@ -16,4 +16,4 @@ DATE_ID=62
 jutil env activate -p covid19dynstat
 
 # run tasks
-srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_ia_window_176.slurm.sh
+srun --exclusive -n ${SLURM_NTASKS} gridjob_sample_ia_window_177.slurm.sh
