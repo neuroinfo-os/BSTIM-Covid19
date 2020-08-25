@@ -9,6 +9,8 @@ import sys
 import pandas as pd
 from config_window import combinations
 
+from pathlib import Path
+
 start = int(os.environ["SGE_DATE_ID"])
 print(start)
 num_sample = int(os.environ["SGE_TASK_ID"])-1
@@ -25,15 +27,13 @@ year = str(start_date)[:4]
 month = str(start_date)[5:7]
 day = str(start_date)[8:10]
 day_folder_path = "../data/ia_effect_samples/{}_{}_{}".format(year, month, day)
-if not os.path.isdir(day_folder_path):
-    os.mkdir(day_folder_path)
+Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
 filename = "../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".format(year, month, day, disease, num_sample)
 
 if PERMUTATION_STUDY:
     day_folder_path = "../data/ia_effect_samples/permutation_studies/{}_{}_{}".format(year, month, day)
-    if not os.path.isdir(day_folder_path):
-        os.mkdir(day_folder_path)
+    Path(day_folder_path).mkdir(parents=True, exist_ok=True)
     filename = "../data/ia_effect_samples/permutation_studies/{}_{}_{}/{}_{}.pkl".format(year, month, day, disease, num_sample)
 
 print("Running task {} - disease: {} - sample: {} - startdate: {} - number of weeks: {} y\nWill create file {}".\

@@ -13,9 +13,11 @@ start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
 year = str(start_day)[:4]
 month = str(start_day)[5:7]
 day = str(start_day)[8:10]
-figures_path = "../figures/{}_{}_{}/".format(year, month, day)
-shared_path = "../../../shared_assets/figures/{}_{}_{}/".format(year, month, day)
+figures_path = "/p/project/covid19dynstat/autostart/BSTIM-Covid19_Window_Final/figures/{}_{}_{}/".format(year, month, day)
+shared_path = "/p/project/covid19dynstat/shared_assets/figures/{}_{}_{}/".format(year, month, day)
 
+if os.path.isfile(os.path.join(figures_path, 'metadata.csv')):
+    os.remove(os.path.join(figures_path, 'metadata.csv'))
 
 for c in county_dict.keys():
     curves_window(start, c, n_weeks=3, model_i=35, save_plot=True)
@@ -26,7 +28,7 @@ interaction_kernel(start, save_plot=True)
 
 # DIe Metadata CSV sotieren.
 metadata_date_path = os.path.join(figures_path, "metadata.csv")
-metadata_total_path = "../../../shared_assets/metadata.csv"
+metadata_total_path = "/p/project/covid19dynstat/shared_assets/metadata.csv"
 
 metadata_date_df = pd.read_csv(metadata_date_path)
 metadata_total_df = pd.read_csv(metadata_total_path)
@@ -34,9 +36,9 @@ metadata_total_df = pd.read_csv(metadata_total_path)
 metadata_date_df_sorted = metadata_total_df.copy()
 probText_sorted = []
 for key in metadata_total_df["countyID"]:
-    probText_sorted.append(metadata_date_df[metadata_date_df["countyID"]==key]["probText"].to_string()[3:])
+    probText_sorted.append(float(list(metadata_date_df[metadata_date_df["countyID"]==key]["probText"])[0]))
 metadata_date_df_sorted["probText"] = probText_sorted
-metadata_date_df_sorted.to_csv(metadata_date_path)
+metadata_date_df_sorted.to_csv(metadata_date_path, index=False)
 
 cwdir = r'.'
 import subprocess

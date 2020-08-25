@@ -9,6 +9,7 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 import os
+from pathlib import Path
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
 # Load only one county 
 def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
@@ -39,8 +40,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     day = str(start_day)[8:10]
 
     day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
-    if not os.path.isdir(day_folder_path):
-        os.mkdir(day_folder_path)
+    Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
     '''
     # check for metadata file:
@@ -282,8 +282,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         month = str(start_day)[5:7]
         day = str(start_day)[8:10]
         day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
-        if not os.path.isdir(day_folder_path):
-            os.mkdir(day_folder_path)
+        Path(day_folder_path).mkdir(parents=True, exist_ok=True)
       
         plt.savefig("../figures/{}_{}_{}/curve_trend_{}.png".format(year, month, day,countyByName[county]), dpi=200)
 

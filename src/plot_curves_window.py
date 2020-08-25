@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 from pymc3.stats import quantiles
 import os
 import pandas as pd
+from pathlib import Path
 
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
 # Load only one county
@@ -40,8 +41,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
     #    return
 
     day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
-    if not os.path.isdir(day_folder_path):
-        os.mkdir(day_folder_path)
+    Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
 
     # check for metadata file:
@@ -285,10 +285,17 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
             probText = "Die Fallzahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% fallen.".format(100-prob2*100)
             #fig.text(0.865, 0.685, "Die Fallzahlen \n werden mit einer \n Wahrscheinlichkeit \n von {:2.1f}\% fallen.".format(100-prob2*100), fontsize=fontsize_probtext ,bbox=dict(facecolor='white'))
         
+        print(county_id)
         df = pd.read_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day), index_col=0)
         county_ix = df["countyID"][df["countyID"]==int(county_id)].index[0]
-        df.iloc[county_ix, 1] = probText
+        if prob2 >=0.5:
+            probVal = prob2*100
+        else:
+            probVal = -(100-prob2*100)
+        df.iloc[county_ix, 1] = probVal#= probText
         df.to_csv("../figures/{}_{}_{}/metadata.csv".format(year, month, day))
+        print(probVal)
+
   
         plt.tight_layout()
     if save_plot:
@@ -296,8 +303,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
         month = str(start_day)[5:7]
         day = str(start_day)[8:10]
         day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
-        if not os.path.isdir(day_folder_path):
-            os.mkdir(day_folder_path)
+        Path(day_folder_path).mkdir(parents=True, exist_ok=True)
       
         plt.savefig("../figures/{}_{}_{}/curve_{}.png".format(year, month, day,countyByName[county]), dpi=200)
 
