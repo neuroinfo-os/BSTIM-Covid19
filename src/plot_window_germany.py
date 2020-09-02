@@ -126,7 +126,7 @@ def curves(start, n_weeks=3, model_i=35,save_plot=False):
     for (ik, (key, _)) in enumerate(counties.items()):
         n_people = counties[key]['demographics'][('total',2018)]
         map_vals[ik] = (map_vals[ik] / n_people) * 100000
-        map_rki[ik] = (map_rki[ik] / n_people) * 100000
+	map_rki[ik] = (map_rki[ik] / n_people) * 100000
         # ik = ik+1
         map_keys.append(key)
 
