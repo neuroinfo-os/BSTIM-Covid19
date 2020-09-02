@@ -15,8 +15,12 @@ dates = next(os.walk(figures))[1]
 # errors if the RKI based csv is out of date with the available folders
 for date in dates:
     map_csv_path = os.path.join(figures, date, 'map.csv')   
+    if not os.path.exists(map_csv_path):
+        continue
+
+    day_0 = pd.Timestamp(date.replace('_','-')) + pd.Timedelta(days=26)
     
-    map_rki = data.loc[date.replace('_', '-')].values.astype('float64')
+    map_rki = data.loc[day_0].values.astype('float64')
     for (i, (key, _)) in enumerate(counties.items()):
         n_people = counties[key]['demographics'][('total', 2018)]
         map_rki[i] = map_rki[i] / n_people * 100000
@@ -24,4 +28,4 @@ for date in dates:
     map_data = pd.read_csv(map_csv_path, index_col=0)
     map_data["newInf100k_RKI"] = list(map_rki)
 
-    map_data.to_csv(map_csv_path)
+    # map_data.to_csv(map_csv_path)
