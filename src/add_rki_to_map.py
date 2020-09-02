@@ -24,11 +24,4 @@ for date in dates:
     map_data = pd.read_csv(map_csv_path, index_col=0)
     map_data["newInf100k_RKI"] = list(map_rki)
 
-
-
-
-
-
-
-
-
+    map_data.to_csv(map_csv_path)
