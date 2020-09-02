@@ -190,7 +190,7 @@ class IAEffectSampler(object):
                 res[i, j, :] = self.ia_bfs(self._to_timestamp(
                     t_pred), x_pred, self._to_timestamp(t_data), x_data)
             frac = (i + 1) / len(days)
-            if self.verbose:
+            if False:#self.verbose:
                 print("⎹" + "█" * int(np.floor(frac * 100)) + " ░▒▓█"[int(((frac * 100) % 1) * 5)] + " " * int(
                     np.ceil((1 - frac) * 100)) + "⎸ ({:.3}%)".format(100 * frac), end="\r", flush=True)
         return res

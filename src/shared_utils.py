@@ -26,6 +26,26 @@ from datetime import timedelta
 yearweek_regex = re.compile(r"([0-9]+)-KW([0-9]+)")
 
 
+
+def make_county_dict():
+    with open('../data/counties/counties.pkl', "rb") as f:
+        counties = pkl.load(f)
+
+    county_list = []
+    #print(counties)
+    for key, _ in counties.items():
+        county_name = counties[key]['name']
+        encoded_name = counties[key]['name'].encode('utf-8')
+        if b'\xc2\x96' in encoded_name:
+            ix = encoded_name.index(b'\xc2\x96')
+            county_name = counties[key]['name'][:ix]+'-'+counties[key]['name'][ix+1:]
+        county_list.append((county_name, key))
+    return OrderedDict(county_list)
+      
+
+
+
+
 def _parse_yearweek(yearweek):
     """Utility function to convert internal string representations of calender weeks into datetime objects. Uses strings of format `<year>-KW<week>`. Weeks are 1-based."""
     year, week = yearweek_regex.search(yearweek).groups()
@@ -82,6 +102,39 @@ def load_daily_data(disease, prediction_region, counties, seperator=",", pad=Non
 
     data.index = [pd.Timestamp(date) for date in data.index]
     return data
+
+def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties, seperator=",", pad=None, permute=False):
+    data = pd.read_csv("../data/diseases/{}.csv".format(disease),
+                       sep=seperator, encoding='iso-8859-1', index_col=0)
+
+    if "99999" in data.columns:
+        data.drop("99999", inplace=True, axis=1)
+
+    data = data.iloc[start:start+7*n_weeks+5,:]
+
+    data = data.loc[:, list(
+        filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
+    print("kwbcuf")
+    if permute:
+        print(data.head())
+        data_stored = data.to_numpy()
+        print(data_stored[:5,:])
+        np.random.shuffle(data_stored.T)
+        data_new = pd.DataFrame(data_stored, index=data.index, columns=data.columns)
+        print(data_new.head())
+    
+    if pad is not None:
+        # get last date
+        last_date = pd.Timestamp(data.iloc[:, -1].index[-1])
+        extra_range = pd.date_range(
+            last_date+timedelta(1), last_date+timedelta(pad))
+        for x in extra_range:
+            data = data.append(pd.Series(name=str(x)[:11]))
+
+    data.index = [pd.Timestamp(date) for date in data.index]
+    return data
+
+
 
 def split_data(
     data,
@@ -219,6 +272,12 @@ def load_model_by_i(disease, i):
         model = pkl.load(f)
     return model
 
+def load_model_window(disease, model_i, start, n_weeks):
+    filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, start)
+    with open(filename_model, "rb") as f:
+        model = pkl.load(f)
+    return model
+
 def load_final_model(no_rd=False):
     if no_rd:
         filename_model = "../data/mcmc_samples_backup/model_covid19_final_no_rd.pkl"
@@ -245,6 +304,14 @@ def load_trace_by_i(disease, i):
     filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease, i)
 
     model = load_model_by_i(disease, i)
+    with model:
+        trace = pm.load_trace(filename_params)
+    del model
+    return trace
+
+def load_trace_window(disease, model_i, start, n_weeks):
+    filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease, start)
+    model = load_model_window(disease, model_i, start, n_weeks)
     with model:
         trace = pm.load_trace(filename_params)
     del model
@@ -281,6 +348,18 @@ def load_final_pred(no_rd=False):
         filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final_no_rd.pkl"
     else:
         filename_pred = "../data/mcmc_samples_backup/predictions_covid19_final.pkl"
+    with open(filename_pred, "rb") as f:
+        res = pkl.load(f)
+    return res
+
+def load_pred_model_window(model_i,start, n_weeks,nowcast=False,trend=False):
+    if nowcast:
+        filename_pred = "../data/mcmc_samples_backup/predictions_nowcast_covid19_model_{}_window_{}_{}.pkl".format(model_i,start, n_weeks)
+    else:
+        filename_pred = "../data/mcmc_samples_backup/predictions_covid19_{}.pkl".format(start)
+    if trend:
+        filename_pred = "../data/mcmc_samples_backup/predictions_trend_covid19_{}.pkl".format(start)
+
     with open(filename_pred, "rb") as f:
         res = pkl.load(f)
     return res

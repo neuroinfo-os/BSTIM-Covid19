@@ -19,3 +19,15 @@ combinations = list(it.product(opt_ia,
 
 
 
+interesting = [
+    (True,True,True,4,4), # full model,
+    (True, False, True, 4, 4),# full without rd,
+    (True, False, True, 1, 4),# without rd, with trend 1
+    (True, False, True, 2, 4), # without rd, with trend 2
+]
+
+
+
+for i in range(len(combinations)):
+    if combinations[i] in interesting:
+        print(i,combinations[i])

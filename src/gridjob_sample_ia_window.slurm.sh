@@ -1,6 +1,8 @@
 #!/bin/bash
 # available SLURM env.vars: https://slurm.schedmd.com/sbatch.html#lbAK
 
+DAT_ID=56
+
 # create task output directory
 TASK_ID=$((${SLURM_ARRAY_TASK_ID}+${SLURM_LOCALID}))
 TASK_DIR=${SCRATCH}/run_${SLURM_ARRAY_JOB_ID}/task_${TASK_ID}
@@ -11,5 +13,6 @@ echo "TASK ${TASK_ID}: Running in job-array ${SLURM_ARRAY_JOB_ID} on `hostname` 
 source ${PROJECT}/.local/share/venvs/covid19dynstat_jusuf/bin/activate
 
 # run code
-export SGE_TASK_ID=${TASK_ID} # needed for later python scripts
-THEANO_FLAGS="base_compiledir=${TASK_DIR}/,floatX=float32,device=cpu,openmp=True,mode=FAST_RUN,warn_float64=warn" python3 sample_posterior.py > ${TASK_DIR}/log.txt
+export SGE_TASK_ID=${TASK_ID} # needed for later python scrip
+export SGE_DATE_ID=${DAT_ID}
+THEANO_FLAGS="base_compiledir=${TASK_DIR}/,floatX=float32,device=cpu,openmp=True,mode=FAST_RUN,warn_float64=warn" OMP_NUM_THREADS=8  python3 sample_ia_effects_window.py > ${TASK_DIR}/log.txt
