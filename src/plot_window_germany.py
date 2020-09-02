@@ -121,17 +121,20 @@ def curves(start, n_weeks=3, model_i=35,save_plot=False):
      
     # relativize prediction mean.
     map_vals = prediction_mean.iloc[-10]
+    map_rki = data.iloc[-1].values.astype('float64')
     map_keys = []
-    ik= 0
-    for key, _ in counties.items():
+    # ik= 0
+    for (ik, (key, _)) in enumerate(counties.items()):
         n_people = counties[key]['demographics'][('total',2018)]
         map_vals[ik] = (map_vals[ik] / n_people) * 100000
-        ik = ik+1
+        map_rki[ik] = (map_rki[ik] / n_people) * 100000
+        # ik = ik+1
         map_keys.append(key)
 
     map_df = pd.DataFrame(index=None)
     map_df["countyID"] = map_keys
     map_df["newInf100k"] = list(map_vals)
+    map_df["newInf100k_RKI"] = list(map_rki)
     
     # plot the chloropleth map
     plot_counties(map_ax,
