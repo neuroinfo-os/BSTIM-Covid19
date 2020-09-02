@@ -5,11 +5,11 @@
 #SBATCH --array=65
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
-#SBATCH --output=/p/project/covid19dynstat/%u/runs/%A_o.txt
-#SBATCH --error=/p/project/covid19dynstat/%u/runs/%A_e.txt
+#SBATCH --output=/p/project/covid19dynstat/autostart/runs/%A_o.txt
+#SBATCH --error=/p/project/covid19dynstat/autostart/runs/%A_e.txt
 #SBATCH --time=24:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=leffenberger@uos.de
+#SBATCH --mail-user=t.kreuzer@fz-juelich.de
 
 # select project
 jutil env activate -p covid19dynstat

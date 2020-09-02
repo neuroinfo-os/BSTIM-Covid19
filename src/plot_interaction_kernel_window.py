@@ -10,6 +10,7 @@ from plot_utils import *
 from shared_utils import *
 import matplotlib
 from matplotlib import pyplot as plt
+from pathlib import Path
 theano.config.compute_test_value = 'off'
 
 def interaction_kernel(start, n_weeks=3,model_i=35, save_plot=False):
@@ -158,8 +159,7 @@ def interaction_kernel(start, n_weeks=3,model_i=35, save_plot=False):
         month = str(start_day)[5:7]
         day = str(start_day)[8:10]
         day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
-        if not os.path.isdir(day_folder_path):
-            os.mkdir(day_folder_path)
+        Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
         plt.savefig("../figures/{}_{}_{}/interaction_kernel.png".format(year, month, day), dpi=300)
 
