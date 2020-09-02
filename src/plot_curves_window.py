@@ -45,7 +45,7 @@ def curves(start, county, n_weeks=3,  model_i=35, save_plot=False):
 
 
     # check for metadata file:
-    if True:#not os.path.isfile("../figures/{}_{}_{}/metadata.csv".format(year, month, day)):
+    if not os.path.isfile("../figures/{}_{}_{}/metadata.csv".format(year, month, day)):
         ids = []
         for key in counties:
             ids.append(int(key))
