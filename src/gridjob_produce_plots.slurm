@@ -8,9 +8,9 @@
 #SBATCH --output=/p/project/covid19dynstat/autostart/runs/%A_o.txt
 #SBATCH --error=/p/project/covid19dynstat/autostart/runs/%A_e.txt
 #SBATCH --time=2:00:00
-#SBATCH --mail-type=ALL
+#SBATCH --mail-type=FAIL
 #SBATCH --mail-user=t.kreuzer@fz-juelich.de
-#SBATCH --dependency=afterany:8491614
+#SBATCH --dependency=afterok:3265
 
 # select project
 jutil env activate -p covid19dynstat

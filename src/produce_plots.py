@@ -13,6 +13,8 @@ start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
 year = str(start_day)[:4]
 month = str(start_day)[5:7]
 day = str(start_day)[8:10]
+#figures_path = "../figures/{}_{}_{}/".format(year, month, day)
+#shared_path = "../../../shared_assets/figures/{}_{}_{}/".format(year, month, day)
 figures_path = "/p/project/covid19dynstat/autostart/BSTIM-Covid19_Window_Final/figures/{}_{}_{}/".format(year, month, day)
 shared_path = "/p/project/covid19dynstat/shared_assets/figures/{}_{}_{}/".format(year, month, day)
 
@@ -28,6 +30,7 @@ interaction_kernel(start, save_plot=True)
 
 # DIe Metadata CSV sotieren.
 metadata_date_path = os.path.join(figures_path, "metadata.csv")
+#metadata_total_path = "../../../shared_assets/metadata.csv"
 metadata_total_path = "/p/project/covid19dynstat/shared_assets/metadata.csv"
 
 metadata_date_df = pd.read_csv(metadata_date_path)
