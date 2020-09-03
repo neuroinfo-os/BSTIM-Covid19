@@ -8,7 +8,7 @@ mkdir -p ${TASK_DIR}
 echo "TASK ${TASK_ID}: Running in job-array ${SLURM_ARRAY_JOB_ID} on `hostname` and dump output to ${TASK_DIR}"
 
 # activate virtual python environment
-source ${PROJECT}/.local/share/venvs/covid19dynstat_v01/bin/activate
+source ${PROJECT}/.local/share/venvs/covid19dynstat_jusuf/bin/activate
 
 # run code
 export SGE_TASK_ID=${TASK_ID} # needed for later python scripts

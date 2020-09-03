@@ -5,7 +5,7 @@
 #SBATCH --array=1-100:4
 #SBATCH --ntasks-per-node=4
 #SBATCH --nodes=1
-#SBATCH --time=24:00:00
+#SBATCH --time=1:30:00
 #SBATCH --output=/p/project/covid19dynstat/autostart/runs/%A_o.txt
 #SBATCH --error=/p/project/covid19dynstat/autostart/runs/%A_e.txt
 # ATTENTION:
