@@ -13,12 +13,13 @@ figures = os.path.join(shared_assets, 'figures/')
 dates = next(os.walk(figures))[1]
 
 # errors if the RKI based csv is out of date with the available folders
-for date in dates:
+for date in sorted(dates):
+
     map_csv_path = os.path.join(figures, date, 'map.csv')   
     if not os.path.exists(map_csv_path):
         continue
-
-    day_0 = pd.Timestamp(date.replace('_','-')) + pd.Timedelta(days=26)
+    
+    day_0 = pd.Timestamp(date.replace('_','-')) + pd.Timedelta(days=25)
     
     map_rki = data.loc[day_0].values.astype('float64')
     for (i, (key, _)) in enumerate(counties.items()):
