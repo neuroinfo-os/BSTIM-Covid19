@@ -21,9 +21,9 @@ shared_path = "/p/project/covid19dynstat/shared_assets/figures/{}_{}_{}/".format
 if os.path.isfile(os.path.join(figures_path, 'metadata.csv')):
     os.remove(os.path.join(figures_path, 'metadata.csv'))
 
-for c in county_dict.keys():
-    curves_window(start, c, n_weeks=3, model_i=35, save_plot=True)
-    curves_window_trend(start, c, save_plot=True)
+# for c in county_dict.keys():
+#     curves_window(start, c, n_weeks=3, model_i=35, save_plot=True)
+#     curves_window_trend(start, c, save_plot=True)
 germany_map(start, save_plot=True)
 interaction_kernel(start, save_plot=True)
 

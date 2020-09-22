@@ -73,12 +73,12 @@ if __name__ == "__main__":
 
     dates = [day for day in pd.date_range(start_date, end_date)]
     df = pd.DataFrame(index=dates)
-    for county_name in counties:
+    for (county_name, county_id) in counties.items():
         print('.',end='')
         series = np.zeros(len(df), dtype=np.int32)
-        lk_data = covid19_data[covid19_data['Landkreis'] == county_name]
+        lk_data = covid19_data[covid19_data['IdLandkreis'] == int(county_id)]
         for (d_id, day) in enumerate(dates):
-            day_string = args.dayformat_Meldedatum[0].format(
+            day_string = dayformat_Meldedatum.format(
                 day.year, day.month, day.day)
             cases = np.sum(lk_data[lk_data['Meldedatum']
                                    == day_string]['AnzahlFall'])
