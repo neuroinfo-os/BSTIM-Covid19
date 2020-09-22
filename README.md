@@ -1,4 +1,8 @@
-# The BSTI Model
+## BSTI Model for Covid-19
+
+We adapted the BSTI Model for infectious diseases to the current Covid19 pandemic and fit county specific models in germany based on a 3 week window of data. The model is calculated on the HPC Systems at the [Juelich Supercomputing Center](https://www.fz-juelich.de/ias/jsc/EN/Home/home_node.html). The results are can be explored on https://covid19-bayesian.fz-juelich.de/.
+
+## The BSTI Model
 
 The BSTI model is a [Bayesian spatio-temporal interaction model][1], a probabilistic generalized linear model, that predicts aggregated case counts within spatial regions (counties) and time intervals (calendar weeks) using a history of reported cases, temporal features (seasonality and trend) and region-specific as well as demographic information.
 
