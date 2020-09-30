@@ -1,4 +1,3 @@
-from config import *
 from collections import defaultdict
 from shapely.geometry import Polygon
 from shapely.ops import cascaded_union
@@ -224,6 +223,12 @@ def set_file_permissions(filename, uid, gid, permissions=0o660):
     os.chmod(filename, permissions)
     os.chown(filename, uid, gid)
 
+def load_trace(start, n_weeks):
+    filename = "../data/mcmc_samples_backup/parameters_covid19_{}.pkl".format(start)
+    model = load_model(start, n_weeks)
+    with model:
+        trace = pm.load_trace(filename)
+    return trace
 
 def load_model(start, n_weeks):
     filename = "../data/mcmc_samples_backup/predictions_covid19_{}.pkl".format(start)
