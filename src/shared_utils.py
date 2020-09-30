@@ -80,7 +80,7 @@ def load_data_n_weeks(
     pad=None
 ):
 
-    data = pd.read_csv("../data/diseases/covid19.csv".format(disease),
+    data = pd.read_csv("../data/diseases/covid19.csv",
                        sep=seperator, encoding='iso-8859-1', index_col=0)
 
     if "99999" in data.columns:
@@ -237,7 +237,7 @@ def load_model(start, n_weeks):
     return model
 
 def load_trend_model(start, n_weeks):
-    filename_pred = "../data/mcmc_samples_backup/predictions_trend_covid19_{}.pkl".format(start)
+    filename = "../data/mcmc_samples_backup/predictions_trend_covid19_{}.pkl".format(start)
     with open(filename, "rb") as f:
         model = pkl.load(f)
     return model

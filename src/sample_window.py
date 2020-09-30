@@ -33,9 +33,10 @@ prediction_region = "germany"
 use_demographics = True
 trend_order      = 1
 periodic_order   = 4
+use_report_delay = False
 
-print("Model Configuration: \n Demographics: {} \n Trend order: {} \n Periodic order: {} \n".format(
-      use_demographics, trend_order, periodic_order
+print("Model Configuration: \n Demographics: {} \n Trend order: {} \n Periodic order: {} \n Report Delay: {}\n".format(
+      use_demographics, trend_order, periodic_order, use_report_delay
 ))
 
 filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease,start)
@@ -103,8 +104,7 @@ if SAMPLE_PARAMS:
         target_accept=0.95,
         max_treedepth=15,
         chains=num_chains,
-        cores=num_cores,
-        window=True)
+        cores=num_cores)
 
     with open(filename_model, "wb") as f:
     	pkl.dump(model.model, f)
@@ -122,16 +122,14 @@ pred = model.sample_predictions(target_train.index,
                                 trace, 
                                 target_test.index, 
                                 average_periodic_feature=False,
-                                average_all=False,
-                                window=True)
+                                average_all=False)
 
 pred_trend = model.sample_predictions(target_train.index, 
                                 target_train.columns, 
                                 trace, 
                                 target_test.index, 
                                 average_periodic_feature=False,
-                                average_all=True,
-                                window=True)
+                                average_all=True)
 
 with open(filename_pred, 'wb') as f:
     pkl.dump(pred, f)
