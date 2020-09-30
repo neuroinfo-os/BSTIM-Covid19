@@ -1,12 +1,10 @@
 from shared_utils import *
 from BaseModel import BaseModel
-from config import *
 import pymc3 as pm
 import pickle as pkl
 import pandas as pd
 import os
 import sys
-from config_window import start as startixs
 
 start = int(os.environ["SGE_DATE_ID"])
 number_of_weeks = 3# int(sys.argv[4])
@@ -22,8 +20,6 @@ num_cores = num_chains
 # whether to sample the parameters or load them 
 SAMPLE_PARAMS = True
 
-PERMUTATION_STUDY=False
-
 # whether to sample predictions on training, test or both
 # SAMPLE_PREDS = "both" # can be "train", "test" or "both"
 
@@ -33,42 +29,38 @@ prediction_region = "germany"
 # model 15 selected by WAICS
 # model 35 ohne report delay und mit trend order 1
 # model 47 mit trend 4
-use_ia, use_report_delay, use_demographics, trend_order, periodic_order = combinations[model_i]
-# Print Model Eigenschaften
-print("Model {} - IA: {} - RD: {} - DEMO: {} - Trend: {} - Per: {}".format(
-    model_i, use_ia, use_report_delay, use_demographics, trend_order, periodic_order
+""" Model: """
+use_demographics = True
+trend_order      = 1
+periodic_order   = 4
 
+print("Model Configuration: \n Demographics: {} \n Trend order: {} \n Periodic order: {} \n".format(
+      use_demographics, trend_order, periodic_order
 ))
-
-# use_interactions, use_report_delay = combinations_ia_report[model_complexity]
 
 filename_params = "../data/mcmc_samples_backup/parameters_{}_{}".format(disease,start)
 filename_pred = "../data/mcmc_samples_backup/predictions_{}_{}.pkl".format(disease, start)
-#filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
+# filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
 filename_pred_trend = "../data/mcmc_samples_backup/predictions_trend_{}_{}.pkl".format(disease, start )
 filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, start)
-if PERMUTATION_STUDY:
-    filename_params = "../data/mcmc_samples_backup/permutation_studies/parameters_{}_{}".format(disease,start)
-    filename_pred = "../data/mcmc_samples_backup/permutation_studies/predictions_{}_{}.pkl".format(disease, start)
-    #filename_pred_nowcast = "../data/mcmc_samples_backup/predictions_nowcast_{}_model_{}_window_{}_{}.pkl".format(disease, model_i, start, number_of_weeks)
-    filename_pred_trend = "../data/mcmc_samples_backup/permutation_studies/predictions_trend_{}_{}.pkl".format(disease, start )
-    filename_model = "../data/mcmc_samples_backup/permutation_studies/model_{}_{}.pkl".format(disease, start)
 
-
-import os
-print(os.getcwd())
-print('../data/counties/counties.pkl')
+# ?????????
+# import os
+# print(os.getcwd())
+# print('../data/counties/counties.pkl')
 
 # Load data
 with open('../data/counties/counties.pkl', "rb") as f:
     county_info = pkl.load(f)
 
 # pad = days to look into the future
-#days_into_future = 5
-#data = load_daily_data(disease, prediction_region, county_info, pad=days_into_future)
+# days_into_future = 5
+# data = load_daily_data(disease, prediction_region, county_info, pad=days_into_future)
 
 days_into_future = 5
-data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region, county_info, pad=days_into_future, permute=PERMUTATION_STUDY)
+data = load_daily_data_n_weeks(start, number_of_weeks, disease, prediction_region,
+                               county_info, pad=days_into_future)
+
 print(data)
 first_day = data.index.min()
 last_day = data.index.max()
@@ -105,16 +97,6 @@ model = BaseModel(tspan,
                   include_demographics=use_demographics,
                   trend_poly_order=trend_order,
                   periodic_poly_order=periodic_order)
-if PERMUTATION_STUDY:
-    model = BaseModel(tspan,
-                  county_info,
-                  ["../data/ia_effect_samples/permutation_studies/{}_{}_{}/{}_{}.pkl".format(year, month, day,disease, i) for i in range(100)],
-                  include_ia=use_ia,
-                  include_report_delay=use_report_delay,
-                  include_demographics=use_demographics,
-                  trend_poly_order=trend_order,
-                  periodic_poly_order=periodic_order)
-
 
 if SAMPLE_PARAMS:
     print("Sampling parameters on the training set.")
