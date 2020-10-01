@@ -241,3 +241,15 @@ def load_trend_model(start, n_weeks):
     with open(filename, "rb") as f:
         model = pkl.load(f)
     return model
+
+def load_predictions(start, n_weeks):
+    filename = "../data/mcmc_samples_backup/predictions_covid19_{}.pkl".format(start)
+    with open(filename, "rb") as f:
+        res = pkl.load(f)
+    return res
+
+def load_trend_predictions(start, n_weeks):
+    filename = "../data/mcmc_samples_backup/predictions_trend_covid19_{}.pkl".format(start)
+    with open(filename, "rb") as f:
+        res = pkl.load(f)
+    return res
