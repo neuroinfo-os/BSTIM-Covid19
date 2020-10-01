@@ -3,7 +3,7 @@ import pickle as pkl
 import numpy as np
 from collections import OrderedDict
 from matplotlib import pyplot as plt
-# from pymc3.stats import quantiles
+from pymc3.stats import quantiles
 import os
 import pandas as pd
 from pathlib import Path
@@ -71,64 +71,55 @@ prediction_samples_trend = prediction_samples_trend[:,i_start_day:i_start_day+n_
 ext_index = pd.DatetimeIndex([d for d in target.index] + \
         [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
         
-    # TODO: figure out where quantiles comes from and if its pymc3, how to replace it
-# prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95)) 
-# prediction_quantiles_trend = quantiles(prediction_samples_trend, (5, 25, 75, 95)) 
-prediction_quantiles_25 = np.quantile(prediction_samples, .25)
-prediction_quantiles_75 = np.quantile(prediction_samples, .75)
-prediction_quantiles_05 = np.quantile(prediction_samples, .05)
-prediction_quantiles_95 = np.quantile(prediction_samples, .95)
+# TODO: figure out where quantiles comes from and if its pymc3, how to replace it
+prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95)) 
+prediction_quantiles_trend = quantiles(prediction_samples_trend, (5, 25, 75, 95)) 
 
-prediction_quantiles_25_trend = np.quantile(prediction_samples, .25)
-prediction_quantiles_75_trend = np.quantile(prediction_samples, .75)
-prediction_quantiles_05_trend = np.quantile(prediction_samples, .05)
-prediction_quantiles_95_trend = np.quantile(prediction_samples, .95)
+prediction_mean = pd.DataFrame(
+    data=np.mean(
+        prediction_samples,
+        axis=0),
+    index=ext_index,
+    columns=target.columns)
+prediction_q25 = pd.DataFrame(
+    data=prediction_quantiles[25],
+    index=ext_index,
+    columns=target.columns)
+prediction_q75 = pd.DataFrame(
+    data=prediction_quantiles[75],
+    index=ext_index,
+    columns=target.columns)
+prediction_q5 = pd.DataFrame(
+    data=prediction_quantiles[5],
+    index=ext_index,
+    columns=target.columns)
+prediction_q95 = pd.DataFrame(
+    data=prediction_quantiles[95],
+    index=ext_index,
+    columns=target.columns)
 
-# prediction_mean = pd.DataFrame(
-#     data=np.mean(
-#         prediction_samples,
-#         axis=0),
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q25 = pd.DataFrame(
-#     data=prediction_quantiles[25],
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q75 = pd.DataFrame(
-#     data=prediction_quantiles[75],
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q5 = pd.DataFrame(
-#     data=prediction_quantiles[5],
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q95 = pd.DataFrame(
-#     data=prediction_quantiles[95],
-#     index=ext_index,
-#     columns=target.columns)
-
-# prediction_mean_trend = pd.DataFrame(
-#     data=np.mean(
-#         prediction_samples_trend,
-#         axis=0),
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q25_trend = pd.DataFrame(
-#     data=prediction_quantiles_trend[25],
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q75_trend = pd.DataFrame(
-#     data=prediction_quantiles_trend[75],
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q5_trend = pd.DataFrame(
-#     data=prediction_quantiles_trend[5],
-#     index=ext_index,
-#     columns=target.columns)
-# prediction_q95_trend = pd.DataFrame(
-#     data=prediction_quantiles_trend[95],
-#     index=ext_index,
-#     columns=target.columns)
+prediction_mean_trend = pd.DataFrame(
+    data=np.mean(
+        prediction_samples_trend,
+        axis=0),
+    index=ext_index,
+    columns=target.columns)
+prediction_q25_trend = pd.DataFrame(
+    data=prediction_quantiles_trend[25],
+    index=ext_index,
+    columns=target.columns)
+prediction_q75_trend = pd.DataFrame(
+    data=prediction_quantiles_trend[75],
+    index=ext_index,
+    columns=target.columns)
+prediction_q5_trend = pd.DataFrame(
+    data=prediction_quantiles_trend[5],
+    index=ext_index,
+    columns=target.columns)
+prediction_q95_trend = pd.DataFrame(
+    data=prediction_quantiles_trend[95],
+    index=ext_index,
+    columns=target.columns)
 
 #     for (county, county_id) in countyByName.items():
 #         pass
