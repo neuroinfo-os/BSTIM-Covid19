@@ -3,6 +3,7 @@ tags
 
 # data directory
 data/
+csv/
 
 # log files
 logs/
