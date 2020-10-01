@@ -53,8 +53,8 @@ def main(start):
     prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
     prediction_samples_trend = prediction_samples_trend[:,i_start_day:i_start_day+n_days,:]
 
-    prediction_samples_trend = np.reshape(res_trend['μ'], (res_trend['μ'].shape[0],  -1, 412))
-    prediction_samples_trend = prediction_samples_trend[:,i_start_day:i_start_day+n_days,:]
+    prediction_samples_trend_mu = np.reshape(res_trend['μ'], (res_trend['μ'].shape[0],  -1, 412))
+    prediction_samples_trend_mu = prediction_samples_trend[:,i_start_day:i_start_day+n_days,:]
 
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
