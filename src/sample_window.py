@@ -156,21 +156,21 @@ if __name__ == "__main__":
                         nargs=1,
                         dest="use_demographics",
                         type=bool,
-                        default=[True]
+                        default=[True],
                         help="Use demographic feature")
     
     parser.add_argument("--trend_order",
                         nargs=1,
                         dest="trend_order",
                         type=int,
-                        default=[1]
+                        default=[1],
                         help="Order of local trend polynomial")
     
     parser.add_argument("--periodic_order",
                         nargs=1,
                         dest="periodic_order",
                         type=int,
-                        default=[4]
+                        default=[4],
                         help="Order of global periodic polynomial")
     
     args = parser.parse_args()
