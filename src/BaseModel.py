@@ -1,4 +1,4 @@
-from sampling_utils import *
+# from sampling_utils import *
 from collections import OrderedDict
 import theano
 import re
@@ -295,7 +295,7 @@ class BaseModel(object):
 
         # extract features
         features = self.evaluate_features(all_days, target_counties)
-        num_counties = 412 #hardcoded
+        # num_counties = 412 #hardcoded; not needed?
         T_S = features["temporal_seasonal"].values
         T_T = features["temporal_trend"].values
         T_D = features["temporal_report_delay"].values
@@ -348,6 +348,7 @@ class BaseModel(object):
                         np.dot(T_S, W_t_s[i]) +
                         result_TT[i] + 
                         np.dot(TS, W_ts[i]) +
+                        np.dot(T_D, W_t_d[i]) + 
                         log_exposure)
             y[i, :] = pm.NegativeBinomial.dist(
                     mu=μ[i, :], alpha=α[i]).random()

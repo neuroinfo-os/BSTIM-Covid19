@@ -5,10 +5,11 @@ import pandas as pd
 import argparse
 from collections import OrderedDict
 from pymc3.stats import quantiles
+import os
 from pathlib import Path
 
 
-def main(start):
+def main(start, csv_path, output_root_dir):
     start = int(os.environ["SGE_DATE_ID"])
 
     with open('../data/counties/counties.pkl', "rb") as f:
@@ -23,11 +24,11 @@ def main(start):
     month = str(start_day)[5:7]
     day = str(start_day)[8:10]
 
-    day_folder_path = "../figures/{}_{}_{}".format(year, month, day)
+    day_folder_path = os.path.join(output_root_dir,"{}_{}_{}".format(year, month, day))
     Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
     prediction_region = "germany"
-    data = load_data_n_weeks(start, n_weeks, prediction_region, counties)
+    data = load_data_n_weeks(start, n_weeks, prediction_region, counties, csv_path)
 
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
     i_start_day = 0
@@ -132,13 +133,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Summarize model samples as mean and \
                                      quantiles, writing results into csv files")
 
-    parser.add_argument("--start",
+    parser.add_argument("start",
                         nargs=1,
-                        dest="start",
                         type=int,
-                        required=True,
                         help="start day calculated by Jan 28 2020 + start days")
+
+    parser.add_argument("--csvinputfile",
+                        nargs=1,
+                        dest="csvinputfile",
+                        type=str,
+                        default=["../data/diseases/COVID19.csv"],
+                        help="path to input csv file")
+
+    parser.add_argument("--outputrootdir",
+                        nargs=1,
+                        dest="outputrootdir",
+                        type=str,
+                        default=["../csv/"],
+                        help="path to output root folder")
 
     args = parser.parse_args()
     
-    main(args.start[0])
+    main(args.start[0], args.csvinputfile[0], args.outputrootdir[0])

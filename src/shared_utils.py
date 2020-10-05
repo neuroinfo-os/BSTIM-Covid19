@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import pymc3 as pm
 # from pymc3.stats import quantiles
-from sampling_utils import *
+# from sampling_utils import *
 from collections import OrderedDict
 import isoweek
 import gc
@@ -23,8 +23,6 @@ import os
 from datetime import timedelta
 
 yearweek_regex = re.compile(r"([0-9]+)-KW([0-9]+)")
-
-
 
 def make_county_dict():
     with open('../data/counties/counties.pkl', "rb") as f:
@@ -50,8 +48,8 @@ def _parse_yearweek(yearweek):
 
 parse_yearweek = np.frompyfunc(_parse_yearweek, 1, 1)
 
-def load_data(prediction_region, counties, seperator=",", pad=None):
-    data = pd.read_csv("../data/diseases/covid19.csv".format(disease),
+def load_data(prediction_region, counties, csv_path, seperator=",", pad=None):
+    data = pd.read_csv(csv_path,
                        sep=seperator, encoding='iso-8859-1', index_col=0)
 
     if "99999" in data.columns:
@@ -76,11 +74,12 @@ def load_data_n_weeks(
     n_weeks,
     prediction_region,
     counties,
+    csv_path,
     seperator=",",
     pad=None
 ):
 
-    data = pd.read_csv("../data/diseases/covid19.csv",
+    data = pd.read_csv(csv_path,
                        sep=seperator, encoding='iso-8859-1', index_col=0)
 
     if "99999" in data.columns:
