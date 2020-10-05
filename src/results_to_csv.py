@@ -8,6 +8,14 @@ from pymc3.stats import quantiles
 import os
 from pathlib import Path
 
+# TODO: metadata csv
+def metadata_csv():
+    # trace = load_trace(start, n_weeks)
+    # trend_params = pm.trace_to_dataframe(trace, varnames=["W_t_t"]).values
+    # trend_w2 = np.reshape(trend_params, newshape=(1000,412,2))[:,i_county,1]
+    # prob2 = np.mean(trend_w2>0)
+    pass
+        
 
 def main(start, csv_path, output_root_dir):
     start = int(os.environ["SGE_DATE_ID"])

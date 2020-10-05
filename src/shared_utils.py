@@ -223,10 +223,11 @@ def set_file_permissions(filename, uid, gid, permissions=0o660):
     os.chown(filename, uid, gid)
 
 def load_trace(start, n_weeks):
-    filename = "../data/mcmc_samples_backup/parameters_covid19_{}.pkl".format(start)
+    filename = "../data/mcmc_samples_backup/parameters_covid19_{}".format(start)
     model = load_model(start, n_weeks)
     with model:
         trace = pm.load_trace(filename)
+    del model
     return trace
 
 def load_model(start, n_weeks):
