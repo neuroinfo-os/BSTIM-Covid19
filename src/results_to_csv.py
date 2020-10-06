@@ -7,8 +7,9 @@ from collections import OrderedDict
 from pymc3.stats import quantiles
 import os
 from pathlib import Path
+from datetime import timedelta
 
-# TODO: metadata csv
+
 def metadata_csv(start, n_weeks, counties, output_dir):
     trace = load_trace(start, n_weeks)
     p_linear_slope = np.mean((trace["W_t_t"] > 0)[:,:,1], axis=0)
@@ -25,28 +26,18 @@ def metadata_csv(start, n_weeks, counties, output_dir):
     )
     metadata = metadata.sort_values(["LKName", "countyID"])
 
-    fpath = os.path.join(output_root_dir, "metadata.csv")
+    fpath = os.path.join(output_dir, "metadata.csv")
     metadata.to_csv(fpath, index=False)
 
 
 def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     countyByName = make_county_dict()
-    # start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
-    # year = str(start_day)[:4]
-    # month = str(start_day)[5:7]
-    # day = str(start_day)[8:10]
-
-    # day_folder_path = os.path.join(output_root_dir,"{}_{}_{}".format(year, month, day))
-    # Path(day_folder_path).mkdir(parents=True, exist_ok=True)
-
     prediction_region = "germany"
     data = load_data_n_weeks(start, n_weeks, prediction_region, counties, csv_path)
-
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
     day_0 = start_day + pd.Timedelta(days=n_weeks*7+5)
     day_m5 = day_0 - pd.Timedelta(days=5)
     day_p5 = day_0 + pd.Timedelta(days=5)
-
     _, target, _, _ = split_data(
         data,
         train_start=start_day,
@@ -57,24 +48,15 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     res = load_predictions(start, n_weeks)
     res_trend = load_trend_predictions(start, n_weeks)
 
-    i_start_day = 0
-    n_days = (day_p5 - start_day).days
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
-    prediction_samples = prediction_samples[:,i_start_day:i_start_day+n_days,:]
-
     prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
-    prediction_samples_trend = prediction_samples_trend[:,i_start_day:i_start_day+n_days,:]
-
     prediction_samples_trend_mu = np.reshape(res_trend['μ'], (res_trend['μ'].shape[0],  -1, 412))
-    prediction_samples_trend_mu = prediction_samples_trend[:,i_start_day:i_start_day+n_days,:]
-
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
-            
-    # TODO: figure out where quantiles comes from and if its pymc3, how to replace it
-    prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95)) 
-    prediction_quantiles_trend = quantiles(prediction_samples_trend, (5, 25, 75, 95)) 
+    # TODO: figure out if we want to replace quantiles function (newer pymc3 versions don't support it)
+    prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
+    prediction_quantiles_trend = quantiles(prediction_samples_trend, (5, 25, 75, 95))
 
     prediction_mean = pd.DataFrame(
         data=np.mean(
@@ -124,20 +106,20 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
 
     for (county, county_id) in countyByName.items():
         county_data = pd.DataFrame({
-            'Raw Prediction Mean' : prediction_mean.loc[:,county_id].values,
-            'Raw Prediction Q25' : prediction_q25.loc[:,county_id].values,
-            'Raw Prediction Q75' : prediction_q75.loc[:,county_id].values,
-            'Raw Prediction Q5' : prediction_q5.loc[:,county_id].values,
-            'Raw Prediction Q95' : prediction_q95.loc[:,county_id].values,
-            'Trend Prediction Mean' : prediction_mean_trend.loc[:,county_id].values,
-            'Trend Prediction Q25' : prediction_q25_trend.loc[:,county_id].values,
-            'Trend Prediction Q75' : prediction_q75_trend.loc[:,county_id].values,
-            'Trend Prediction Q5' : prediction_q5_trend.loc[:,county_id].values,
-            'Trend Prediction Q95' : prediction_q95_trend.loc[:,county_id].values,
-            'RKI Meldedaten' : np.append(target.loc[:,county_id].values, np.repeat(np.nan, 5)),
-            'is_nowcast' : (day_m5 <= ext_index) & (ext_index < day_0),
-            'is_prediction' : (day_0 <= ext_index)},
-            index = ext_index
+            'Raw Prediction Mean': prediction_mean.loc[:,county_id].values,
+            'Raw Prediction Q25': prediction_q25.loc[:,county_id].values,
+            'Raw Prediction Q75': prediction_q75.loc[:,county_id].values,
+            'Raw Prediction Q5': prediction_q5.loc[:,county_id].values,
+            'Raw Prediction Q95': prediction_q95.loc[:,county_id].values,
+            'Trend Prediction Mean': prediction_mean_trend.loc[:,county_id].values,
+            'Trend Prediction Q25': prediction_q25_trend.loc[:,county_id].values,
+            'Trend Prediction Q75': prediction_q75_trend.loc[:,county_id].values,
+            'Trend Prediction Q5': prediction_q5_trend.loc[:,county_id].values,
+            'Trend Prediction Q95': prediction_q95_trend.loc[:,county_id].values,
+            'RKI Meldedaten': np.append(target.loc[:,county_id].values, np.repeat(np.nan, 5)),
+            'is_nowcast': (day_m5 <= ext_index) & (ext_index < day_0),
+            'is_prediction': (day_0 <= ext_index)},
+            index=ext_index
         )
         fpath = os.path.join(output_dir, "{}.csv".format(countyByName[county]))
         county_data.to_csv(fpath)
@@ -149,7 +131,7 @@ def main(start, csv_path, output_root_dir):
     n_weeks = 3
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
-    
+    start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
     year = str(start_day)[:4]
     month = str(start_day)[5:7]
     day = str(start_day)[8:10]
@@ -173,7 +155,7 @@ if __name__ == "__main__":
                         nargs=1,
                         dest="csvinputfile",
                         type=str,
-                        default=["../data/diseases/COVID19.csv"],
+                        default=["../data/diseases/covid19.csv"],
                         help="path to input csv file")
 
     parser.add_argument("--outputrootdir",
