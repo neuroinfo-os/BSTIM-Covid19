@@ -166,5 +166,5 @@ if __name__ == "__main__":
                         help="path to output root folder")
 
     args = parser.parse_args()
-    
+
     main(args.start[0], args.csvinputfile[0], args.outputrootdir[0])
