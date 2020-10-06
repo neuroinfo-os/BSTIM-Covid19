@@ -124,7 +124,6 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         fpath = os.path.join(output_dir, "{}.csv".format(countyByName[county]))
         county_data.to_csv(fpath)
 
-        
 
 def main(start, csv_path, output_root_dir):
     # default
