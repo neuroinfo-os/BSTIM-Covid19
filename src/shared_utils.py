@@ -231,13 +231,7 @@ def load_trace(start, n_weeks):
     return trace
 
 def load_model(start, n_weeks):
-    filename = "../data/mcmc_samples_backup/predictions_covid19_{}.pkl".format(start)
-    with open(filename, "rb") as f:
-        model = pkl.load(f)
-    return model
-
-def load_trend_model(start, n_weeks):
-    filename = "../data/mcmc_samples_backup/predictions_trend_covid19_{}.pkl".format(start)
+    filename = "../data/mcmc_samples_backup/model_covid19_{}.pkl".format(start)
     with open(filename, "rb") as f:
         model = pkl.load(f)
     return model

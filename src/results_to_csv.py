@@ -9,37 +9,40 @@ import os
 from pathlib import Path
 
 # TODO: metadata csv
-def metadata_csv():
-    # trace = load_trace(start, n_weeks)
-    # trend_params = pm.trace_to_dataframe(trace, varnames=["W_t_t"]).values
-    # trend_w2 = np.reshape(trend_params, newshape=(1000,412,2))[:,i_county,1]
-    # prob2 = np.mean(trend_w2>0)
-    pass
-        
+def metadata_csv(start, n_weeks, counties, output_dir):
+    trace = load_trace(start, n_weeks)
+    p_linear_slope = np.mean((trace["W_t_t"] > 0)[:,:,1], axis=0)
+    prob_text = ["Die Fallzahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% {}".format(
+        p*100 if p >= 0.5 else 100-p*100, "steigen" if p>= 0.5 else "fallen"
+    ) for p in p_linear_slope]
 
-def main(start, csv_path, output_root_dir):
-    start = int(os.environ["SGE_DATE_ID"])
+    metadata = pd.DataFrame({
+        "countyID": [int(county_id) for county_id in counties.keys()],
+        "LKType": [counties[county_id]['name'].split(" ")[0] for county_id in counties.keys()],
+        "LKName": [counties[county_id]['name'].split(" ")[1] for county_id in counties.keys()],
+        "probText": prob_text
+    }
+    )
+    metadata = metadata.sort_values(["LKName", "countyID"])
 
-    with open('../data/counties/counties.pkl', "rb") as f:
-        counties = pkl.load(f)
+    fpath = os.path.join(output_root_dir, "metadata.csv")
+    metadata.to_csv(fpath, index=False)
 
-    # default
-    n_weeks = 3
 
+def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     countyByName = make_county_dict()
-    start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
-    year = str(start_day)[:4]
-    month = str(start_day)[5:7]
-    day = str(start_day)[8:10]
+    # start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
+    # year = str(start_day)[:4]
+    # month = str(start_day)[5:7]
+    # day = str(start_day)[8:10]
 
-    day_folder_path = os.path.join(output_root_dir,"{}_{}_{}".format(year, month, day))
-    Path(day_folder_path).mkdir(parents=True, exist_ok=True)
+    # day_folder_path = os.path.join(output_root_dir,"{}_{}_{}".format(year, month, day))
+    # Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
     prediction_region = "germany"
     data = load_data_n_weeks(start, n_weeks, prediction_region, counties, csv_path)
 
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
-    i_start_day = 0
     day_0 = start_day + pd.Timedelta(days=n_weeks*7+5)
     day_m5 = day_0 - pd.Timedelta(days=5)
     day_p5 = day_0 + pd.Timedelta(days=5)
@@ -54,6 +57,7 @@ def main(start, csv_path, output_root_dir):
     res = load_predictions(start, n_weeks)
     res_trend = load_trend_predictions(start, n_weeks)
 
+    i_start_day = 0
     n_days = (day_p5 - start_day).days
 
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
@@ -135,7 +139,26 @@ def main(start, csv_path, output_root_dir):
             'is_prediction' : (day_0 <= ext_index)},
             index = ext_index
         )
-        county_data.to_csv("../csv/{}_{}_{}/{}.csv".format(year, month, day, countyByName[county]))
+        fpath = os.path.join(output_dir, "{}.csv".format(countyByName[county]))
+        county_data.to_csv(fpath)
+
+        
+
+def main(start, csv_path, output_root_dir):
+    # default
+    n_weeks = 3
+    with open('../data/counties/counties.pkl', "rb") as f:
+        counties = pkl.load(f)
+    
+    year = str(start_day)[:4]
+    month = str(start_day)[5:7]
+    day = str(start_day)[8:10]
+    output_dir = os.path.join(output_root_dir,"{}_{}_{}".format(year, month, day))
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    metadata_csv(start, n_weeks, counties, output_dir)
+    plotdata_csv(start, n_weeks, csv_path, counties, output_dir)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Summarize model samples as mean and \
