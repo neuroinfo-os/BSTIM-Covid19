@@ -100,6 +100,8 @@ def load_data_n_weeks(
         for x in extra_range:
             data = data.append(pd.Series(name=str(x)[:11]))
 
+    data.index = [pd.Timestamp(date) for date in data.index]
+
     return data
 
 
