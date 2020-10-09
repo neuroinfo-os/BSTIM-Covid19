@@ -110,7 +110,9 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
     if "99999" in data.columns:
         data.drop("99999", inplace=True, axis=1)
 
-    data = data.iloc[start:start+7*n_weeks+5,:]
+    data.index = [pd.Timestamp(date) for date in data.index]
+    start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
+    data = data.loc[start_day <= data.index]
 
     data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
@@ -131,7 +133,6 @@ def load_daily_data_n_weeks(start, n_weeks,disease, prediction_region, counties,
         for x in extra_range:
             data = data.append(pd.Series(name=str(x)[:11]))
 
-    data.index = [pd.Timestamp(date) for date in data.index]
     return data
 
 
