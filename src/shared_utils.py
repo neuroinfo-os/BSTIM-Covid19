@@ -85,7 +85,9 @@ def load_data_n_weeks(
     if "99999" in data.columns:
         data.drop("99999", inplace=True, axis=1)
 
-    data = data.iloc[start:start+7*n_weeks+5,:]
+    data.index = [pd.Timestamp(date) for date in data.index]
+    start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
+    data = data.loc[start_day <= data.index]
 
     data = data.loc[:, list(
         filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
@@ -99,6 +101,7 @@ def load_data_n_weeks(
             data = data.append(pd.Series(name=str(x)[:11]))
 
     data.index = [pd.Timestamp(date) for date in data.index]
+
     return data
 
 
@@ -131,96 +134,6 @@ def split_data(
     data_test = data
 
     return data_train, target_train, data_test, target_test
-
-
-def quantile_negbin(qs, mean, dispersion=0):
-    """ For `n` values in `qs` and `m` values in `mean`, computes the m
-    by n matrix of `qs` quantiles for distributions with means `mean`.
-    If dispersion is set to 0, a Poisson distribution is assumed, 
-    otherwise a Negative Binomial with corresponding dispersion parameter is used."""
-    qs = np.array(qs).ravel()
-    mean = np.array(mean).ravel()
-    res = np.empty((len(mean), len(qs)))
-    for i, mu in enumerate(mean):
-        if dispersion == 0:
-            # plot Poisson quantiles
-            dist = scipy.stats.poisson(mu)
-        else:
-            # k = y
-            n = 1 / dispersion
-            p = 1 / (1 + dispersion * mu)
-            dist = scipy.stats.nbinom(n, p)
-        for j, q in enumerate(qs):
-            res[i, j] = dist.ppf(q)
-    return res
-
-
-def deviance_negbin(y, μ, α, saturated="NegativeBinomial"):
-    if saturated == "NegativeBinomial":
-        logp_sat = tt.where(
-            y == 0, np.zeros_like(
-                y, dtype=np.float32), pm.NegativeBinomial.dist(
-                mu=y, alpha=α).logp(y))
-    elif saturated == "Poisson":
-        logp_sat = tt.where(y == 0, np.zeros_like(
-            y, dtype=np.float32), pm.Poisson.dist(mu=y).logp(y))
-    else:
-        raise NotImplementedError()
-    logp_mod = pm.NegativeBinomial.dist(mu=μ, alpha=α).logp(y)
-    return (2 * (logp_sat - logp_mod)).eval()
-
-
-def dss(y, μ, var):
-    return np.log(var) + (y - μ)**2 / var
-
-
-def pit_negbin(y, μ, α):
-    return scipy.stats.nbinom.cdf(y, α, μ / (α + μ))
-
-
-def make_axes_stack(
-        ax,
-        num,
-        xoff,
-        yoff,
-        fig=None,
-        down=True,
-        sharex=False,
-        sharey=False):
-    if isinstance(ax, plt.Axes):
-        bbox = ax.get_position()
-        if fig is None:
-            fig = ax.figure
-        ax.set_zorder(num if down else 0)
-        axes = [ax]
-    elif isinstance(ax, SubplotSpec):
-        if fig is None:
-            fig = plt.gcf()
-        bbox = ax.get_position(fig)
-        axes = [fig.add_axes(bbox, zorder=num if down else 0)]
-    else:
-        if fig is None:
-            fig = plt.gcf()
-        bbox = transforms.Bbox.from_bounds(
-            ax[0], ax[1], ax[2] - ax[0], ax[3] - ax[1])
-        axes = [fig.add_axes(bbox, zorder=num if down else 0)]
-
-    for i in range(1, num):
-        bbox = bbox.translated(xoff, yoff)
-        ax = fig.add_axes(
-            bbox,
-            zorder=num - i if down else i,
-            sharex=axes[0] if sharex else None,
-            sharey=axes[0] if sharey else None)
-        for tick in ax.get_xticklabels() + ax.get_yticklabels():
-            tick.set_visible(False)
-        axes.append(ax)
-    return axes
-
-
-def set_file_permissions(filename, uid, gid, permissions=0o660):
-    os.chmod(filename, permissions)
-    os.chown(filename, uid, gid)
 
 def load_trace(start, n_weeks):
     filename = "../data/mcmc_samples_backup/parameters_covid19_{}".format(start)
