@@ -112,6 +112,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         columns=target.columns)
 
     for (county, county_id) in countyByName.items():
+        rki_data = np.append(target.loc[:, county_id].values, np.repeat(np.nan, 5))
         county_data = pd.DataFrame({
             'Raw Prediction Mean': prediction_mean.loc[:,county_id].values,
             'Raw Prediction Q25': prediction_q25.loc[:,county_id].values,
@@ -123,8 +124,10 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
             'Trend Prediction Q75': prediction_q75_trend.loc[:,county_id].values,
             'Trend Prediction Q5': prediction_q5_trend.loc[:,county_id].values,
             'Trend Prediction Q95': prediction_q95_trend.loc[:,county_id].values,
-            'RKI Meldedaten': np.append(target.loc[:,county_id].values, np.repeat(np.nan, 5)),
+            'RKI Meldedaten': rki_data,
             'is_nowcast': (day_m5 <= ext_index) & (ext_index < day_0),
+            'is_prediction': (day_0 <= ext_index),
+            'is_high': np.less(prediction_q95_trend.loc[:,county_id].values, rki_data)},
             'is_prediction': (day_0 <= ext_index)},
             index=ext_index
         )
