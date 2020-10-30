@@ -7,7 +7,6 @@ import pickle as pkl
 import numpy as np
 from collections import OrderedDict
 from matplotlib import pyplot as plt
-from pymc3.stats import quantiles
 import pandas as pd
 from pathlib import Path
 # def curves(use_interactions=True, use_report_delay=True, prediction_day=30, save_plot=False):
@@ -20,16 +19,12 @@ def curves(start, n_weeks=3, model_i=35,save_csv=False):
     n_weeks = int(n_weeks)
     model_i = int(model_i)
     
-    # for i, disease in enumerate(diseases):
-    i = 0
     disease = "covid19"
     prediction_region = "germany"
     data = load_daily_data_n_weeks(start, n_weeks, disease, prediction_region, counties)
 
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
-    i_start_day = 0
     day_0 = start_day + pd.Timedelta(days=n_weeks*7+5)
-    day_m5 = day_0 - pd.Timedelta(days=5)
     day_p5 = day_0 + pd.Timedelta(days=5)
 
 
@@ -39,18 +34,12 @@ def curves(start, n_weeks=3, model_i=35,save_csv=False):
         test_start=day_0,
         post_test=day_p5)
 
-    county_ids = target.columns
-
     # Load our prediction samples
     res = load_pred_model_window(model_i, start, n_weeks, trend=True)
-    n_days = (day_p5 - start_day).days
     prediction_samples = np.reshape(res['μ'], (res['μ'].shape[0], -1, 412))
     #prediction_samples = prediction_samples[:,i_start_day:i_start_day+n_days,:]
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
-
-    # TODO: figure out where quantiles comes from and if its pymc3, how to replace it
-    prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95)) 
 
     prediction_mean = pd.DataFrame(
         data=np.mean(
