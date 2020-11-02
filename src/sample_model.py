@@ -7,7 +7,7 @@ import os
 import sys
 import argparse
 
-def main(start, csv_path, use_demographics, trend_order, periodic_order, num_samples, num_chains):
+def main(start, csv_path, ia_effect_path, use_interactions, use_demographics, trend_order, periodic_order, num_samples, num_chains):
     
     # Default Values
     number_of_weeks = 3
@@ -73,9 +73,10 @@ def main(start, csv_path, use_demographics, trend_order, periodic_order, num_sam
     month = str(start_date)[5:7]
     day = str(start_date)[8:10]
 
-
     model = BaseModel(tspan,
                       county_info,
+                      [os.path.join(ia_effect_path, "{}_{}.pkl".format(disease, i)) for i in range(100)],
+                      include_ia=use_interactions,
                       include_report_delay=use_report_delay,
                       include_demographics=use_demographics,
                       trend_poly_order=trend_order,
@@ -138,6 +139,20 @@ if __name__ == "__main__":
                         type=str,
                         default=["../data/diseases/COVID19.csv"],
                         help="Number of chains in MCMC")
+    
+    parser.add_argument("--ia_effect_path",
+                        nargs=1,
+                        dest="ia_effect_path",
+                        type=str,
+                        default=["../data/ia_effect_samples"],
+                        help="Path to directory with IA effect sample files")
+
+    parser.add_argument("--use_interactions",
+                        nargs=1,
+                        dest="use_interactions",
+                        type=bool,
+                        default=[True],
+                        help="Use IA effects feature")
 
     parser.add_argument("--use_demographics",
                         nargs=1,
@@ -178,6 +193,8 @@ if __name__ == "__main__":
     
     main(args.start[0], 
          args.csvinputfile[0],
+         args.ia_effect_path[0],
+         args.use_interactions[0],
          args.use_demographics[0],
          args.trend_order[0],
          args.periodic_order[0],
