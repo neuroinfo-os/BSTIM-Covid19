@@ -31,16 +31,22 @@ def main(start, task_id, num_weeks, csv_path):
     day_folder_path = "../data/ia_effect_samples/{}_{}_{}".format(year, month, day)
     Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
-    filename = "../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".format(year, month, day, disease, num_sample)
+    filename = "../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".\
+        format(year, month, day, disease, num_sample)
 
-    print("Running task {} - disease: {} - sample: {} - startdate: {} - number of weeks: {} y\nWill create file {}".\
-                                                format(num_sample, disease, num_sample, start_date, number_of_weeks, filename ))
+    print("Running task {} - disease: {} - sample: {} -\
+            startdate: {} - number of weeks: {} y\nWill create file {}".\
+                                                format( num_sample, disease,
+                                                        num_sample, start_date,
+                                                        number_of_weeks, filename ))
 
     with open('../data/counties/counties.pkl', "rb") as f:
         counties = pkl.load(f)
 
 
-    data = load_data_n_weeks(start, number_of_weeks, prediction_region, counties, csv_path)
+    data = load_data_n_weeks(start, number_of_weeks,
+                             prediction_region, counties,
+                             csv_path)
     print("DaysTest")
     print(data.index)
     # RNGenerators
