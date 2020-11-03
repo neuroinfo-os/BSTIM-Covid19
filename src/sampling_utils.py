@@ -98,8 +98,10 @@ def sample_time_and_space__prep(times_by_day,
                 can be reused.
                 """
 
-                # subdata 'data' of 'indata' is likely to skip a few first days(rows) in 'indata',
-                # but as times_by_day_np represents the whole 'indata', an offsets needs to be considered when accessing 'times_by_day_np'
+                # subdata 'data' of 'indata' is likely to skip a few first days(rows)
+                # in 'indata',
+                # but as times_by_day_np represents the whole 'indata', an offsets
+                # needs to be considered when accessing 'times_by_day_np'
                 dayoffset = np.where(idx==True)[0][0]
                 n_total = data.sum().sum()
 
