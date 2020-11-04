@@ -71,7 +71,6 @@ def load_data_n_weeks(
     n_weeks,
     csv_path,
     seperator=",",
-    pad=None
 ):
 
     data = pd.read_csv(csv_path, sep=seperator, encoding='iso-8859-1', index_col=0)
@@ -82,14 +81,6 @@ def load_data_n_weeks(
     data.index = [pd.Timestamp(date) for date in data.index]
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
     data = data.loc[start_day <= data.index]
-
-    if pad is not None:
-        # get last date
-        last_date = pd.Timestamp(data.iloc[:, -1].index[-1])
-        extra_range = pd.date_range(
-            last_date+timedelta(1), last_date+timedelta(pad))
-        for x in extra_range:
-            data = data.append(pd.Series(name=str(x)[:11]))
 
     data.index = [pd.Timestamp(date) for date in data.index]
 
