@@ -13,7 +13,6 @@ import os
 from numba import njit
 from collections import OrderedDict
 from matplotlib import pyplot as pp
-from geo_utils import jacobian_sq
 # BUG: may throw an error for flat RVs
 theano.config.compute_test_value = 'off'
 
@@ -69,7 +68,7 @@ def sample_time_and_space__once(times_by_day, locations_by_county):
     times_by_day_np = t_convert_1(times_by_day_np)
 
     t_convert_2 = np.frompyfunc(datetime.datetime.timestamp, 1, 1)
-    times_by_day_np = t_convert_2(times_by_day_np
+    times_by_day_np = t_convert_2(times_by_day_np)
     times_by_day_np = np.array(times_by_day_np, np.float64)
 
     max_coords = 0
@@ -90,66 +89,66 @@ def sample_time_and_space__prep(times_by_day,
                                 locations_by_county_np,
                                 data,
                                 idx):
-                """
-                Recalculations for a fixed dataframe sample_time_and_space().
+    """
+    Recalculations for a fixed dataframe sample_time_and_space().
 
-                Calculation of helper arrays are very costy.
-                If the dataframe does not change, precalculated values
-                can be reused.
-                """
+    Calculation of helper arrays are very costy.
+    If the dataframe does not change, precalculated values
+    can be reused.
+    """
 
-                # subdata 'data' of 'indata' is likely to skip a few first days(rows)
-                # in 'indata',
-                # but as times_by_day_np represents the whole 'indata', an offsets
-                # needs to be considered when accessing 'times_by_day_np'
-                dayoffset = np.where(idx==True)[0][0]
-                n_total = data.sum().sum()
+    # subdata 'data' of 'indata' is likely to skip a few first days(rows)
+    # in 'indata',
+    # but as times_by_day_np represents the whole 'indata', an offsets
+    # needs to be considered when accessing 'times_by_day_np'
+    dayoffset = np.where(idx==True)[0][0]
+    n_total = data.sum().sum()
 
-                # get number of samples per county-day
-                smpls_per_cntyday = np.array(data.values).flatten('F')
+    # get number of samples per county-day
+    smpls_per_cntyday = np.array(data.values).flatten('F')
 
-                ######## t_all ########
+    ######## t_all ########
 
-                # get list of day-ids for all county-days
-                dayids = np.arange(len(data.index))
-                day_of_cntyday = np.tile(dayids, len(data.columns))
+    # get list of day-ids for all county-days
+    dayids = np.arange(len(data.index))
+    day_of_cntyday = np.tile(dayids, len(data.columns))
 
-                # get list of day-ids for all samples
-                day_of_smpl = np.array([ day_of_cntyday[i] \
-                    for (i,smpls) in enumerate(smpls_per_cntyday) \
-                    for x in range(smpls) ])
+    # get list of day-ids for all samples
+    day_of_smpl = np.array([ day_of_cntyday[i] \
+        for (i,smpls) in enumerate(smpls_per_cntyday) \
+        for x in range(smpls) ])
 
-                # get available times for each sample
-                time_of_days = data.index.tolist() # needs to stay pandas format
-                av_times_per_day = [len(times_by_day[d]) for d in time_of_days]
-                av_times_per_smpl = [ av_times_per_day[day_of_cntyday[i]] \
-                    for (i,smpls) in enumerate(smpls_per_cntyday) \
-                    for x in range(smpls) ]
+    # get available times for each sample
+    time_of_days = data.index.tolist() # needs to stay pandas format
+    av_times_per_day = [len(times_by_day[d]) for d in time_of_days]
+    av_times_per_smpl = [ av_times_per_day[day_of_cntyday[i]] \
+        for (i,smpls) in enumerate(smpls_per_cntyday) \
+        for x in range(smpls) ]
 
-                ######## x_all ########
+    ######## x_all ########
 
-                # get list of county-ids for all county-days
-                cntyids = np.arange(len(data.columns))
-                cnty_of_cntyday = np.repeat(cntyids, len(data.index))
+    # get list of county-ids for all county-days
+    cntyids = np.arange(len(data.columns))
+    cnty_of_cntyday = np.repeat(cntyids, len(data.index))
 
-                # get list of county-ids for all samples
-                cnty_of_smpl = np.array([ cnty_of_cntyday[i] \
-                    for (i,smpl) in enumerate(smpls_per_cntyday) \
-                    for x in range(smpl) ])
+    # get list of county-ids for all samples
+    cnty_of_smpl = np.array([ cnty_of_cntyday[i] \
+        for (i,smpl) in enumerate(smpls_per_cntyday) \
+        for x in range(smpl) ])
 
-                # get available locations for each sample
-                label_of_cntys = data.columns # list of countys labels
-                av_locs_per_cnty = \
-                    [len(locations_by_county[c]) for c in label_of_cntys]
+    # get available locations for each sample
+    label_of_cntys = data.columns # list of countys labels
+    av_locs_per_cnty = \
+        [len(locations_by_county[c]) for c in label_of_cntys]
 
-                av_locs_per_smpl = \
-                    [ av_locs_per_cnty[cnty_of_cntyday[i]] \
-                    for (i,smpls) in enumerate(smpls_per_cntyday) \
-                    for x in range(smpls) ]
+    av_locs_per_smpl = \
+        [ av_locs_per_cnty[cnty_of_cntyday[i]] \
+        for (i,smpls) in enumerate(smpls_per_cntyday) \
+        for x in range(smpls) ]
 
-                return (n_total, dayoffset,
-                day_of_smpl, av_times_per_smpl,
-                cnty_of_smpl, av_locs_per_smpl)
+    return (n_total, dayoffset,
+            day_of_smpl, av_times_per_smpl,
+            cnty_of_smpl, av_locs_per_smpl)
 
 
 def sample_time_and_space__pred(n_days,
@@ -164,36 +163,36 @@ def sample_time_and_space__pred(n_days,
                                 rnd_time,
                                 rnd_loc):
 
-                    ######## t_all ########
-                    n_total = n_days * n_counties * num_tps
+    ######## t_all ########
+    n_total = n_days * n_counties * num_tps
 
-                    rnd_timeid_per_smpl = np.floor( av_times_per_smpl * \
-                        rnd_time.random( n_total ) ).astype("int32")
+    rnd_timeid_per_smpl = np.floor(av_times_per_smpl * rnd_time.random(n_total)
+                                   ).astype("int32")
 
-                    # collect times for each sample with its random time-id
-                    t_all =
-                        [ times_by_day_np[d_offs+i][rnd_timeid_per_smpl[ \
-                        (i*n_counties+j)*num_tps+x]] \
-                        for i in range(n_days) \
-                        for j in range(n_counties) \
-                        for x in range(num_tps) ]
+    # collect times for each sample with its random time-id
+    t_all = \
+        [times_by_day_np[d_offs+i][rnd_timeid_per_smpl[ \
+        (i*n_counties+j)*num_tps+x]] \
+        for i in range(n_days) \
+        for j in range(n_counties) \
+        for x in range(num_tps) ]
 
-                    ######## x_all ########
+    ######## x_all ########
 
-                    # calc random location-id for each sample
-                    rnd_locid_per_smpl =
-                        np.floor( av_locs_per_smpl * \
-                        rnd_loc.random((n_total,)) ).astype("int32")
+    # calc random location-id for each sample
+    rnd_locid_per_smpl = \
+        np.floor( av_locs_per_smpl * \
+        rnd_loc.random((n_total,)) ).astype("int32")
 
-                    # collect locations for each sample with its random loc-id
-                    x_all =
-                        [ locations_by_county_np[c_offs+j] \
-                        [rnd_locid_per_smpl[(i*n_counties+j)*num_tps+x]] \
-                        for i in range(n_days) \
-                        for j in range(n_counties) \
-                        for x in range(num_tps) ]
+    # collect locations for each sample with its random loc-id
+    x_all = \
+        [locations_by_county_np[c_offs+j] \
+        [rnd_locid_per_smpl[(i*n_counties+j)*num_tps+x]] \
+        for i in range(n_days)
+        for j in range(n_counties)
+        for x in range(num_tps)]
 
-                    return t_all, x_all
+    return t_all, x_all
 
 
 @numba.jit(nopython=True, parallel=True, cache=False)

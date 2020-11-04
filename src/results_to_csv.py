@@ -40,7 +40,7 @@ def metadata_csv(start, n_weeks, counties, output_dir):
 def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     countyByName = make_county_dict()
     prediction_region = "germany"
-    data = load_data_n_weeks(start, n_weeks, prediction_region, counties, csv_path)
+    data = load_data_n_weeks(start, n_weeks, csv_path)
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
     day_0 = start_day + pd.Timedelta(days=n_weeks*7+5)
     day_m5 = day_0 - pd.Timedelta(days=5)
@@ -62,8 +62,8 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
     # TODO: figure out if we want to replace quantiles function (newer pymc3 versions don't support it)
-    prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
-    prediction_quantiles_trend = quantiles(prediction_samples_trend, (5, 25, 75, 95))
+    prediction_quantiles = np.quantiles(prediction_samples, (5, 25, 75, 95))
+    prediction_quantiles_trend = np.quantiles(prediction_samples_trend, (5, 25, 75, 95))
 
     prediction_mean = pd.DataFrame(
         data=np.mean(

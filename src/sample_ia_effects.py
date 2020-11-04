@@ -7,7 +7,6 @@ from sampling_utils import *
 from shared_utils import *
 import sys
 import pandas as pd
-from config_window import combinations
 
 from pathlib import Path
 import argparse
@@ -19,15 +18,12 @@ def main(start, task_id, num_weeks, csv_path):
     number_of_weeks = num_weeks # default 3
     start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start, unit='d')
 
-    # maybe not necessary
     disease = "covid19"
     prediction_region = "germany"
-    nums_sample = range(100)
-    csv_path = csv_path
 
-    year = str(start_date)[:4]
-    month = str(start_date)[5:7]
-    day = str(start_date)[8:10]
+    year = start_date.year
+    month = start_date.month
+    day = start_date.day
     day_folder_path = "../data/ia_effect_samples/{}_{}_{}".format(year, month, day)
     Path(day_folder_path).mkdir(parents=True, exist_ok=True)
 
@@ -44,9 +40,7 @@ def main(start, task_id, num_weeks, csv_path):
         counties = pkl.load(f)
 
 
-    data = load_data_n_weeks(start, number_of_weeks,
-                             prediction_region, counties,
-                             csv_path)
+    data = load_data_n_weeks(start, number_of_weeks, csv_path)
     print("DaysTest")
     print(data.index)
     # RNGenerators
@@ -67,7 +61,6 @@ if __name__ == '__main__':
                                         Jan 28 2020 plus a number of days')
 
     parser.add_argument('start',
-                        required=True,
                         nargs=1,
                         type=int,
                         help='start day calculated by Jan 28 2020 + start days')
@@ -79,7 +72,7 @@ if __name__ == '__main__':
                         nargs=1,
                         dest='num_weeks',
                         type=int,
-                        default=3)
+                        default=[3])
     parser.add_argument('--csv_path',
                         nargs=1,
                         dest='csv_path',
@@ -89,7 +82,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(   args.start[0],
-            args.task_id[0],
-            args.num_weeks[0],
-            args.csv_path[0])
+    main(args.start[0],
+         args.task_id[0],
+         args.num_weeks[0],
+         args.csv_path[0])

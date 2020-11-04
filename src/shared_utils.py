@@ -13,11 +13,8 @@ import numpy as np
 import pandas as pd
 import pymc3 as pm
 # from pymc3.stats import quantiles
-# from sampling_utils import *
 from collections import OrderedDict
 import isoweek
-import gc
-from BaseModel import BaseModel
 import itertools as it
 import os
 from datetime import timedelta
@@ -72,15 +69,12 @@ def load_data(prediction_region, counties, csv_path, seperator=",", pad=None):
 def load_data_n_weeks(
     start,
     n_weeks,
-    prediction_region,
-    counties,
     csv_path,
     seperator=",",
     pad=None
 ):
 
-    data = pd.read_csv(csv_path,
-                       sep=seperator, encoding='iso-8859-1', index_col=0)
+    data = pd.read_csv(csv_path, sep=seperator, encoding='iso-8859-1', index_col=0)
 
     if "99999" in data.columns:
         data.drop("99999", inplace=True, axis=1)
@@ -88,9 +82,6 @@ def load_data_n_weeks(
     data.index = [pd.Timestamp(date) for date in data.index]
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
     data = data.loc[start_day <= data.index]
-
-    data = data.loc[:, list(
-        filter(lambda cid: prediction_region in counties[cid]["region"], data.columns))]
 
     if pad is not None:
         # get last date

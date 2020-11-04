@@ -41,8 +41,6 @@ def main(start, csv_path, ia_effect_path, use_interactions, use_demographics, tr
     days_into_future = 5
     data = load_data_n_weeks(start, 
                              number_of_weeks,
-                             prediction_region,
-                             county_info, 
                              csv_path,
                              pad=days_into_future)
 

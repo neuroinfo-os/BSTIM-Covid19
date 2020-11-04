@@ -6,6 +6,7 @@ import pandas as pd
 import datetime
 import numpy as np
 import scipy as sp
+import pickle as pkl
 import pymc3 as pm
 import patsy as pt
 import theano.tensor as tt
