@@ -114,6 +114,73 @@ class ReportDelayPolynomialFeature(SpatioTemporalFeature):
         _t = 0 if t <= self.t0 else (t - self.t0).days / self.scale
         return _t ** self.order
 
+class IAEffectLoader(object):
+    generates_stats = False
+
+    def __init__(self, var, filenames, days, counties, predict_for=None):
+        self.vars = [var]
+        self.samples = []
+        i = 0
+        for filename in filenames:
+            try:
+                with open(filename, "rb") as f:
+                    tmp = pkl.load(f)
+            except FileNotFoundError:
+                print("Warning: File {} not found!".format(filename))
+                pass
+            except Exception as e:
+                print(e)
+            else:
+                m = tmp["ia_effects"]
+                ds = list(tmp["predicted day"])
+                cs = list(tmp["predicted county"])
+                d_idx = np.array([ds.index(d) for d in days]).reshape((-1, 1))
+                print(i)
+                i = i+1
+                print("Days")
+                print(days)
+                print("ds")
+                print(ds)
+                for d in days:
+                    print(d)
+                    print(ds.index(d))
+                c_idx = np.array([cs.index(c) for c in counties])
+
+                # Simulate linear IA effects if predicting the future
+                if predict_for is not None:
+                    d1 = [ds.index(d) for d in days]
+                    d2 = list(range(d1[-1], d1[-1]+len(predict_for)))
+                    n_days_pred = len(d2)
+                    # Repeat ia_effects for last day.
+                    last = m[-1, :, :]
+                    last = np.tile(last, (n_days_pred, 1, 1))
+                    m = np.concatenate((m, last), axis=0)
+                    # Update d_idx.
+                    d_idx = np.array(d1 + d2).reshape(-1, 1)
+
+                self.samples.append(np.moveaxis(
+                    m[d_idx, c_idx, :], -1, 0).reshape((m.shape[-1], -1)).T)
+
+    def step(self, point):
+        new = point.copy()
+        # res = new[self.vars[0].name]
+        new_res = self.samples[np.random.choice(len(self.samples))]
+        new[self.vars[0].name] = new_res
+        # random choice; but block structure <-- this must have "design matrix" shape/content
+        return new
+
+    def stop_tuning(self, *args):
+        pass
+
+    @property
+    def vars_shape_dtype(self):
+        shape_dtypes = {}
+        for var in self.vars:
+            dtype = np.dtype(var.dtype)
+            shape = var.dshape
+            shape_dtypes[var.name] = (shape, dtype)
+        return shape_dtypes
+
 class BaseModel(object):
     """
     Model for disease prediction.
@@ -122,13 +189,17 @@ class BaseModel(object):
     * temporal (functions of time)
     * spatial (functions of space, i.e. longitude, latitude)
     * county_specific (functions of time and space, i.e. longitude, latitude)
+    * interaction effects (functions of distance in time and space relative to each datapoint)
     """
 
     def __init__(
             self,
             trange,
             counties,
+            ia_effect_filenames,
             model=None,
+            num_ia=16,
+            include_ia=True,
             include_report_delay=True,
             report_delay_order=4,
             include_demographics=True,
@@ -139,6 +210,9 @@ class BaseModel(object):
             orthogonalize=False):
 
         self.county_info = counties
+        self.ia_effect_filenames = ia_effect_filenames
+        self.num_ia = num_ia if include_ia else 0
+        self.include_ia = include_ia
         self.include_report_delay = include_report_delay
         self.report_delay_order = report_delay_order
         self.include_demographics = include_demographics
@@ -208,43 +282,83 @@ class BaseModel(object):
         num_ts = TS.shape[1]
         num_counties = len(counties)
         
-        with pm.Model() as self.model:
-            # priors
-            # NOTE: Vary parameters over time -> W_ia dependent on time
-            # δ = 1/√α
-            δ = pm.HalfCauchy("δ", 10, testval=1.0)
-            α = pm.Deterministic("α", np.float32(1.0) / δ)
+        if self.include_ia:
+            with pm.Model() as self.model:
+                # interaction effects are generated externally -> flat prior
+                IA = pm.Flat("IA", testval=np.ones(
+                    (num_obs, self.num_ia)), shape=(num_obs, self.num_ia))
 
-            W_t_s = pm.Normal("W_t_s", mu=0, sd=10,
-                              testval=np.zeros(num_t_s), shape=num_t_s)
-            W_t_t = pm.Normal("W_t_t", mu=0, sd=10,
-                              testval=np.zeros((num_counties, num_t_t)), shape=(num_counties, num_t_t))
+                # priors
+                # NOTE: Vary parameters over time -> W_ia dependent on time
+                # δ = 1/√α
+                δ = pm.HalfCauchy("δ", 10, testval=1.0)
+                α = pm.Deterministic("α", np.float32(1.0) / δ)
 
-            W_t_d = pm.Normal("W_t_d", mu=0, sd=10,
-                              testval=np.zeros(num_t_d), shape=num_t_d)
-            W_ts = pm.Normal("W_ts", mu=0, sd=10,
-                             testval=np.zeros(num_ts), shape=num_ts)
+                W_ia = pm.Normal("W_ia", mu=0, sd=10, testval=np.zeros(self.num_ia), shape=self.num_ia)
+                W_t_s = pm.Normal("W_t_s", mu=0, sd=10, testval=np.zeros(num_t_s), shape=num_t_s)
+                W_t_t = pm.Normal("W_t_t", mu=0, sd=10, testval=np.zeros((num_counties, num_t_t)),
+                                shape=(num_counties, num_t_t))
 
-            self.param_names = ["δ", "W_t_s", "W_t_t", "W_t_d", "W_ts"]
-            self.params = [δ, W_t_s, W_t_t, W_t_d, W_ts]
+                W_t_d = pm.Normal("W_t_d", mu=0, sd=10, testval=np.zeros(num_t_d), shape=num_t_d)
+                W_ts = pm.Normal("W_ts", mu=0, sd=10, testval=np.zeros(num_ts), shape=num_ts)
 
-            expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
-            expanded_TT = np.reshape(T_T, newshape=(21,412,2))
-            result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
+                self.param_names = ["δ", "W_ia", "W_t_s", "W_t_t", "W_t_d", "W_ts"]
+                self.params = [δ, W_ia, W_t_s, W_t_t, W_t_d, W_ts]
 
-            # calculate mean rates
-            μ = pm.Deterministic(
-                "μ",
-                tt.exp(
-                    tt.dot(T_S, W_t_s) +
-                    result_TT + 
-                    tt.dot(T_D, W_t_d) +
-                    tt.dot(TS, W_ts)+
-                    log_exposure
+                expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
+                expanded_TT = np.reshape(T_T, newshape=(21,412,2))
+                result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
+
+                # calculate mean rates
+                μ = pm.Deterministic(
+                    "μ",
+                    tt.exp(
+                        tt.dot(IA, W_ia) +
+                        tt.dot(T_S, W_t_s) +
+                        result_TT + 
+                        tt.dot(T_D, W_t_d) +
+                        tt.dot(TS, W_ts)+
+                        log_exposure
+                        )
                     )
-                  )
-            # constrain to observations
-            pm.NegativeBinomial("Y", mu=μ, alpha=α, observed=Y_obs)
+                # constrain to observations
+                pm.NegativeBinomial("Y", mu=μ, alpha=α, observed=Y_obs)
+        else:
+            # doesn't include IA
+            with pm.Model() as self.model:
+                # priors
+                # δ = 1/√α
+                δ = pm.HalfCauchy("δ", 10, testval=1.0)
+                α = pm.Deterministic("α", np.float32(1.0) / δ)
+
+                W_t_s = pm.Normal("W_t_s", mu=0, sd=10, testval=np.zeros(num_t_s), shape=num_t_s)
+                W_t_t = pm.Normal("W_t_t", mu=0, sd=10, testval=np.zeros((num_counties, num_t_t)),
+                                  shape=(num_counties, num_t_t))
+
+                W_t_d = pm.Normal("W_t_d", mu=0, sd=10, testval=np.zeros(num_t_d), shape=num_t_d)
+                W_ts = pm.Normal("W_ts", mu=0, sd=10, testval=np.zeros(num_ts), shape=num_ts)
+
+                self.param_names = ["δ", "W_t_s", "W_t_t", "W_t_d", "W_ts"]
+                self.params = [δ, W_t_s, W_t_t, W_t_d, W_ts]
+
+                expanded_Wtt = tt.tile(W_t_t.reshape(shape=(1,num_counties,-1)), reps=(21, 1, 1))
+                expanded_TT = np.reshape(T_T, newshape=(21,412,2))
+                result_TT = tt.flatten(tt.sum(expanded_TT*expanded_Wtt,axis=-1))
+
+                # calculate mean rates
+                μ = pm.Deterministic(
+                    "μ",
+                    tt.exp(
+                        tt.dot(T_S, W_t_s) +
+                        result_TT + 
+                        tt.dot(T_D, W_t_d) +
+                        tt.dot(TS, W_ts)+
+                        log_exposure
+                        )
+                    )
+                # constrain to observations
+                pm.NegativeBinomial("Y", mu=μ, alpha=α, observed=Y_obs)
+
 
     def sample_parameters(
             self,
@@ -270,14 +384,30 @@ class BaseModel(object):
         if chains is None:
             chains = max(2, cores)
 
-        with self.model:
-            # run!
-            nuts = pm.step_methods.NUTS(
-                vars=self.params,
-                target_accept=target_accept,
-                max_treedepth=max_treedepth)
-            trace = pm.sample(samples, nuts, chains=chains, cores=cores,
-                              compute_convergence_checks=False, **kwargs)
+        if self.include_ia:
+            with self.model:
+                # run!
+                ia_effect_loader = IAEffectLoader(
+                    self.model.IA,
+                    self.ia_effect_filenames,
+                    target.index,
+                    target.columns)
+                nuts = pm.step_methods.NUTS(
+                    vars=self.params,
+                    target_accept=target_accept,
+                    max_treedepth=max_treedepth)
+                steps = [ia_effect_loader, nuts]
+                trace = pm.sample(samples, steps, chains=chains, cores=cores,
+                                  compute_convergence_checks=False, **kwargs)
+        else:
+            with self.model:
+                # run!
+                nuts = pm.step_methods.NUTS(
+                    vars=self.params,
+                    target_accept=target_accept,
+                    max_treedepth=max_treedepth)
+                trace = pm.sample(samples, nuts, chains=chains, cores=cores,
+                                  compute_convergence_checks=False, **kwargs)
         return trace
 
     def sample_predictions(
@@ -332,6 +462,11 @@ class BaseModel(object):
         W_t_d = parameters["W_t_d"]
         W_ts = parameters["W_ts"]
 
+        if self.include_ia:
+            W_ia = parameters["W_ia"]
+            ia_l = IAEffectLoader(None, self.ia_effect_filenames,
+                                  target_days, target_counties, predict_for=prediction_days)
+
         num_predictions = len(target_days) * len(target_counties) + \
             len(prediction_days) * len(target_counties)
         num_parameter_samples = α.size
@@ -343,14 +478,34 @@ class BaseModel(object):
         expanded_TT = np.reshape(T_T, newshape=(1,31,412,2))
         result_TT = np.reshape(np.sum(expanded_TT*expanded_Wtt,axis=-1), newshape=(-1,31*412))
       
-        for i in range(num_parameter_samples):
-            μ[i, :] = np.exp(
-                        np.dot(T_S, W_t_s[i]) +
-                        result_TT[i] + 
-                        np.dot(TS, W_ts[i]) +
-                        np.dot(T_D, W_t_d[i]) + 
-                        log_exposure)
-            y[i, :] = pm.NegativeBinomial.dist(
-                    mu=μ[i, :], alpha=α[i]).random()
+        # NOTE: the delay polynomial is left out here!
+        # mean_delay /= num_parameter_samples
+        if self.include_ia:
+            for i in range(num_parameter_samples):
+                IA_ef = np.dot(
+                    ia_l.samples[np.random.choice(len(ia_l.samples))], W_ia[i])
+                # np.dot(ia_l.samples[np.random.choice(len(ia_l.samples))], self.Q), W_ia[i])
+                if average_all:
+                    IA_ef = np.reshape(IA_ef, newshape=(31,412))
+                    mean = np.mean(IA_ef, axis=0, keepdims=True)
+                    IA_ef = np.reshape(np.tile(mean, reps=(31,1)), (-1)) 
+                μ[i, :] = np.exp(IA_ef +
+                                 np.dot(T_S, W_t_s[i]) +
+                                 result_TT[i] + 
+                                 np.dot(TS, W_ts[i]) +
+                                 np.dot(T_D, W_t_d[i]) +
+                                 log_exposure)
+                y[i, :] = pm.NegativeBinomial.dist(
+                        mu=μ[i, :], alpha=α[i]).random()
+        # again not modeled
+        else:
+            for i in range(num_parameter_samples):
+                μ[i, :] = np.exp(np.dot(T_S, W_t_s[i]) +
+                                 result_TT[i] + 
+                                 np.dot(TS, W_ts[i]) +
+                                 np.dot(T_D, W_t_d[i]) +
+                                 log_exposure)
+                y[i, :] = pm.NegativeBinomial.dist(
+                        mu=μ[i, :], alpha=α[i]).random()
 
         return {"y": y, "μ": μ, "α": α}
