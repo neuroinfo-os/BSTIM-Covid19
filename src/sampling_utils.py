@@ -213,17 +213,17 @@ def sample_time_and_space_tx(n_total, n_counties, dayoffset,
 
     return t_all_np, x_all_np
 
-def sample_time_and_space(  n_counties,
-                            n_total,
-                            dayoffset,
-                            times_by_day_np,
-                            locations_by_county_np,
-                            day_of_smpl,
-                            av_times_per_smpl,
-                            cnty_of_smpl,
-                            av_locs_per_smpl,
-                            rnd_time,
-                            rnd_loc):
+def sample_time_and_space(n_counties,
+                          n_total,
+                          dayoffset,
+                          times_by_day_np,
+                          locations_by_county_np,
+                          day_of_smpl,
+                          av_times_per_smpl,
+                          cnty_of_smpl,
+                          av_locs_per_smpl,
+                          rnd_time,
+                          rnd_loc):
     """
     Calculations samples in time and space.
     Calculation a hughe random number array use
