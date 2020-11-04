@@ -127,7 +127,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
             'RKI Meldedaten': rki_data,
             'is_nowcast': (day_m5 <= ext_index) & (ext_index < day_0),
             'is_prediction': (day_0 <= ext_index),
-            'is_high': np.less(prediction_q95_trend.loc[:,county_id].values, rki_data)},
+            'is_high': np.less(prediction_q95_trend.loc[:,county_id].values, rki_data),
             'is_prediction': (day_0 <= ext_index)},
             index=ext_index
         )
