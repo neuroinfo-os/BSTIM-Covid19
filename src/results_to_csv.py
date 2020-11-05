@@ -167,7 +167,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         county_data = pd.DataFrame({
             'Raw Prediction Mean': prediction_mean.loc[:,county_id].values,
             'Raw Prediction Mean100k': np.multiply(
-                np.devide(prediction_mean.loc[:,county_id].values, n_people), 
+                np.divide(prediction_mean.loc[:,county_id].values, n_people), 
                 100000),
             'Raw Prediction Q25': prediction_q25.loc[:,county_id].values,
             'Raw Prediction Q75': prediction_q75.loc[:,county_id].values,
@@ -175,7 +175,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
             'Raw Prediction Q95': prediction_q95.loc[:,county_id].values,
             'Trend Prediction Mean': prediction_mean_trend.loc[:,county_id].values,
             'Trend Prediction Mean100k': np.mutliply(
-                np.devide(prediction_mean_trend.loc[:,county_id].values,n_people),
+                np.divide(prediction_mean_trend.loc[:,county_id].values,n_people),
                 100000),
             'Trend Prediction Q25': prediction_q25_trend.loc[:,county_id].values,
             'Trend Prediction Q75': prediction_q75_trend.loc[:,county_id].values,
@@ -183,7 +183,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
             'Trend Prediction Q95': prediction_q95_trend.loc[:,county_id].values,
             'Trend 7Week Prediction Mean': prediction_mean_7day.loc[:,county_id].values,
             'Trend 7Week Prediction Mean100k': np.multiply(
-                np.devide(prediction_mean_7day.loc[:,county_id].values,n_people),
+                np.divide(prediction_mean_7day.loc[:,county_id].values,n_people),
                 100000),
             'Trend 7Week Prediction Q25': prediction_q25_7day.loc[:,county_id].values,
             'Trend 7Week Prediction Q75': prediction_q75_7day.loc[:,county_id].values,
