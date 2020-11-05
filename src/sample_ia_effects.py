@@ -92,8 +92,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print(args.csv_path)
-
     main(args.start[0],
          args.task_id[0],
          args.num_weeks[0],
