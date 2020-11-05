@@ -174,7 +174,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
             'Raw Prediction Q5': prediction_q5.loc[:,county_id].values,
             'Raw Prediction Q95': prediction_q95.loc[:,county_id].values,
             'Trend Prediction Mean': prediction_mean_trend.loc[:,county_id].values,
-            'Trend Prediction Mean100k': np.mutliply(
+            'Trend Prediction Mean100k': np.multiply(
                 np.divide(prediction_mean_trend.loc[:,county_id].values,n_people),
                 100000),
             'Trend Prediction Q25': prediction_q25_trend.loc[:,county_id].values,
