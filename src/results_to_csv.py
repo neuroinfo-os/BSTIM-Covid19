@@ -132,28 +132,28 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         index=ext_index,
         columns=target.columns)
     prediction_q25_7day = pd.DataFrame(
-        data=np.pad(prediction_quantiles_7day_inc[25], 
+        data=np.pad(prediction_quantiles_7day_inc[25].astype(float), 
                     ((7,0),(0,0)), 
                     'constant', 
                     constant_values=np.nan),
         index=ext_index,
         columns=target.columns)
     prediction_q75_7day = pd.DataFrame(
-        data=np.pad(prediction_quantiles_7day_inc[75], 
+        data=np.pad(prediction_quantiles_7day_inc[75].astype(float), 
                     ((7,0),(0,0)), 
                     'constant', 
                     constant_values=np.nan),
         index=ext_index,
         columns=target.columns)
     prediction_q5_7day = pd.DataFrame(
-        data=np.pad(prediction_quantiles_7day_inc[5], 
+        data=np.pad(prediction_quantiles_7day_inc[5].astype(float), 
                     ((7,0),(0,0)), 
                     'constant', 
                     constant_values=np.nan),
         index=ext_index,
         columns=target.columns)
     prediction_q95_7day = pd.DataFrame(
-        data=np.pad(prediction_quantiles_7day_inc[95], 
+        data=np.pad(prediction_quantiles_7day_inc[95].astype(float), 
                     ((7,0),(0,0)), 
                     'constant', 
                     constant_values=np.nan),
