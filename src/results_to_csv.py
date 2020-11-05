@@ -23,12 +23,14 @@ def metadata_csv(start, n_weeks, counties, output_dir):
     prob_text = ["Die Fallzahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% {}".format(
         p*100 if p >= 0.5 else 100-p*100, "steigen" if p>= 0.5 else "fallen"
     ) for p in p_linear_slope]
+    n_people = [counties[key]['demographics'][('total',2018)] for key in counties.keys()]
 
     metadata = pd.DataFrame({
         "countyID": [int(county_id) for county_id in counties.keys()],
         "LKType": [counties[county_id]['name'].split(" ")[0] for county_id in counties.keys()],
         "LKName": [counties[county_id]['name'].split(" ")[1] for county_id in counties.keys()],
-        "probText": prob_text
+        "probText": prob_text,
+        "n_people": n_people
     }
     )
     metadata = metadata.sort_values(["LKName", "countyID"])
@@ -36,10 +38,19 @@ def metadata_csv(start, n_weeks, counties, output_dir):
     fpath = os.path.join(output_dir, "metadata.csv")
     metadata.to_csv(fpath, index=False)
 
+def x_days_incidence_by_county(samples, x):
+    num_sample = len(samples)
+    timesteps = len(samples[0])
+    counties = len(samples[0][0])
+    incidence = np.empty((num_sample, timesteps-x, counties), dtype='int64')
+    for sample in range(num_sample):
+        for week in range(timesteps-x):
+            incidence[sample][week] = np.sum(samples[sample][week:week+x], axis=0)
+    return incidence
+
 
 def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     countyByName = make_county_dict()
-    prediction_region = "germany"
     data = load_data_n_weeks(start, n_weeks, csv_path)
     start_day = pd.Timestamp('2020-01-28') + pd.Timedelta(days=start)
     day_0 = start_day + pd.Timedelta(days=n_weeks*7+5)
@@ -59,11 +70,13 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_samples = np.reshape(res['y'], (res['y'].shape[0], -1, 412)) 
     prediction_samples_trend = np.reshape(res_trend['y'], (res_trend['y'].shape[0],  -1, 412))
     prediction_samples_trend_mu = np.reshape(res_trend['μ'], (res_trend['μ'].shape[0],  -1, 412))
+    predictions_7day_inc = x_days_incidence_by_county(prediction_samples_trend_mu, 7)
     ext_index = pd.DatetimeIndex([d for d in target.index] + \
             [d for d in pd.date_range(target.index[-1]+timedelta(1),day_p5-timedelta(1))])
     # TODO: figure out if we want to replace quantiles function (newer pymc3 versions don't support it)
-    prediction_quantiles = np.quantiles(prediction_samples, (5, 25, 75, 95))
-    prediction_quantiles_trend = np.quantiles(prediction_samples_trend, (5, 25, 75, 95))
+    prediction_quantiles = quantiles(prediction_samples, (5, 25, 75, 95))
+    prediction_quantiles_trend = quantiles(prediction_samples_trend_mu, (5, 25, 75, 95))
+    prediction_quantiles_7day_inc = quantiles(predictions_7day_inc, (5, 25, 75, 95))
 
     prediction_mean = pd.DataFrame(
         data=np.mean(
@@ -111,22 +124,73 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         index=ext_index,
         columns=target.columns)
 
+    prediction_mean_7day = pd.DataFrame(
+        data=np.pad(np.mean(predictions_7day_inc, axis=0),
+                    ((7,0), (0,0)), 
+                    'constant', 
+                    constant_values=np.nan),
+        index=ext_index,
+        columns=target.columns)
+    prediction_q25_7day = pd.DataFrame(
+        data=np.pad(prediction_quantiles_7day_inc[25], 
+                    ((7,0),(0,0)), 
+                    'constant', 
+                    constant_values=np.nan),
+        index=ext_index,
+        columns=target.columns)
+    prediction_q75_7day = pd.DataFrame(
+        data=np.pad(prediction_quantiles_7day_inc[75], 
+                    ((7,0),(0,0)), 
+                    'constant', 
+                    constant_values=np.nan),
+        index=ext_index,
+        columns=target.columns)
+    prediction_q5_7day = pd.DataFrame(
+        data=np.pad(prediction_quantiles_7day_inc[5], 
+                    ((7,0),(0,0)), 
+                    'constant', 
+                    constant_values=np.nan),
+        index=ext_index,
+        columns=target.columns)
+    prediction_q95_7day = pd.DataFrame(
+        data=np.pad(prediction_quantiles_7day_inc[95], 
+                    ((7,0),(0,0)), 
+                    'constant', 
+                    constant_values=np.nan),
+        index=ext_index,
+        columns=target.columns)
+    
+
     for (county, county_id) in countyByName.items():
         rki_data = np.append(target.loc[:, county_id].values, np.repeat(np.nan, 5))
+        n_people = counties[county_id]['demographics'][('total',2018)]
         county_data = pd.DataFrame({
             'Raw Prediction Mean': prediction_mean.loc[:,county_id].values,
+            'Raw Prediction Mean100k': np.multiply(
+                np.devide(prediction_mean.loc[:,county_id].values, n_people), 
+                100000),
             'Raw Prediction Q25': prediction_q25.loc[:,county_id].values,
             'Raw Prediction Q75': prediction_q75.loc[:,county_id].values,
             'Raw Prediction Q5': prediction_q5.loc[:,county_id].values,
             'Raw Prediction Q95': prediction_q95.loc[:,county_id].values,
             'Trend Prediction Mean': prediction_mean_trend.loc[:,county_id].values,
+            'Trend Prediction Mean100k': np.mutliply(
+                np.devide(prediction_mean_trend.loc[:,county_id].values,n_people),
+                100000),
             'Trend Prediction Q25': prediction_q25_trend.loc[:,county_id].values,
             'Trend Prediction Q75': prediction_q75_trend.loc[:,county_id].values,
             'Trend Prediction Q5': prediction_q5_trend.loc[:,county_id].values,
             'Trend Prediction Q95': prediction_q95_trend.loc[:,county_id].values,
+            'Trend 7Week Prediction Mean': prediction_mean_7day.loc[:,county_id].values,
+            'Trend 7Week Prediction Mean100k': np.multiply(
+                np.devide(prediction_mean_7day.loc[:,county_id].values,n_people),
+                100000),
+            'Trend 7Week Prediction Q25': prediction_q25_7day.loc[:,county_id].values,
+            'Trend 7Week Prediction Q75': prediction_q75_7day.loc[:,county_id].values,
+            'Trend 7Week Prediction Q5': prediction_q5_7day.loc[:,county_id].values,
+            'Trend 7Week Prediction Q95': prediction_q95_7day.loc[:,county_id].values,
             'RKI Meldedaten': rki_data,
             'is_nowcast': (day_m5 <= ext_index) & (ext_index < day_0),
-            'is_prediction': (day_0 <= ext_index),
             'is_high': np.less(prediction_q95_trend.loc[:,county_id].values, rki_data),
             'is_prediction': (day_0 <= ext_index)},
             index=ext_index

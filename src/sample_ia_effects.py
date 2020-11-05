@@ -11,21 +11,17 @@ import pandas as pd
 from pathlib import Path
 import argparse
 
-def main(start, task_id, num_weeks, csv_path):
+def main(start, task_id, num_weeks, csv_path, ia_effect_root):
     start_date = pd.Timestamp("2020-01-28") + pd.Timedelta(start, unit='d')
     disease = "covid19"
 
     year = str(start_date)[:4]
     month = str(start_date)[5:7]
     day = str(start_date)[8:10]
-    day_folder_path = "../data/ia_effect_samples/{}_{}_{}".format(year, month, day)
+    day_folder_path = os.path.join(ia_effect_root, "{}_{}_{}".format(year,month,day))
 
     Path(day_folder_path).mkdir(parents=True, exist_ok=True)
-    filename = "../data/ia_effect_samples/{}_{}_{}/{}_{}.pkl".format(year, 
-                                                                     month, 
-                                                                     day, 
-                                                                     disease, 
-                                                                     task_id)
+    filename = os.path.join(day_folder_path, "{}_{}.pkl".format(disease, task_id))
 
     print("Running task {} - disease: {} - sample: {} -\
             startdate: {} - number of weeks: {} y\nWill create file {}".format(task_id, 
@@ -80,12 +76,19 @@ if __name__ == "__main__":
                         dest="num_weeks",
                         type=int,
                         default=[3])
-    parser.add_argument("--csv_path",
+    parser.add_argument("--csvinputfile",
                         nargs=1,
-                        dest="csv_path",
+                        dest="csvinputfile",
                         type=str,
                         default=["../data/diseases/covid19.csv"],
                         help="path to csv containing reported cases")
+
+    parser.add_argument("--ia_effect_root",
+                        nargs=1,
+                        dest="ia_effect_root",
+                        type=str,
+                        default=["../data/ia_effect_samples"],
+                        help="Path to directory with IA effect sample files in date folders")
 
     args = parser.parse_args()
 
@@ -94,4 +97,5 @@ if __name__ == "__main__":
     main(args.start[0],
          args.task_id[0],
          args.num_weeks[0],
-         args.csv_path[0])
+         args.csvinputfile[0],
+         args.ia_effect_root[0])

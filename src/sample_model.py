@@ -5,9 +5,10 @@ import pickle as pkl
 import pandas as pd
 import os
 import sys
+import warnings
 import argparse
 
-def main(start, csv_path, ia_effect_path, use_interactions, use_demographics, trend_order, periodic_order, num_samples, num_chains):
+def main(start, csv_path, ia_effect_root, use_interactions, use_demographics, trend_order, periodic_order, num_samples, num_chains):
     
     # Default Values
     number_of_weeks = 3
@@ -33,6 +34,16 @@ def main(start, csv_path, ia_effect_path, use_interactions, use_demographics, tr
     filename_pred_trend = "../data/mcmc_samples_backup/predictions_trend_{}_{}.pkl".format(disease, start )
     filename_model = "../data/mcmc_samples_backup/model_{}_{}.pkl".format(disease, start)
 
+    year = str(start_date)[:4]
+    month = str(start_date)[5:7]
+    day = str(start_date)[8:10]
+    ia_effect_path = os.path.join(ia_effect_root, "{}_{}_{}".format(year,month,day))
+    ia_effect_files = [os.path.join(ia_effect_path, ia_file) 
+                       for ia_file in os.listdir(ia_effect_path)]
+
+    if len(ia_effect_files) < 100:
+        warnings.warn("Currently using less then 100 sample sets for IA Effects")
+
     # Load data: This must be in the correct place at the moment!
     with open('../data/counties/counties.pkl', "rb") as f:
         county_info = pkl.load(f)
@@ -45,22 +56,23 @@ def main(start, csv_path, ia_effect_path, use_interactions, use_demographics, tr
                              pad=days_into_future)
 
     print(data)
-    first_day = data.index.min()
-    last_day = data.index.max()
+    # first_day = data.index.min()
+    # last_day = data.index.max()
 
     # For the simple model, only targets are required!
     _, target_train, _, target_test = split_data(
         data,
-        train_start=first_day,
-        test_start=last_day - pd.Timedelta(days=days_into_future+4),
-        post_test=last_day + pd.Timedelta(days=1)
+        train_start=start_date,
+        # test_start=last_day - pd.Timedelta(days=days_into_future+4),
+        test_start=start_date + pd.Timedelta(days=number_of_weeks*7),
+        post_test=start_date + pd.Timedelta(days=number_of_weeks*7 + 10)
     )
 
     tspan = (target_train.index[0], target_train.index[-1])
     print("CHECK")
     print(start)
     print(start_date)
-    print(first_day)
+    print(tspan)
     print(target_train)
     print("training for {} in {} with final model from {} to {}\nWill create files {}, {} and {}".format(
         disease, prediction_region, *tspan, filename_params, filename_pred, filename_model))
@@ -73,7 +85,7 @@ def main(start, csv_path, ia_effect_path, use_interactions, use_demographics, tr
 
     model = BaseModel(tspan,
                       county_info,
-                      [os.path.join(ia_effect_path, "{}_{}.pkl".format(disease, i)) for i in range(100)],
+                      ia_effect_files,
                       include_ia=use_interactions,
                       include_report_delay=use_report_delay,
                       include_demographics=use_demographics,
@@ -135,15 +147,15 @@ if __name__ == "__main__":
                         nargs=1,
                         dest="csvinputfile",
                         type=str,
-                        default=["../data/diseases/COVID19.csv"],
+                        default=["../data/diseases/covid19.csv"],
                         help="Number of chains in MCMC")
     
-    parser.add_argument("--ia_effect_path",
+    parser.add_argument("--ia_effect_root",
                         nargs=1,
-                        dest="ia_effect_path",
+                        dest="ia_effect_root",
                         type=str,
                         default=["../data/ia_effect_samples"],
-                        help="Path to directory with IA effect sample files")
+                        help="Path to directory with IA effect sample files in date folders")
 
     parser.add_argument("--use_interactions",
                         nargs=1,
@@ -188,10 +200,10 @@ if __name__ == "__main__":
                         help="Number of chains in MCMC")
     
     args = parser.parse_args()
-    
+
     main(args.start[0], 
          args.csvinputfile[0],
-         args.ia_effect_path[0],
+         args.ia_effect_root[0],
          args.use_interactions[0],
          args.use_demographics[0],
          args.trend_order[0],
