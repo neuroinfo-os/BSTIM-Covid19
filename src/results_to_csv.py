@@ -2,6 +2,7 @@ import argparse
 import os
 import pickle as pkl
 import shutil
+import uuid
 from collections import OrderedDict
 from datetime import timedelta
 from pathlib import Path
@@ -73,7 +74,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     res_trend = load_trend_predictions(start, n_weeks)
 
     prediction_samples = np.reshape(res["y"], (res["y"].shape[0], -1, 412))
-    prediction_sample_mu = np.reshape(res["μ"], (res["μ"].shape[0], -1, 412))
+    prediction_samples_mu = np.reshape(res["μ"], (res["μ"].shape[0], -1, 412))
     prediction_samples_trend = np.reshape(
         res_trend["y"], (res_trend["y"].shape[0], -1, 412)
     )
@@ -250,8 +251,14 @@ def export(start, outputdir, exportrootdir, exportoffset=0):
     exportdir = os.path.join(
         exportrootdir, "{}_{}_{}".format(export_year, export_month, export_day)
     )
-    Path(exportdir).mkdir(parents=True, exist_ok=True)
-    shutil.copytree(outputdir, exportdir)
+    Path(os.path.basename(exportdir)).mkdir(parents=True, exist_ok=True)
+    try:
+        shutil.copytree(outputdir, exportdir)
+    except FileExistsError:
+        uuidcode = uuid.uuid4().hex
+        exportdir2 = "{}{}".format(exportdir, uuidcode)
+        print("{} already exists. Try {}".format(exportdir, exportdir2))
+        shutil.copytree(outputdir, exportdir2)
 
 
 def main(start, csv_path, output_root_dir, exportdir, exportoffset):
