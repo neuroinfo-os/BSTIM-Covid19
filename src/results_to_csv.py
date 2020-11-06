@@ -332,8 +332,8 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     map_df["7DayInf100k_RKI"] = map_rki_7day100k
     map_df["newInfRaw"] = map_nowcast
     map_df["7DayInfRaw"] = map_nowcast_7day
-    map_df["newInf100kRaw_RKI"] = map_rki
-    map_df["7DayInf100kRaw_RKI"] = map_rki_7day
+    map_df["newInfRaw_RKI"] = map_rki
+    map_df["7DayInfRaw_RKI"] = map_rki_7day
     map_df.to_csv(os.path.join(output_dir, "map.csv"))
 
 
