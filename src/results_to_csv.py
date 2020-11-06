@@ -47,7 +47,7 @@ def metadata_csv(start, n_weeks, counties, output_dir):
     metadata.to_csv(fpath, index=False)
 
 
-def x_days_incidence_by_county(samples, x):
+def sample_x_days_incidence_by_county(samples, x):
     num_sample = len(samples)
     timesteps = len(samples[0])
     counties = len(samples[0][0])
@@ -81,8 +81,12 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_samples_trend_mu = np.reshape(
         res_trend["μ"], (res_trend["μ"].shape[0], -1, 412)
     )
-    predictions_7day_inc = x_days_incidence_by_county(prediction_samples_trend, 7)
-    predictions_7day_inc_mu = x_days_incidence_by_county(prediction_samples_trend_mu, 7)
+    predictions_7day_inc = sample_x_days_incidence_by_county(
+        prediction_samples_trend, 7
+    )
+    predictions_7day_inc_mu = sample_x_days_incidence_by_county(
+        prediction_samples_trend_mu, 7
+    )
     ext_index = pd.DatetimeIndex(
         [d for d in target.index]
         + [
@@ -184,9 +188,33 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         columns=target.columns,
     )
 
+    rki_7day = target.rolling(7).sum()
+
+    ref_date = target.iloc[-1].name
+    nowcast_vals = prediction_mean.loc[prediction_mean.index == ref_date]
+    nowcast7day_vals = prediction_mean_7day.loc[prediction_mean.index == ref_date]
+    rki_vals = target.iloc[-1]
+    rki_7day_vals = rki_7day.iloc[-1]
+
+    map_nowcast = []
+    map_nowcast_7day = []
+    map_rki = []
+    map_rki_7day = []
+    map_keys = []
+
     for (county, county_id) in countyByName.items():
         rki_data = np.append(target.loc[:, county_id].values, np.repeat(np.nan, 5))
+        rki_data7day = np.append(
+            rki_7day.loc[:, county_id].values, np.repeat(np.nan, 5)
+        )
         n_people = counties[county_id]["demographics"][("total", 2018)]
+
+        map_nowcast.append(nowcast_vals[county_id].item() / n_people * 100000)
+        map_nowcast_7day.append(nowcast7day_vals[county_id].item() / n_people * 100000)
+        map_rki.append(rki_vals[county_id].item() / n_people * 100000)
+        map_rki_7day.append(rki_7day_vals[county_id].item() / n_people * 100000)
+        map_keys.append(county_id)
+
         county_data = pd.DataFrame(
             {
                 "Raw Prediction Mean": prediction_mean.loc[:, county_id].values,
@@ -227,6 +255,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
                     :, county_id
                 ].values,
                 "RKI Meldedaten": rki_data,
+                "RKI 7Day Incidence": rki_data7day,
                 "is_nowcast": (day_m5 <= ext_index) & (ext_index < day_0),
                 "is_high": np.less(
                     prediction_q95_trend.loc[:, county_id].values, rki_data
@@ -237,6 +266,14 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         )
         fpath = os.path.join(output_dir, "{}.csv".format(countyByName[county]))
         county_data.to_csv(fpath)
+
+    map_df = pd.DataFrame(index=None)
+    map_df["countyID"] = map_keys
+    map_df["newInf100k"] = map_nowcast
+    map_df["7DayInf100k"] = map_nowcast_7day
+    map_df["newInf100k_RKI"] = map_rki
+    map_df["7DayInf100k_RKI"] = map_rki_7day
+    map_df.to_csv(os.path.join(output_dir, "map.csv"))
 
 
 def export(start, outputdir, exportrootdir, exportoffset=0):
