@@ -228,7 +228,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         county_data = pd.DataFrame(
             {
                 "Raw Prediction Mean": prediction_mean.loc[:, county_id].values,
-                "Raw Prediction Mean100k": np.multiply(
+                "Raw Prediction Mean 100k": np.multiply(
                     np.divide(prediction_mean.loc[:, county_id].values, n_people),
                     100000,
                 ),
