@@ -233,37 +233,84 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
                     100000,
                 ),
                 "Raw Prediction Q25": prediction_q25.loc[:, county_id].values,
+                "Raw Prediction Q25 100k": np.multiply(
+                    np.divide(prediction_q25.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Raw Prediction Q75": prediction_q75.loc[:, county_id].values,
+                "Raw Prediction Q75 100k": np.multiply(
+                    np.divide(prediction_q75.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Raw Prediction Q5": prediction_q5.loc[:, county_id].values,
+                "Raw Prediction Q5 100k": np.multiply(
+                    np.divide(prediction_q5.loc[:, county_id].values, n_people), 100000,
+                ),
                 "Raw Prediction Q95": prediction_q95.loc[:, county_id].values,
+                "Raw Prediction Q95 100k": np.multiply(
+                    np.divide(prediction_q95.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend Prediction Mean": prediction_mean_trend.loc[:, county_id].values,
-                "Trend Prediction Mean100k": np.multiply(
+                "Trend Prediction Mean 100k": np.multiply(
                     np.divide(prediction_mean_trend.loc[:, county_id].values, n_people),
                     100000,
                 ),
                 "Trend Prediction Q25": prediction_q25_trend.loc[:, county_id].values,
+                "Trend Prediction Q25 100k": np.multiply(
+                    np.divide(prediction_q25_trend.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend Prediction Q75": prediction_q75_trend.loc[:, county_id].values,
+                "Trend Prediction Q75 100k": np.multiply(
+                    np.divide(prediction_q75_trend.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend Prediction Q5": prediction_q5_trend.loc[:, county_id].values,
+                "Trend Prediction Q5 100k": np.multiply(
+                    np.divide(prediction_q5_trend.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend Prediction Q95": prediction_q95_trend.loc[:, county_id].values,
+                "Trend Prediction Q95 100k": np.multiply(
+                    np.divide(prediction_q95_trend.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend 7Week Prediction Mean": prediction_mean_7day.loc[
                     :, county_id
                 ].values,
-                "Trend 7Week Prediction Mean100k": np.multiply(
+                "Trend 7Week Prediction Mean 100k": np.multiply(
                     np.divide(prediction_mean_7day.loc[:, county_id].values, n_people),
                     100000,
                 ),
                 "Trend 7Week Prediction Q25": prediction_q25_7day.loc[
                     :, county_id
                 ].values,
+                "Trend 7Week Prediction Q25 100k": np.multiply(
+                    np.divide(prediction_q25_7day.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend 7Week Prediction Q75": prediction_q75_7day.loc[
                     :, county_id
                 ].values,
+                "Trend 7Week Prediction Q75 100k": np.multiply(
+                    np.divide(prediction_q75_7day.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend 7Week Prediction Q5": prediction_q5_7day.loc[
                     :, county_id
                 ].values,
+                "Trend 7Week Prediction Q5 100k": np.multiply(
+                    np.divide(prediction_q5_7day.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "Trend 7Week Prediction Q95": prediction_q95_7day.loc[
                     :, county_id
                 ].values,
+                "Trend 7Week Prediction Q95 100k": np.multiply(
+                    np.divide(prediction_q95_7day.loc[:, county_id].values, n_people),
+                    100000,
+                ),
                 "RKI Meldedaten": rki_data,
                 "RKI 7Day Incidence": rki_data7day,
                 "is_nowcast": (day_m5 <= ext_index) & (ext_index < day_0),
