@@ -197,9 +197,13 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     rki_7day_vals = rki_7day.iloc[-1]
 
     map_nowcast = []
+    map_nowcast100k = []
     map_nowcast_7day = []
+    map_nowcast_7day100k = []
     map_rki = []
+    map_rki100k = []
     map_rki_7day = []
+    map_rki_7day100k = []
     map_keys = []
 
     for (county, county_id) in countyByName.items():
@@ -209,10 +213,16 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
         )
         n_people = counties[county_id]["demographics"][("total", 2018)]
 
-        map_nowcast.append(nowcast_vals[county_id].item() / n_people * 100000)
-        map_nowcast_7day.append(nowcast7day_vals[county_id].item() / n_people * 100000)
-        map_rki.append(rki_vals[county_id].item() / n_people * 100000)
-        map_rki_7day.append(rki_7day_vals[county_id].item() / n_people * 100000)
+        map_nowcast.append(nowcast_vals[county_id].item())
+        map_nowcast100k.append(nowcast_vals[county_id].item() / n_people * 100000)
+        map_nowcast_7day.append(nowcast7day_vals[county_id].item())
+        map_nowcast_7day100k.append(
+            nowcast7day_vals[county_id].item() / n_people * 100000
+        )
+        map_rki.append(rki_vals[county_id].item())
+        map_rki100k.append(rki_vals[county_id].item() / n_people * 100000)
+        map_rki_7day.append(rki_7day_vals[county_id].item())
+        map_rki_7day100k.append(rki_7day_vals[county_id].item() / n_people * 100000)
         map_keys.append(county_id)
 
         county_data = pd.DataFrame(
@@ -269,10 +279,14 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
 
     map_df = pd.DataFrame(index=None)
     map_df["countyID"] = map_keys
-    map_df["newInf100k"] = map_nowcast
-    map_df["7DayInf100k"] = map_nowcast_7day
-    map_df["newInf100k_RKI"] = map_rki
-    map_df["7DayInf100k_RKI"] = map_rki_7day
+    map_df["newInf100k"] = map_nowcast100k
+    map_df["7DayInf100k"] = map_nowcast_7day100k
+    map_df["newInf100k_RKI"] = map_rki100k
+    map_df["7DayInf100k_RKI"] = map_rki_7day100k
+    map_df["newInfRaw"] = map_nowcast
+    map_df["7DayInfRaw"] = map_nowcast_7day
+    map_df["newInf100kRaw_RKI"] = map_rki
+    map_df["7DayInf100kRaw_RKI"] = map_rki_7day
     map_df.to_csv(os.path.join(output_dir, "map.csv"))
 
 
