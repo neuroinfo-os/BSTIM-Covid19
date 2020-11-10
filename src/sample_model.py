@@ -1,9 +1,9 @@
+import argparse
 import os
 import pickle as pkl
 import sys
 import warnings
 
-import argparse
 import pandas as pd
 import pymc3 as pm
 from BaseModel import BaseModel
@@ -75,10 +75,6 @@ def main(
     days_into_future = 5
     data = load_data_n_weeks(start, number_of_weeks, csv_path, pad=days_into_future)
 
-    print(data)
-    # first_day = data.index.min()
-    # last_day = data.index.max()
-
     # For the simple model, only targets are required!
     _, target_train, _, target_test = split_data(
         data,
@@ -106,10 +102,6 @@ def main(
     )
 
     print(os.getcwd())
-
-    year = str(start_date)[:4]
-    month = str(start_date)[5:7]
-    day = str(start_date)[8:10]
 
     model = BaseModel(
         tspan,
