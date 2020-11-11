@@ -9,20 +9,14 @@ import concurrent.futures
 import pandas as pd
 import shutil
 
-
-
-# for c in county_dict.keys():
-#     curves_window(start, c, n_weeks=3, model_i=35, save_plot=True)
-#     curves_window_trend(start, c, save_plot=True)
-
 workers = 128
 
-def plot_curves(c):
-    curves_window(start, c, n_weeks=3, model_i=35, save_plot=False)
-    curves_window_trend(start, c, save_plot=False)
-    return c
-
 def main():
+
+    def plot_curves(c):
+        curves_window(start, c, n_weeks=3, model_i=35, save_plot=True)
+        curves_window_trend(start, c, save_plot=True)
+        return c
 
     start = int(os.environ["SGE_DATE_ID"]) 
     county_dict = make_county_dict()
@@ -36,8 +30,8 @@ def main():
     if os.path.isfile(os.path.join(figures_path, 'metadata.csv')):
         os.remove(os.path.join(figures_path, 'metadata.csv'))
 
-    germany_map(start, save_plot=False)
-    interaction_kernel(start, save_plot=False)
+    germany_map(start, save_csv=True)
+    interaction_kernel(start, save_plot=True)
     
     completed_counties = list()
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
@@ -58,8 +52,6 @@ def main():
     cwdir = r'.'
     # crop the images
     crop_command = r"find {} -type f -name '*.png' -exec convert {} -trim {} \;".format(figures_path, "{}", "{}") 
-    rm_command = "rm -r {}".format(shared_path)
-    copy_command = "cp -r {} {}".format(figures_path, shared_path)
     returnval = subprocess.run(crop_command, check=False, shell=True, cwd=cwdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print(returnval.stdout.decode("ascii"))
     print(returnval.stderr.decode("ascii"))
