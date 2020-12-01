@@ -17,10 +17,7 @@ def metadata_csv(start, n_weeks, counties, output_dir):
     trace = load_trace(start, n_weeks)
     p_linear_slope = np.mean((trace["W_t_t"] > 0)[:, :, 1], axis=0)
     prob_text = [
-        "Die Fallzahlen werden mit einer Wahrscheinlichkeit von {:2.1f}\% {}".format(
-            p * 100 if p >= 0.5 else 100 - p * 100, "steigen" if p >= 0.5 else "fallen"
-        )
-        for p in p_linear_slope
+        p * 100 if p >= 0.5 else -(100 - p*100) for p in p_linear_slope
     ]
     n_people = [
         counties[key]["demographics"][("total", 2018)] for key in counties.keys()
