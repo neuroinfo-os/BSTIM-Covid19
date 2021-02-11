@@ -45,13 +45,15 @@ def metadata_csv(start, n_weeks, counties, output_dir):
 
 
 def sample_x_days_incidence_by_county(samples, x):
+    offset = x-1 if x >= 1 else 0 #6
     num_sample = len(samples)
-    timesteps = len(samples[0])
+    timesteps = len(samples[0]) #31
     counties = len(samples[0][0])
-    incidence = np.empty((num_sample, timesteps - x, counties), dtype="int64")
+    #timesteps - offset = 25
+    incidence = np.empty((num_sample, timesteps - offset, counties), dtype=np.float64)
     for sample in range(num_sample):
-        for week in range(timesteps - x):
-            incidence[sample][week] = np.sum(samples[sample][week : week + x], axis=0)
+        for interval in range(timesteps - offset):
+            incidence[sample][interval] = np.sum(samples[sample][interval : interval + x], axis=0)
     return incidence
 
 
@@ -75,6 +77,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_samples_trend = np.reshape(
         res_trend["y"], (res_trend["y"].shape[0], -1, 412)
     )
+    # hier komme ich am ende an, right?
     prediction_samples_trend_mu = np.reshape(
         res_trend["μ"], (res_trend["μ"].shape[0], -1, 412)
     )
@@ -137,7 +140,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_mean_7day = pd.DataFrame(
         data=np.pad(
             np.mean(predictions_7day_inc_mu, axis=0),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -147,7 +150,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q25_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[25].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -157,7 +160,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q75_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[75].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -167,7 +170,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q5_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[5].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -177,7 +180,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q95_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[95].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
