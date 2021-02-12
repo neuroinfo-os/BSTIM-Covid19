@@ -45,11 +45,10 @@ def metadata_csv(start, n_weeks, counties, output_dir):
 
 
 def sample_x_days_incidence_by_county(samples, x):
-    offset = x-1 if x >= 1 else 0 #6
+    offset = x-1 if x >= 1 else 0
     num_sample = len(samples)
-    timesteps = len(samples[0]) #31
+    timesteps = len(samples[0])
     counties = len(samples[0][0])
-    #timesteps - offset = 25
     incidence = np.empty((num_sample, timesteps - offset, counties), dtype=np.float64)
     for sample in range(num_sample):
         for interval in range(timesteps - offset):
@@ -77,7 +76,6 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_samples_trend = np.reshape(
         res_trend["y"], (res_trend["y"].shape[0], -1, 412)
     )
-    # hier komme ich am ende an, right?
     prediction_samples_trend_mu = np.reshape(
         res_trend["μ"], (res_trend["μ"].shape[0], -1, 412)
     )
