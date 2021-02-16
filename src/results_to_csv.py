@@ -45,13 +45,14 @@ def metadata_csv(start, n_weeks, counties, output_dir):
 
 
 def sample_x_days_incidence_by_county(samples, x):
+    offset = x-1 if x >= 1 else 0
     num_sample = len(samples)
     timesteps = len(samples[0])
     counties = len(samples[0][0])
-    incidence = np.empty((num_sample, timesteps - x, counties), dtype="int64")
+    incidence = np.empty((num_sample, timesteps - offset, counties), dtype=np.float64)
     for sample in range(num_sample):
-        for week in range(timesteps - x):
-            incidence[sample][week] = np.sum(samples[sample][week : week + x], axis=0)
+        for interval in range(timesteps - offset):
+            incidence[sample][interval] = np.sum(samples[sample][interval : interval + x], axis=0)
     return incidence
 
 
@@ -137,7 +138,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_mean_7day = pd.DataFrame(
         data=np.pad(
             np.mean(predictions_7day_inc_mu, axis=0),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -147,7 +148,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q25_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[25].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -157,7 +158,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q75_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[75].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -167,7 +168,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q5_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[5].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -177,7 +178,7 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
     prediction_q95_7day = pd.DataFrame(
         data=np.pad(
             prediction_quantiles_7day_inc[95].astype(float),
-            ((7, 0), (0, 0)),
+            ((6, 0), (0, 0)),
             "constant",
             constant_values=np.nan,
         ),
@@ -273,38 +274,38 @@ def plotdata_csv(start, n_weeks, csv_path, counties, output_dir):
                     np.divide(prediction_q95_trend.loc[:, county_id].values, n_people),
                     100000,
                 ),
-                "Trend 7Week Prediction Mean": prediction_mean_7day.loc[
+                "Trend 7Day Prediction Mean": prediction_mean_7day.loc[
                     :, county_id
                 ].values,
-                "Trend 7Week Prediction Mean 100k": np.multiply(
+                "Trend 7Day Prediction Mean 100k": np.multiply(
                     np.divide(prediction_mean_7day.loc[:, county_id].values, n_people),
                     100000,
                 ),
-                "Trend 7Week Prediction Q25": prediction_q25_7day.loc[
+                "Trend 7Day Prediction Q25": prediction_q25_7day.loc[
                     :, county_id
                 ].values,
-                "Trend 7Week Prediction Q25 100k": np.multiply(
+                "Trend 7Day Prediction Q25 100k": np.multiply(
                     np.divide(prediction_q25_7day.loc[:, county_id].values, n_people),
                     100000,
                 ),
-                "Trend 7Week Prediction Q75": prediction_q75_7day.loc[
+                "Trend 7Day Prediction Q75": prediction_q75_7day.loc[
                     :, county_id
                 ].values,
-                "Trend 7Week Prediction Q75 100k": np.multiply(
+                "Trend 7Day Prediction Q75 100k": np.multiply(
                     np.divide(prediction_q75_7day.loc[:, county_id].values, n_people),
                     100000,
                 ),
-                "Trend 7Week Prediction Q5": prediction_q5_7day.loc[
+                "Trend 7Day Prediction Q5": prediction_q5_7day.loc[
                     :, county_id
                 ].values,
-                "Trend 7Week Prediction Q5 100k": np.multiply(
+                "Trend 7Day Prediction Q5 100k": np.multiply(
                     np.divide(prediction_q5_7day.loc[:, county_id].values, n_people),
                     100000,
                 ),
-                "Trend 7Week Prediction Q95": prediction_q95_7day.loc[
+                "Trend 7Day Prediction Q95": prediction_q95_7day.loc[
                     :, county_id
                 ].values,
-                "Trend 7Week Prediction Q95 100k": np.multiply(
+                "Trend 7Day Prediction Q95 100k": np.multiply(
                     np.divide(prediction_q95_7day.loc[:, county_id].values, n_people),
                     100000,
                 ),
