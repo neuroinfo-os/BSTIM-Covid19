@@ -78,7 +78,7 @@ if __name__ == "__main__":
         series = np.zeros(len(df), dtype=np.int32)
         lk_data = covid19_data[covid19_data['IdLandkreis'] == int(county_id)]
         for (d_id, day) in enumerate(dates):
-            day_string = dayformat_Meldedatum.format(
+            day_string = "{:04d}/{:02d}/{:02d} 00:00:00".format(
                 day.year, day.month, day.day)
             cases = np.sum(lk_data[lk_data['Meldedatum']
                                    == day_string]['AnzahlFall'])
